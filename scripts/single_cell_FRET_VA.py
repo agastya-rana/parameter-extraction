@@ -1,7 +1,7 @@
 """
 Variational annealing of single cell FRET data. 
 
-Created by Nirag Kadakia at 08:00 1016-2017
+Created by Nirag Kadakia at 08:00 10-16-2017
 This work is licensed under the 
 Creative Commons Attribution-NonCommercial-ShareAlike 4.0 
 International License. 
@@ -9,18 +9,36 @@ To view a copy of this license, visit
 http://creativecommons.org/licenses/by-nc-sa/4.0/.
 """
 
-import scipy as sp
-from varanneal import va_ode
 import sys, time
+sys.path.append('../src')
+import scipy as sp
+#from varanneal import va_ode
+from models import MWC_VA
+from scipy.integrate import odeint
+from parameters import params_Tar_1
 
-#TODO ALL
+a = MWC_VA()
+a.import_signal_data()
 
-# Define the model
-def l96(t, x, k):
-    return sp.roll(x,1,1) * (sp.roll(x,-1,1) - sp.roll(x,2,1)) - x + k
+bounds = params_Tar_1()
+params = []
+for iP, val in enumerate(bounds.values()):
+	exec('params.append(%s)' % val[0])
 
-D = 20
+x0 = sp.array([1.27, 7.0])
+sol = odeint(a.df_data_generation, x0, a.Tt[a.signal_bounds_lo: a.signal_bounds_hi], args=(params, ))
 
+import matplotlib.pyplot as plt
+plt.subplot(211)
+plt.plot(a.Tt[a.signal_bounds_lo: a.signal_bounds_hi], sol[:, 0])
+plt.plot(a.Tt[a.signal_bounds_lo: a.signal_bounds_hi], sol[:, 1])
+
+plt.show()
+	
+	
+	
+
+"""
 ################################################################################
 # Action/annealing parameters
 ################################################################################
@@ -94,3 +112,4 @@ print("\nADOL-C annealing completed in %f s."%(time.time() - tstart))
 anneal1.save_paths("paths.npy")
 anneal1.save_params("params.npy")
 anneal1.save_action_errors("action_errors.npy")
+"""
