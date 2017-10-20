@@ -18,7 +18,7 @@ from scipy.integrate import odeint
 from params_bounds import params_Tar_1
 from save_data import save_twin_data
 
-FRET_noise = 0.1
+FRET_noise = 2.0
 
 a = single_cell_FRET()
 a.import_signal_data()
@@ -30,7 +30,8 @@ for iP, val in enumerate(params_dict.values()):
 
 x0 = sp.array([1.27, 7.0])
 Tt = a.Tt[a.signal_bounds_lo: a.signal_bounds_hi]
-sol = odeint(a.df_data_generation, x0, Tt, args=(params, ))
+states = odeint(a.df_data_generation, x0, Tt, args=(params, ))
+stimuli = a.signal_vector[a.signal_bounds_lo: a.signal_bounds_hi]
 
-save_twin_data(Tt, sol, measured_vars_and_noise=[[1, FRET_noise]])
+save_twin_data(Tt, states, stimuli, measured_vars_and_noise=[[1, FRET_noise]])
 								

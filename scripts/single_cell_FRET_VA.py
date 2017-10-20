@@ -12,7 +12,7 @@ http://creativecommons.org/licenses/by-nc-sa/4.0/.
 import sys, time
 sys.path.append('../src')
 import scipy as sp
-#from varanneal import va_ode
+from varanneal import va_ode
 from models import MWC_VA
 from scipy.integrate import odeint
 from parameters import params_Tar_1
