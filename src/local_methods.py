@@ -19,6 +19,6 @@ def def_data_dir():
 	"""
 	
 	data_dir = "C:\Users/nk479/Dropbox (emonetlab)/" \
-				"data_assimilation/preliminary_data/170913/Device1"
+				"users/nirag_kadakia/data/FRET-data-assimilation"
 	
 	return data_dir
