@@ -13,7 +13,7 @@ http://creativecommons.org/licenses/by-nc-sa/4.0/.
 import scipy as sp
 import sys
 from scipy.interpolate import interp1d
-from load_data import load_preliminary_FRET
+from load_data import load_preliminary_FRET, load_protocol
 from models import MWC_Tar
 
 class single_cell_FRET():
@@ -36,8 +36,12 @@ class single_cell_FRET():
 		self.signal_vector = load_preliminary_FRET(data_set=self.data_set, \
 													cell=self.cell)['signal']
 		self.signal_vector = self.signal_vector*self.signal_convert_factor
-		self.Tt = sp.arange(0, len(self.signal_vector)*self.data_dt, self.data_dt)
+		self.Tt = sp.arange(0, len(self.signal_vector)*self.data_dt, 
+								self.data_dt)
 		
+	def lorenz_signal_data(self, dilate=1.0):
+		self.signal_vector = load_protocol(type='lorenz', params=[dilate])  
+
 	def signal(self, t):
 		return interp1d(self.Tt, self.signal_vector)(t)
 		

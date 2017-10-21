@@ -30,3 +30,21 @@ def load_preliminary_FRET(data_set=1, cell=1):
 	data['FRET_idx'] = FRET_idx
 	
 	return data
+
+def load_protocol(type='lorenz', params=[1.0]):
+	return None
+
+def load_twin_data(data_flags):
+
+	data_dict = dict()
+
+	data_ID  = data_flags[0]
+	data_dt = data_flags[1]
+	data_sigma = data_flags[2]
+
+	in_dir = '%s/assimilation/%s' % (DATA_DIR, data_ID)
+	data_dict['measurements'] = sp.load('%s/measured_states_dt=%s_sigma=%s.npy' 
+										% (in_dir, data_dt, data_sigma))
+	data_dict['stimuli'] = sp.load('%s/stimulus_dt=%s_sigma=%s.npy' % DATA_DIR)
+	
+	return data_dict 

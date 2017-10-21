@@ -17,27 +17,44 @@ from local_methods import def_data_dir
 
 DATA_DIR = def_data_dir()
 
-def save_twin_data(time, states, measured_vars_and_noise=[[0, 1]]):
+def save_twin_data(time, states, stimuli, data_flags,
+					measured_vars_and_noise=[[0, 1]]):
 	
+	data_ID = data_flags[0]
+	data_dt = data_flags[1]
+	data_sigma = data_flags[2]
+
 	nL = len(measured_vars_and_noise)
 	nT = len(time)
 	noisy_states = sp.zeros((nT, nL))
-	noise_levels = []
+	noises = []
 	
 	for meas_idx, vars_and_noise in enumerate(measured_vars_and_noise):
 		noisy_states[:, meas_idx] = states[:, vars_and_noise[0]]
-		noisy_states[:, meas_idx] += sp.random.normal(0, vars_and_noise[1],  nT)
-		noise_levels.append(vars_and_noise[1])
+		noisy_states[:, meas_idx] += \
+			sp.random.normal(0, vars_and_noise[1],  nT)
+		noises.append(vars_and_noise[1])
 					
 	true_data = sp.vstack((time, states.T)).T
 	twin_data = sp.vstack((time, noisy_states.T)).T
 	
-	out_dir = '%s/twin_data' % DATA_DIR
+	out_dir = '%s/assimilation/%s' % (DATA_DIR, data_ID)
 	if not os.path.exists(out_dir):
 		os.makedirs(out_dir)
-		
-	if nL == 1:
-		sp.save('%s/FRET_twin_data_%s.npy' % (out_dir, noise_levels[0]), twin_data)
-	else:
-		sp.save('%s/FRET_twin_data_%s.npy' % (out_dir, noise_levels[0]), twin_data)
-	sp.save('%s/FRET_true_states.npy' % out_dir, true_data)
+	
+	sp.save('%s/measured_states_dt=%s_sigma=%s.npy' 
+				% (out_dir, data_dt, data_sigma), twin_data)
+	sp.save('%s/true_states_dt=%s_sigma=%s.npy' 
+			% (out_dir, data_dt, data_sigma), true_data)
+	sp.save('%s/stimulus_dt=%s_sigma=%s.npy' 
+			% (out_dir, data_dt, data_sigma), stimuli)
+
+def save_estimates(annealer, data_set='1.0'):
+	
+	out_dir = '%s/estimates' % DATA_DIR
+	if not os.path.exists(out_dir):
+		os.makedirs(out_dir)
+
+	annealer.save_params('%s/params_%s.npy' % (out_dir, data_set))
+	annealer.save_paths('%s/paths_%s.npy' % (out_dir, data_set))
+	annealer.save_action_errors('%s/action_errors_%s.npy' % (out_dir, data_set))
