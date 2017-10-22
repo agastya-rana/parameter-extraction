@@ -29,8 +29,8 @@ class single_cell_FRET():
 		self.nD = 2
 		self.dt = 0.1
 		self.nT = 500
-		self.Tt = sp.arange(0, self.dt*self.nT, self.dt)
-		
+		self.Tt = None	
+	
 		# Variables for integrating model / twin data generation
 		self.model = MWC_Tar
 		self.true_states = None
@@ -43,18 +43,21 @@ class single_cell_FRET():
 		self.param_bounds = None	
 		self.state_bounds = None
 		self.bounds = None
-		self.nPest = 0
+		self.nPest = None
+		self.Pidx = None
 		self.init_seed = 0
 		self.x_init = None
 		self.p_init = None
 
 		# Variables for annealing
 		self.alpha = 2.0
-		self.beta_array = sp.arange(0, 50, 51)
+		self.beta_array = sp.linspace(0, 50, 51)
 		self.Rf0 = 1e-6
 		self.Rm = 1.0
-		self.Pidx = None
 
+	def set_Tt(self):	
+		self.Tt = sp.arange(0, self.dt*self.nT, self.dt)
+		
 	def import_signal_data(self, data_set=1, cell=12, nSkip=50, yscale=1e-3):
 		self.signal_vector = load_preliminary_FRET(data_set=self.data_set, \
 													cell=self.cell)['signal']
@@ -79,9 +82,16 @@ class single_cell_FRET():
 	def signal(self, t):
 		assert self.signal_vector is not None, \
 			'Must set stimulus vector before setting stimulus function'
+		assert self.Tt is not None, \
+			'Must first set the time vector with set_Tt()'
 
 		return interp1d(self.Tt, self.signal_vector, 
 						fill_value='extrapolate')(t)
+
+	def set_true_params(self, params_dict=params_Tar_1):
+		self.true_params = []
+		for iP, val in enumerate(params_dict().values()):
+			exec('self.true_params.append(%s)' % val)
 
 	def set_param_bounds(self, bounds_dict=bounds_Tar_1):
 		param_bounds_dict = bounds_dict()['params']

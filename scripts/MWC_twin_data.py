@@ -29,18 +29,12 @@ def generate_MWC_twin_data(data_flags, x0 = sp.array([1.27, 7.0])):
 	print ('Setting dt=%s and noise=%s' % (a.dt, FRET_noise))
 	a.x_integrate_init = x0
 
+	a.set_Tt() 
 	a.set_step_signal()
 	a.model = MWC_Tar
-
-	# Load parameters
-	params_dict = params_Tar_1()
-	a.true_params = []
-	for iP, val in enumerate(params_dict.values()):
-		exec('a.true_params.append(%s)' % val)
-
-	# Carry out integration
+	a.set_true_params()
 	a.df_integrate()
-
+	
 	save_twin_data(a.Tt, a.true_states, a.signal_vector, 
 					measured_vars_and_noise=[[1, FRET_noise]], 
 					data_flags=data_flags)
