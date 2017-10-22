@@ -49,12 +49,19 @@ def save_twin_data(time, states, stimuli, data_flags,
 	sp.save('%s/stimulus_dt=%s_sigma=%s.npy' 
 			% (out_dir, data_dt, data_sigma), stimuli)
 
-def save_estimates(annealer, data_set='1.0'):
+def save_estimates(annealer, data_flags):
 	
-	out_dir = '%s/estimates' % DATA_DIR
+	data_ID = data_flags[0]
+	data_dt = data_flags[1]
+	data_sigma = data_flags[2]
+
+	out_dir = '%s/assimilation/%s' %(DATA_DIR, data_ID)
 	if not os.path.exists(out_dir):
 		os.makedirs(out_dir)
 
-	annealer.save_params('%s/params_%s.npy' % (out_dir, data_set))
-	annealer.save_paths('%s/paths_%s.npy' % (out_dir, data_set))
-	annealer.save_action_errors('%s/action_errors_%s.npy' % (out_dir, data_set))
+	annealer.save_params('%s/params_dt=%s_sigma=%s.npy' 
+							% (out_dir, data_dt, data_sigma))
+	annealer.save_paths('%s/paths_dt=%s_sigma=%s.npy'
+							% (out_dir, data_dt, data_sigma))
+	annealer.save_action_errors('%s/action_errors_dt=%s_sigma=%s.npy' 
+							% (out_dir, data_dt, data_sigma))

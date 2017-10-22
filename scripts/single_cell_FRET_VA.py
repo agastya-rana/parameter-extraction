@@ -13,35 +13,39 @@ import sys, time
 sys.path.append('../src')
 sys.path.append('../../../../varanneal_NK/varanneal/varanneal')
 sys.path.append('/home/fas/emonet/nk479/varanneal_NK/varanneal/varanneal')
+import va_ode
 import scipy as sp
 #from varanneal import va_ode
-import va_ode
 from utils import get_flags
 from single_cell_FRET import single_cell_FRET
 from params_bounds import bounds_Tar_1, bounds_Tar_2
-from load_data import load_twin_data
+from load_data import load_VA_data
 from save_data import save_estimates
 
+data_flags = get_flags()
+
+n_ID = data_flags[0]
+data_dt = float(data_flags[1])
+data_sigma = float(data_flags[2])
 
 nD = 2
 Lidx = [1]
 Pidx = 'All'
-data_set = 0.1
 param_bounds_dict = bounds_Tar_1()
-state_bounds = [[1.0, 2.0], [2.0, 9.0]]
+state_bounds = [[0.0, 10.0], [3.0, 12.0]]
 
+# Annealing parameters
 alpha = 2.0
 beta_array = sp.linspace(0, 50, 51)
-RF0 = 1e-6
-RM = 1.0 / data_set**2.0
-
+RF0 = 1e-7
+RM = 1.0 / data_sigma**2.0
 cutoff = 1 #if nT is even-D
 
 # Load twin data from file
-twin_data_dict = load_twin_data(data_flag='%s' % data_set)
-measurements = twin_data_dict['measurements'][:-cutoff, 1:]
-stimuli = twin_data_dict['stimuli'][:-cutoff]
-Tt = twin_data_dict['measurements'][:-cutoff, 0]
+data_dict = load_VA_data(data_flags=data_flags) 
+measurements = data_dict['measurements'][:-cutoff, 1:]
+stimuli = data_dict['stimuli'][:-cutoff]
+Tt = data_dict['measurements'][:-cutoff, 0]
 nT = len(Tt)
 dt = Tt[1] - Tt[0]
 
@@ -80,5 +84,4 @@ annealer.anneal(x_init, p_init, alpha, beta_array, RM, RF0, Lidx, Pidx, dt_model
                method='L-BFGS-B', opt_args=BFGS_options, adolcID=0)
 print("\nADOL-C annealing completed in %f s."%(time.time() - tstart))
 
-save_estimates(annealer, data_set=data_set)
-
+save_estimates(annealer, data_flags)

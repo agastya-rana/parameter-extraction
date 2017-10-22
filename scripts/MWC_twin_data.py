@@ -12,7 +12,6 @@ http://creativecommons.org/licenses/by-nc-sa/4.0/.
 import sys, time
 sys.path.append('../src')
 import scipy as sp
-from scipy.integrate import odeint
 import matplotlib.pyplot as plt
 from utils import get_flags
 from single_cell_FRET import single_cell_FRET
@@ -26,23 +25,23 @@ def generate_MWC_twin_data(data_flags):
 	x0 = sp.array([1.27, 7.0])
 
 	a = single_cell_FRET()
-	a.import_signal_data()
-	a.model = MWC_Tar
 	
-	a.data_dt = data_flags[1]	
-	FRET_noise = data_flags[2]
-	print ('Setting dt=%s and noise=%s' % (a.data_dt, FRET_noise))
+	a.dt = float(data_flags[1])
+	FRET_noise = float(data_flags[2])
+	print ('Setting dt=%s and noise=%s' % (a.dt, FRET_noise))
+	a.set_step_signal(density=30, seed=20)
+	a.model = MWC_Tar
+	a.x_integrate_init = x0
 
+	# Set true parameters
 	params_dict = params_Tar_1()
-	params = []
+	a.true_params = []
 	for iP, val in enumerate(params_dict.values()):
-		exec('params.append(%s)' % val)
+		exec('a.true_params.append(%s)' % val)
 
-	Tt = a.Tt[a.signal_bounds_lo: a.signal_bounds_hi]
-	states = odeint(a.df_data_generation, x0, Tt, args=(params, ))
-	stimuli = a.signal_vector[a.signal_bounds_lo: a.signal_bounds_hi]
+	a.df_integrate()
 
-	save_twin_data(Tt, states, stimuli, 
+	save_twin_data(a.Tt, a.true_states, a.signal_vector, 
 					measured_vars_and_noise=[[1, FRET_noise]], 
 					data_flags=data_flags)
 	
