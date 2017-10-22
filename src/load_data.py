@@ -34,7 +34,7 @@ def load_preliminary_FRET(data_set=1, cell=1):
 def load_protocol(type='lorenz', params=[1.0]):
 	return None
 
-def load_VA_data(data_flags):
+def load_VA_twin_data(data_flags):
 
 	data_dict = dict()
 	data_ID  = data_flags[0]

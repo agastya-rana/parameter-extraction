@@ -12,10 +12,8 @@ http://creativecommons.org/licenses/by-nc-sa/4.0/.
 import sys, time
 sys.path.append('../src')
 import scipy as sp
-import matplotlib.pyplot as plt
 from utils import get_flags
 from single_cell_FRET import single_cell_FRET
-from params_bounds import params_Tar_1
 from models import MWC_Tar
 from save_data import save_twin_data
 

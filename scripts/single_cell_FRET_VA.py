@@ -15,7 +15,7 @@ import scipy as sp
 from varanneal import va_ode
 from utils import get_flags
 from single_cell_FRET import single_cell_FRET
-from load_data import load_VA_data
+from load_data import load_VA_twin_data
 from save_data import save_estimates
 
 
@@ -42,7 +42,7 @@ def single_cell_FRET_VA(data_flags):
 	scF.Rm = 1.0/data_sigma**2.0
 
 	# Load twin data from file / match scF params
-	data_dict = load_VA_data(data_flags=data_flags)
+	data_dict = load_VA_twin_data(data_flags=data_flags)
 	measurements = data_dict['measurements'][:, 1:]
 	stimuli = data_dict['stimuli'][:]
 	scF.Tt = data_dict['measurements'][:, 0]
