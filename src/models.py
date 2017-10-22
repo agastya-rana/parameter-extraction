@@ -17,14 +17,11 @@ def MWC_Tar(t, x, (p, stim)):
 	Only Tar receptor, Tsr not included.  
 	"""
 
-	if len(sp.shape(x)) == 2:
-		Mm = x.T[0].T
-		FR = x.T[1].T
-		df = sp.zeros(x.shape, dtype='object')
-	elif len(sp.shape(x)) == 1:
-		Mm, FR = x
-		df = sp.zeros(x.shape)
+	Mm = x[...,0]
+	FR = x[...,1]
 	
+	df = sp.empty_like(x)	
+
 	K_off_a, K_on_a, Nn, \
 		alpha_m, m_0,  \
 		a_0, tau_m,  \
@@ -35,12 +32,8 @@ def MWC_Tar(t, x, (p, stim)):
 	Ee = Nn*(f_m + f_c)
 	Aa = (1. + sp.exp(Ee))**-1.0
 	
-	if len(sp.shape(x)) == 2:
-		df[:, 0]  = (a_0 - Aa)/tau_m
-		df[:, 1]  = k_FR*Aa - FR/tau_FR
-	elif len(sp.shape(x)) == 1:
-		df[0] = (a_0 - Aa)/tau_m
-		df[1] = k_FR*Aa - FR/tau_FR
+	df[..., 0]  = (a_0 - Aa)/tau_m
+	df[..., 1]  = k_FR*Aa - FR/tau_FR
 
 	return df
 
