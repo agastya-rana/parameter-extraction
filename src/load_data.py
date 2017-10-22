@@ -25,11 +25,11 @@ def load_preliminary_FRET(data_set=1, cell=1):
 	signal = f['FRET_data']['input_ts'][0,0][0]
 	FRET_idx = f['FRET_data']['cell_%s' % cell][0,0]['FRET_index'][0, 0][0]
 	
-	data = dict()
-	data['signal']=signal
-	data['FRET_idx'] = FRET_idx
+	data_dict = dict()
+	data_dict['signal']=signal
+	data_dict['FRET_idx'] = FRET_idx
 	
-	return data
+	return data_dict
 
 def load_protocol(type='lorenz', params=[1.0]):
 	return None
@@ -37,7 +37,6 @@ def load_protocol(type='lorenz', params=[1.0]):
 def load_VA_data(data_flags):
 
 	data_dict = dict()
-
 	data_ID  = data_flags[0]
 	data_dt = data_flags[1]
 	data_sigma = data_flags[2]
