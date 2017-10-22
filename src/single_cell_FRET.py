@@ -39,7 +39,7 @@ class single_cell_FRET():
 		self.signal_vector = self.signal_vector*yscale
 		self.signal_vector = self.signal_vector[nSkip:] 
 
-	def set_step_signal(self, density=20, seed=2, yvals=[.085, 0.1, 0.115]):
+	def set_step_signal(self, density=30, seed=20, yvals=[.085, 0.1, 0.115]):
 		switch_points = range(self.nT)
 		sp.random.seed(seed)
 		sp.random.shuffle(switch_points)

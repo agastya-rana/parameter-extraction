@@ -20,25 +20,25 @@ from models import MWC_Tar
 from save_data import save_twin_data
 
 
-def generate_MWC_twin_data(data_flags):
+def generate_MWC_twin_data(data_flags, x0 = sp.array([1.27, 7.0])):
 
-	x0 = sp.array([1.27, 7.0])
+	a = single_cell_FRET()	
 
-	a = single_cell_FRET()
-	
 	a.dt = float(data_flags[1])
 	FRET_noise = float(data_flags[2])
 	print ('Setting dt=%s and noise=%s' % (a.dt, FRET_noise))
-	a.set_step_signal(density=30, seed=20)
-	a.model = MWC_Tar
 	a.x_integrate_init = x0
 
-	# Set true parameters
+	a.set_step_signal()
+	a.model = MWC_Tar
+
+	# Load parameters
 	params_dict = params_Tar_1()
 	a.true_params = []
 	for iP, val in enumerate(params_dict.values()):
 		exec('a.true_params.append(%s)' % val)
 
+	# Carry out integration
 	a.df_integrate()
 
 	save_twin_data(a.Tt, a.true_states, a.signal_vector, 
