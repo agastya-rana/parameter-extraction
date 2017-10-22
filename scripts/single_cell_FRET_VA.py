@@ -61,7 +61,8 @@ def single_cell_FRET_VA(data_flags):
 	annealer.anneal(scF.x_init, scF.p_init, scF.alpha, scF.beta_array, 
 					scF.Rm, scF.Rf0, scF.Lidx, scF.Pidx, dt_model=None, 
 					init_to_data=True, bounds=scF.bounds, disc='trapezoid', 
-					method='L-BFGS-B', opt_args=BFGS_options, adolcID=0)
+					method='L-BFGS-B', opt_args=BFGS_options, 
+					adolcID=init_seed)
 	print("\nADOL-C annealing completed in %f s."%(time.time() - tstart))
 
 	save_estimates(annealer, data_flags)

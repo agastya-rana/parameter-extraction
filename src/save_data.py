@@ -54,14 +54,15 @@ def save_estimates(annealer, data_flags):
 	data_ID = data_flags[0]
 	data_dt = data_flags[1]
 	data_sigma = data_flags[2]
+	init_seed = data_flags[3]
 
 	out_dir = '%s/assimilation/%s' %(DATA_DIR, data_ID)
 	if not os.path.exists(out_dir):
 		os.makedirs(out_dir)
 
-	annealer.save_params('%s/params_dt=%s_sigma=%s.npy' 
-							% (out_dir, data_dt, data_sigma))
-	annealer.save_paths('%s/paths_dt=%s_sigma=%s.npy'
-							% (out_dir, data_dt, data_sigma))
-	annealer.save_action_errors('%s/action_errors_dt=%s_sigma=%s.npy' 
-							% (out_dir, data_dt, data_sigma))
+	annealer.save_params('%s/params_dt=%s_sigma=%s_IC=%s.npy' 
+							% (out_dir, data_dt, data_sigma, init_seed))
+	annealer.save_paths('%s/paths_dt=%s_sigma=%s_IC=%s.npy'
+							% (out_dir, data_dt, data_sigma, init_seed))
+	annealer.save_action_errors('%s/action_errors_dt=%s_sigma=%s_IC=%s.npy' 
+							% (out_dir, data_dt, data_sigma, init_seed))
