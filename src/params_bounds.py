@@ -65,7 +65,7 @@ def bounds_Tar_2():
 	bounds['tau_FR'] = [0.45, 0.55]
 
 	bounds = dict()
-    bounds['states'] = state_bounds
-    bounds['params'] = param_bounds
+	bounds['states'] = state_bounds
+	bounds['params'] = param_bounds
 
-    return bounds
+	return bounds
