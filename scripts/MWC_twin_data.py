@@ -21,6 +21,10 @@ from save_data import save_twin_data
 
 
 def generate_MWC_twin_data(data_flags, x0 = sp.array([1.27, 7.0])):
+	"""
+	Function to generate twin data for the MWC model. Command line
+	arguments: data_flag, dt, data noise.
+	"""
 
 	a = single_cell_FRET()	
 

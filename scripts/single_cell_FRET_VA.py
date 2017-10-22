@@ -20,6 +20,12 @@ from save_data import save_estimates
 
 
 def single_cell_FRET_VA(data_flags):
+	"""
+	Function to run a full annealing cycle on FRET data. 
+	Uses data saved from MWC_twin_data.py; run this first.
+	command line arguments: data_flag, dt, data noise, and 
+	initial condition seed.
+	"""	
 
 	data_ID = data_flags[0]
 	data_dt = float(data_flags[1])
