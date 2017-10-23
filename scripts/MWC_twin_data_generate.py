@@ -29,11 +29,14 @@ def generate_MWC_twin_data(data_flags, x0 = sp.array([1.27, 7.0])):
 
 	a.dt = float(data_flags[1])
 	FRET_noise = float(data_flags[2])
+	a.nT = int(data_flags[3])
+	density = int(data_flags[4])
 	print ('Setting dt=%s and noise=%s' % (a.dt, FRET_noise))
+	print ('Signal nT=%s and density=%s' % (a.nT, density))
 	a.x_integrate_init = x0
 
 	a.set_Tt() 
-	a.set_step_signal()
+	a.set_step_signal(density=density)#,yvals=[0.1, .16, 0.02])
 	a.model = MWC_Tar
 	a.set_true_params(params_dict=params_Tar_1)
 	a.df_integrate()

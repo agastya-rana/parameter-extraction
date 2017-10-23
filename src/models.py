@@ -31,7 +31,7 @@ def MWC_Tar(t, x, (p, stim)):
 	f_m = alpha_m*(m_0 - Mm)
 	Ee = Nn*(f_m + f_c)
 	Aa = (1. + sp.exp(Ee))**-1.0
-	
+
 	df[..., 0]  = (a_0 - Aa)/tau_m
 	df[..., 1]  = k_FR*Aa - FR/tau_FR
 
