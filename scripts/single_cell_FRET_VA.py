@@ -38,8 +38,6 @@ def single_cell_FRET_VA(data_flags):
 	scF.set_param_bounds(bounds_dict=bounds_Tar_3)
 	scF.set_state_bounds(bounds_dict=bounds_Tar_3)
 	scF.set_bounds()
-	scF.init_seed = init_seed
-	scF.initial_estimate()
 	scF.Rm = 1.0/data_sigma**2.0
 
 	# Load twin data from file / match scF params
@@ -49,6 +47,8 @@ def single_cell_FRET_VA(data_flags):
 	scF.Tt = data_dict['measurements'][:, 0]
 	scF.nT = len(scF.Tt)
 	scF.dt = scF.Tt[1]-scF.Tt[0]
+	scF.init_seed = init_seed
+	scF.initial_estimate()
 
 	# Initalize annealer class
 	annealer = va_ode.Annealer()

@@ -32,7 +32,7 @@ def plot_MWC_prediction_twin_data(data_flags):
 	pred_nT = 200
 	pred_seed = 10**8
 	pred_density = 50
-	IC_range = range(100)
+	IC_range = range(1)
 
 	a = single_cell_FRET()
 
@@ -89,6 +89,7 @@ def plot_MWC_prediction_twin_data(data_flags):
 		for iP, Pval in enumerate(est_params[:, init_seed]):
 			a.true_params[iP] = Pval
 
+		print a.true_params
 		a.df_integrate()
 		est_PW[:, :, init_seed] = a.true_states[:, :]
 
