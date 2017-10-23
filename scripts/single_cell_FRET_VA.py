@@ -17,6 +17,7 @@ from utils import get_flags
 from single_cell_FRET import single_cell_FRET
 from load_data import load_VA_twin_data
 from save_data import save_estimates
+from params_bounds import *
 
 
 def single_cell_FRET_VA(data_flags):
@@ -34,8 +35,8 @@ def single_cell_FRET_VA(data_flags):
 
 	# Initialize FRET class 
 	scF = single_cell_FRET()
-	scF.set_param_bounds()
-	scF.set_state_bounds()
+	scF.set_param_bounds(bounds_dict=bounds_Tar_2)
+	scF.set_state_bounds(bounds_dict=bounds_Tar_2)
 	scF.set_bounds()
 	scF.init_seed = init_seed
 	scF.initial_estimate()
