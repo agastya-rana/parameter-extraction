@@ -62,5 +62,7 @@ def load_VA_twin_estimates(data_flags, init_seed):
 							% (in_dir, data_dt, data_sigma, init_seed))
 	data_dict['est_params'] = sp.load('%s/params_dt=%s_sigma=%s_IC=%s.npy' \
 							% (in_dir, data_dt, data_sigma, init_seed))
+	data_dict['errors'] = sp.load('%s/action_errors_dt=%s_sigma=%s_IC=%s.npy' \
+							% (in_dir, data_dt, data_sigma, init_seed))
 
 	return data_dict
