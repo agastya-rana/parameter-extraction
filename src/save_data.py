@@ -13,7 +13,9 @@ import scipy as sp
 import scipy.io as sio
 import os
 from local_methods import def_data_dir
-
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 
 DATA_DIR = def_data_dir()
 
@@ -56,7 +58,7 @@ def save_estimates(annealer, data_flags):
 	data_sigma = data_flags[2]
 	init_seed = data_flags[3]
 
-	out_dir = '%s/assimilation/%s' %(DATA_DIR, data_ID)
+	out_dir = '%s/assimilation/%s' % (DATA_DIR, data_ID)
 	if not os.path.exists(out_dir):
 		os.makedirs(out_dir)
 
@@ -66,3 +68,14 @@ def save_estimates(annealer, data_flags):
 							% (out_dir, data_dt, data_sigma, init_seed))
 	annealer.save_action_errors('%s/action_errors_dt=%s_sigma=%s_IC=%s.npy' 
 							% (out_dir, data_dt, data_sigma, init_seed))
+
+def save_est_pred_plot(fig, data_flags):
+
+	data_ID = data_flags[0]
+	data_dt = data_flags[1]
+	data_sigma = data_flags[2]
+
+	out_dir = '%s/assimilation/%s' % (DATA_DIR, data_ID)
+	plt.savefig('%s/est_pred_plot_dt=%s_sigma=%s.png' % (out_dir, data_dt, data_sigma))
+	plt.savefig('%s/est_pred_plot_dt=%s_sigma=%s.svg' % (out_dir, data_dt, data_sigma))
+	

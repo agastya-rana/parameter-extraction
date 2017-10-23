@@ -12,10 +12,13 @@ http://creativecommons.org/licenses/by-nc-sa/4.0/.
 import sys, time
 sys.path.append('../src')
 import scipy as sp
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from utils import get_flags
 from single_cell_FRET import single_cell_FRET
 from load_data import load_VA_twin_estimates, load_VA_twin_data
+from save_data import save_est_pred_plot
 from params_bounds import *
 from models import MWC_Tar
 
@@ -68,6 +71,7 @@ def plot_MWC_prediction_twin_data(data_flags):
 	est_states = sp.zeros((est_nT, a.nD, len(IC_range)))
 	est_params = sp.zeros((len(a.true_params), len(IC_range)))
 	pred_states = sp.zeros((pred_nT, a.nD, len(IC_range)))
+
 	for init_seed in IC_range:
 		data_dict = load_VA_twin_estimates(data_flags, init_seed)
 		est_states[:, :, init_seed] = data_dict['est_states'][beta, :, 1:]
@@ -82,7 +86,15 @@ def plot_MWC_prediction_twin_data(data_flags):
 		a.df_integrate()
 		pred_states[:, :, init_seed] = a.true_states
 
-	
+	# Generate figure
+	fig = plt.figure()
+	plt.plot(a.Tt, true_pred[:, 1])
+
+	for init_seed in IC_range:
+		plt.plot(a.Tt, pred_states[:, 1, init_seed])
+
+	save_est_pred_plot(fig, data_flags)
+
 
 if __name__ == '__main__':
 	data_flags = get_flags()
