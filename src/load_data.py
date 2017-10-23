@@ -46,4 +46,21 @@ def load_VA_twin_data(data_flags):
 										% (in_dir, data_dt, data_sigma))
 	data_dict['stimuli'] = sp.load('%s/stimulus_dt=%s_sigma=%s.npy' 
 										% (in_dir, data_dt, data_sigma))
+	data_dict['true_states'] = sp.load('%s/true_states_dt=%s_sigma=%s.npy'
+										% (in_dir, data_dt, data_sigma))
 	return data_dict 
+
+def load_VA_twin_estimates(data_flags, init_seed):
+	
+	data_dict = dict()
+	data_ID  = data_flags[0]
+	data_dt = data_flags[1]
+	data_sigma = data_flags[2]
+
+	in_dir = '%s/assimilation/%s' % (DATA_DIR, data_ID)
+	data_dict['est_states'] = sp.load('%s/paths_dt=%s_sigma=%s_IC=%s.npy' \
+							% (in_dir, data_dt, data_sigma, init_seed))
+	data_dict['est_params'] = sp.load('%s/params_dt=%s_sigma=%s_IC=%s.npy' \
+							% (in_dir, data_dt, data_sigma, init_seed))
+
+	return data_dict

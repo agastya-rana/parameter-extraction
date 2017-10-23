@@ -15,7 +15,8 @@ import scipy as sp
 from utils import get_flags
 from single_cell_FRET import single_cell_FRET
 from models import MWC_Tar
-from save_data import save_twin_data
+from save_data import save_VA_twin_data
+from params_bounds import *
 
 
 def generate_MWC_twin_data(data_flags, x0 = sp.array([1.27, 7.0])):
@@ -34,10 +35,10 @@ def generate_MWC_twin_data(data_flags, x0 = sp.array([1.27, 7.0])):
 	a.set_Tt() 
 	a.set_step_signal()
 	a.model = MWC_Tar
-	a.set_true_params()
+	a.set_true_params(params_dict=params_Tar_1)
 	a.df_integrate()
 	
-	save_twin_data(a.Tt, a.true_states, a.signal_vector, 
+	save_VA_twin_data(a.Tt, a.true_states, a.signal_vector, 
 					measured_vars_and_noise=[[1, FRET_noise]], 
 					data_flags=data_flags)
 	

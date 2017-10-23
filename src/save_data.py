@@ -17,7 +17,7 @@ from local_methods import def_data_dir
 
 DATA_DIR = def_data_dir()
 
-def save_twin_data(time, states, stimuli, data_flags,
+def save_VA_twin_data(time, states, stimuli, data_flags,
 					measured_vars_and_noise=[[0, 1]]):
 	
 	data_ID = data_flags[0]
