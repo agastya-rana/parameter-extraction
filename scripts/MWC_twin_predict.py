@@ -28,9 +28,9 @@ def plot_MWC_prediction_twin_data(data_flags):
 	TODO
 	"""	
 	
-	beta = -1
-	pred_nT = 100
-	IC_range = range(10)
+	beta = 35
+	pred_nT = 200
+	IC_range = range(100)
 	pred_seed = 10**8
 	import_pred_data = False
 
@@ -88,10 +88,11 @@ def plot_MWC_prediction_twin_data(data_flags):
 
 	# Generate figure
 	fig = plt.figure()
-	plt.plot(a.Tt, true_pred[:, 1])
+	plt.scatter(a.Tt, true_pred[:, 1], color='black')
 
 	for init_seed in IC_range:
-		plt.plot(a.Tt, pred_states[:, 1, init_seed])
+		plt.plot(a.Tt, pred_states[:, 1, init_seed], 
+					color='dodgerblue', linewidth=0.5)
 
 	save_est_pred_plot(fig, data_flags)
 
