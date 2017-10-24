@@ -51,7 +51,7 @@ class single_cell_FRET():
 
 		# Variables for annealing
 		self.alpha = 2.0
-		self.beta_array = sp.linspace(0, 50, 51)
+		self.beta_array = sp.linspace(0, 60, 61)
 		self.Rf0 = 1e-6
 		self.Rm = 1.0
 

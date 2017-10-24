@@ -19,7 +19,7 @@ from save_data import save_VA_twin_data
 from params_bounds import *
 
 
-def generate_MWC_twin_data(data_flags, x0 = sp.array([1.27, 7.0])):
+def generate_MWC_twin_data(data_flags, x0 = sp.array([2.3, 7.0])):
 	"""
 	Function to generate twin data for the MWC model. Command line
 	arguments: data_flag, dt, data noise.

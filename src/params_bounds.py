@@ -58,7 +58,7 @@ def bounds_Tar_2():
 	param_bounds['K_on_a'] = [0.45, 0.55]
 	param_bounds['Nn'] = [4.5, 5.5]
 	param_bounds['alpha_m'] = [1.8, 2.1]
-	param_bounds['m_0'] = [0.45, 0.55]
+	param_bounds['m_0'] = [1.4, 1.6]
 	param_bounds['a_0'] = [0.31, 0.35]
 	param_bounds['tau_m'] = [30., 40.]
 	param_bounds['k_FR'] = [35., 45.]
@@ -75,15 +75,15 @@ def bounds_Tar_3():
     state_bounds = [[0.0, 5.0], [-20, 20]]
 
     param_bounds = OrderedDict()
-    param_bounds['K_off_a'] = [0.018, 0.022]
-    param_bounds['K_on_a'] = [0.45, 0.55]
+    param_bounds['K_off_a'] = [0.01, 0.02]
+    param_bounds['K_on_a'] = [0.4, 0.6]
     param_bounds['Nn'] = [5., 5.]
     param_bounds['alpha_m'] = [0.1, 10.0]
-    param_bounds['m_0'] = [0.5, 0.5]
-    param_bounds['a_0'] = [0., 1.0]
+    param_bounds['m_0'] = [0.5, 5.0]
+    param_bounds['a_0'] = [0.1, 1.0]
     param_bounds['tau_m'] = [1., 100.]
-    param_bounds['k_FR'] = [10., 100.]
-    param_bounds['tau_FR'] = [0.1, 1.0]
+    param_bounds['k_FR'] = [0., 100.]
+    param_bounds['tau_FR'] = [0, 100.]
 
     bounds = dict()
     bounds['states'] = state_bounds
