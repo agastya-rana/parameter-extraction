@@ -15,6 +15,7 @@ import sys
 import random
 from scipy.interpolate import interp1d
 from scipy.integrate import odeint
+import scipy.linalg as LA
 from load_data import load_preliminary_FRET, load_protocol
 from models import MWC_Tar
 from utils import smooth
@@ -40,7 +41,7 @@ class single_cell_FRET():
 		self.signal_vector = None
 		self.x_integrate_init = None
 
-		# Variables for state and parameter estimation
+		# Variables for optimization of single annealing step
 		self.Lidx = [1]
 		self.param_bounds = None	
 		self.state_bounds = None
@@ -51,11 +52,24 @@ class single_cell_FRET():
 		self.x_init = None
 		self.p_init = None
 
-		# Variables for annealing
+		# Variables for annealing run
 		self.alpha = 2.0
 		self.beta_array = sp.linspace(0, 60, 61)
 		self.Rf0 = 1e-6
 		self.Rm = 1.0
+
+		# Variables for linear kernel estimation
+		self.kernel_length = 50
+		self.regularization = 1.0
+		self.kernel_tikhonov_matrix = None
+		self.kernel_inverse_hessian = None
+		self.kernel_Aa = None
+
+
+	#############################################
+	##### 		Stimulus functions			#####
+	#############################################
+
 
 	def set_Tt(self):	
 		self.Tt = sp.arange(0, self.dt*self.nT, self.dt)
@@ -96,6 +110,12 @@ class single_cell_FRET():
 
 		return interp1d(self.Tt, self.signal_vector, 
 						fill_value='extrapolate')(t)
+
+
+	#############################################
+	#####			VA parameters			#####
+	#############################################
+
 
 	def set_true_params(self, params_dict=params_Tar_1):
 		self.true_params = []
@@ -150,6 +170,12 @@ class single_cell_FRET():
 	                                self.param_bounds[iD][0],
     	                            self.param_bounds[iD][1])
 
+
+	#############################################
+	#####	Data generation and models		#####
+	#############################################
+
+
 	def df_data_generation(self, x, t, p):
 		self.stim = self.signal(t)
 		return self.model(t, x, (p, self.stim))
@@ -164,3 +190,71 @@ class single_cell_FRET():
 		self.true_states = odeint(self.df_data_generation, 
 								self.x_integrate_init, 
 								self.Tt, args=(self.true_params, ))
+
+
+	#############################################
+	#####		Kernel estimation			#####
+	#############################################
+
+
+	def set_kernel_estimation_Aa(self, stimulus=None):
+		assert 0 <  self.kernel_length < self.nT, \
+			'Kernel length must be nonzero and shorter than recorded time length'
+
+		if stimulus is None:
+			assert self.signal_vector is not None, \
+				'Signal vector must first be imported or set by' \
+					' set_step_signal() or import_signal_data().' \
+					' Or pass directly to set_kernel_estimation_Aa(stimulus=)'
+		else:
+			assert len(stimulus) == self.nT, \
+				'User-defined stimulus in set_kernel_estimation_Aa(stimulus)' \
+					' must be length %s' % self.nT
+			self.signal_vector = stimulus
+
+		self.kernel_estimator_nT = self.nT - self.kernel_length
+		self.kernel_Aa = sp.zeros((self.kernel_estimator_nT, self.kernel_length))
+		for row in range(self.kernel_estimator_nT):
+			self.kernel_Aa[row, :] = \
+				self.signal_vector[row: row + self.kernel_length][::-1]
+
+	def set_kernel_estimation_regularization(self):
+		self.kernel_tikhonov_matrix = sp.eye(self.kernel_length)*self.regularization
+
+	def set_kernel_estimation_inverse_hessian(self):
+		assert self.kernel_Aa is not None, \
+			'First set kernel_Aa with set_kernel_estimation_Aa'
+
+		self.kernel_inverse_hessian = \
+			LA.inv(sp.dot(self.kernel_Aa.T, self.kernel_Aa) \
+							+ self.kernel_tikhonov_matrix)
+	
+	def kernel_calculation(self, response_vector):
+		assert self.kernel_inverse_hessian is not None, \
+			'First set inverse hessian for the estimation with' \
+				' set_inverse_hessian()'
+		assert len(sp.shape(response_vector)) == 1 and \
+				len(response_vector) == self.kernel_estimator_nT, \
+			'response_vector should be numpy array with length equal to' \
+				' stimulus data minus kernel length'
+
+		estimated_kernel = sp.dot(sp.dot(self.kernel_inverse_hessian, 
+								self.kernel_Aa.T), response_vector)
+	
+		return estimated_kernel
+
+	def convolve_stimulus_kernel(self, kernel, stimulus=None):		
+		if stimulus is None:
+			assert self.signal_vector is not None, \
+				'Signal vector must first be imported or set by' \
+					' set_step_signal() or import_signal_data().' \
+					' Or pass directly to set_kernel_estimation_Aa(stimulus=)'
+		else:
+			assert len(stimulus) == self.nT, \
+				'User-defined stimulus in set_kernel_estimation_Aa(stimulus)' \
+				' must be length %s' % self.nT
+			self.signal_vector = stimulus
+
+		response_vector = sp.convolve(kernel, self.signal_vector, mode='same')
+
+		return response_vector

@@ -66,3 +66,18 @@ def load_VA_twin_estimates(data_flags, init_seed):
 							% (in_dir, data_dt, data_sigma, init_seed))
 
 	return data_dict
+
+def load_estimated_kernels(data_flags):
+
+	data_ID = data_flags[0]
+	data_dt = data_flags[1]
+	data_sigma = data_flags[2]
+	kernel_length = data_flags[3]
+
+	in_dir = '%s/assimilation/%s' % (DATA_DIR, data_ID)
+	estimated_kernels = \
+		sp.load('%s/est_linear_kernel_dt=%s_sigma=%s_kernel-length=%s.npy'
+			 % (in_dir, data_dt, data_sigma, kernel_length))	
+
+	return estimated_kernels
+

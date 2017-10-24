@@ -69,16 +69,16 @@ def save_estimates(annealer, data_flags):
 	annealer.save_action_errors('%s/action_errors_dt=%s_sigma=%s_IC=%s.npy' 
 							% (out_dir, data_dt, data_sigma, init_seed))
 
-def save_est_pred_plot(fig, data_flags):
+def save_est_VA_pred_plot(fig, data_flags):
 
 	data_ID = data_flags[0]
 	data_dt = data_flags[1]
 	data_sigma = data_flags[2]
 
 	out_dir = '%s/assimilation/%s' % (DATA_DIR, data_ID)
-	plt.savefig('%s/est_pred_plot_dt=%s_sigma=%s.png' 
+	plt.savefig('%s/est_VA_pred_plot_dt=%s_sigma=%s.png' 
 					% (out_dir, data_dt, data_sigma))
-	plt.savefig('%s/est_pred_plot_dt=%s_sigma=%s.svg' 
+	plt.savefig('%s/est_VA_pred_plot_dt=%s_sigma=%s.svg' 
 					% (out_dir, data_dt, data_sigma))
 
 def save_est_params_plot(fig, data_flags):
@@ -93,3 +93,26 @@ def save_est_params_plot(fig, data_flags):
     plt.savefig('%s/est_params_plot_dt=%s_sigma=%s.svg' 
 					% (out_dir, data_dt, data_sigma))
 	
+def save_estimated_kernels(estimated_kernels, data_flags):
+
+	data_ID = data_flags[0]
+	data_dt = data_flags[1]
+	data_sigma = data_flags[2]
+	kernel_length = data_flags[3]
+
+	out_dir = '%s/assimilation/%s' % (DATA_DIR, data_ID)
+	sp.save('%s/est_linear_kernel_dt=%s_sigma=%s_kernel-length=%s.npy'
+			% (out_dir, data_dt, data_sigma, kernel_length), estimated_kernels)
+
+def save_est_kernel_pred_plot(fig, data_flags):
+
+	data_ID = data_flags[0]
+	data_dt = data_flags[1]
+	data_sigma = data_flags[2]
+	kernel_length = data_flags[3]
+
+	out_dir = '%s/assimilation/%s' % (DATA_DIR, data_ID)
+	plt.savefig('%s/est_kernel_pred_plot_dt=%s_sigma=%s_kernel-length=%s.png'
+				% (out_dir, data_dt, data_sigma, kernel_length))	
+	plt.savefig('%s/est_kernel_plot_dt=%s_sigma=%s_kernel-length=%s.svg'
+                    % (out_dir, data_dt, data_sigma, kernel_length))
