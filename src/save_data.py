@@ -76,6 +76,20 @@ def save_est_pred_plot(fig, data_flags):
 	data_sigma = data_flags[2]
 
 	out_dir = '%s/assimilation/%s' % (DATA_DIR, data_ID)
-	plt.savefig('%s/est_pred_plot_dt=%s_sigma=%s.png' % (out_dir, data_dt, data_sigma))
-	plt.savefig('%s/est_pred_plot_dt=%s_sigma=%s.svg' % (out_dir, data_dt, data_sigma))
+	plt.savefig('%s/est_pred_plot_dt=%s_sigma=%s.png' 
+					% (out_dir, data_dt, data_sigma))
+	plt.savefig('%s/est_pred_plot_dt=%s_sigma=%s.svg' 
+					% (out_dir, data_dt, data_sigma))
+
+def save_est_params_plot(fig, data_flags):
+
+    data_ID = data_flags[0]
+    data_dt = data_flags[1]
+    data_sigma = data_flags[2]
+
+    out_dir = '%s/assimilation/%s' % (DATA_DIR, data_ID)
+    plt.savefig('%s/est_params_plot_dt=%s_sigma=%s.png' 
+					% (out_dir, data_dt, data_sigma))
+    plt.savefig('%s/est_params_plot_dt=%s_sigma=%s.svg' 
+					% (out_dir, data_dt, data_sigma))
 	

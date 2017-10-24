@@ -93,22 +93,21 @@ def bounds_Tar_3():
 
 def bounds_Tar_4():
 
-    state_bounds = [[2.1, 2.4], [0, 15]]
+    state_bounds = [[0.0, 5.0], [-20, 20]]
 
     param_bounds = OrderedDict()
-    param_bounds['K_off_a'] = [0.02, 0.02]
-    param_bounds['K_on_a'] = [0.5, 0.5]
+    param_bounds['K_off_a'] = [0.01, 0.02]
+    param_bounds['K_on_a'] = [0.4, 0.6]
     param_bounds['Nn'] = [5., 5.]
-    param_bounds['alpha_m'] = [2.0, 2.0]
-    param_bounds['m_0'] = [1.5, 1.5]
-    param_bounds['a_0'] = [0.33, 0.33]
-    param_bounds['tau_m'] = [35.0, 35.0]
+    param_bounds['alpha_m'] = [0.1, 10.0]
+    param_bounds['m_0'] = [0.5, 5.0]
+    param_bounds['a_0'] = [0.4, 0.3]
+    param_bounds['tau_m'] = [1., 100.]
     param_bounds['k_FR'] = [0., 100.]
-    param_bounds['tau_FR'] = [0., 10.]
+    param_bounds['tau_FR'] = [0, 100.]
 
     bounds = dict()
     bounds['states'] = state_bounds
     bounds['params'] = param_bounds
 
     return bounds
-
