@@ -17,7 +17,9 @@ from scipy.interpolate import interp1d
 from scipy.integrate import odeint
 from load_data import load_preliminary_FRET, load_protocol
 from models import MWC_Tar
+from utils import smooth
 from params_bounds import *
+
 
 class single_cell_FRET():
 	"""
@@ -79,6 +81,13 @@ class single_cell_FRET():
 								sp.random.choice(yvals)
 		self.signal_vector[switch_points[density-2]:] = sp.random.choice(yvals)
 		
+	def smooth_step_signal(self, window_len=5):
+		assert self.signal_vector is not None, \
+			'Must set stimulus vector before smoothing'
+
+		self.signal_vector = smooth(self.signal_vector, window_len=window_len)
+		self.signal_vector = self.signal_vector[:self.nT]
+
 	def signal(self, t):
 		assert self.signal_vector is not None, \
 			'Must set stimulus vector before setting stimulus function'
