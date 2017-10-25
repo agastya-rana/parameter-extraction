@@ -94,7 +94,7 @@ def plot_MWC_kernel_twin_data(data_flags, pred_seed = 10**8):
 	# Plot
 	fig = kernel_pred_plot(a.dt, a.kernel_length, Tt_EW, Tt_PW)
 
-	plt.subplot(311)
+	plt.subplot(313)
 	for estimated_kernel in estimated_kernels.T:
 		plt.plot(sp.arange(kernel_length)*a.dt, estimated_kernel[::-1], 
 					color='dodgerblue', lw=0.3)
@@ -113,7 +113,7 @@ def plot_MWC_kernel_twin_data(data_flags, pred_seed = 10**8):
 					color='dodgerblue', lw=0.3)
 	plt.plot(Tt_PW, opt_pred_path, color='orange', zorder=1003, lw=0.5)
 	
-	plt.subplot(313)
+	plt.subplot(311)
 	plt.plot(Tt_EW, mean_subtracted_stimuli_EW, color='dodgerblue')
 	plt.plot(Tt_PW, mean_subtracted_stimuli_PW, color='dodgerblue')
 	
@@ -147,7 +147,7 @@ def plot_MWC_opt_kernel_twin_data(data_flags):
 	# Plot estimated kernels, predicted response, and stimuli, save
 	fig = opt_kernel_pred_plot(dt, kernel_length, Tt_PW)
 	
-	plt.subplot(311)	
+	plt.subplot(313)	
 	plt.plot(sp.arange(kernel_length)*dt, opt_pred_kernel[::-1], 
 						color='dodgerblue', lw=0.5)
 	
@@ -157,8 +157,8 @@ def plot_MWC_opt_kernel_twin_data(data_flags):
 	plt.plot(Tt_PW, mean_subtracted_true_PW[:, 1], color='black', 
 				zorder=1001, lw=0.5)
 	plt.plot(Tt_PW, opt_pred_path, color='orange', zorder=1003, lw=0.5)
-	
-	plt.subplot(313)
+
+	plt.subplot(311)
 	plt.plot(Tt_PW, mean_subtracted_stimuli_PW, color='dodgerblue')
 	plt.xlim(Tt_PW[0], Tt_PW[-1])
 	
