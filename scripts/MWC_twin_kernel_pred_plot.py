@@ -19,7 +19,7 @@ import matplotlib.pyplot as plt
 from utils import get_flags
 from single_cell_FRET import single_cell_FRET
 from load_data import load_estimated_kernels, load_VA_twin_data
-from save_data import save_est_kernel_pred_plot
+from save_data import save_est_kernel_pred_plot, save_opt_est_kernel_objs
 from params_bounds import *
 from models import MWC_Tar
 
@@ -68,25 +68,27 @@ def plot_MWC_kernel_twin_data(data_flags, pred_seed = 10**8):
 	mean_subtracted_data_PW = data_PW - sp.average(data_PW)
 	mean_subtracted_true_PW = sp.zeros(true_PW.shape)
 	for iD in range(a.nD):
-		mean_subtracted_true_PW[:, iD] = true_PW[:, iD] - sp.average(true_PW[:, iD])
+		mean_subtracted_true_PW[:, iD] = \
+			true_PW[:, iD] - sp.average(true_PW[:, iD])
 	mean_subtracted_stimuli_EW = stimuli_EW - sp.average(stimuli_EW)
 	mean_subtracted_stimuli_PW = stimuli_PW - sp.average(stimuli_PW)
 
 	# Load estimated states and generate predicted states
-	mean_substracted_est_PW = sp.zeros((pred_nT, regularization_range))
+	mean_subtracted_est_PW = sp.zeros((pred_nT, regularization_range))
 	errors_PW = sp.zeros(regularization_range)
 	for iR, estimated_kernel in enumerate(estimated_kernels.T):
 		a.nT = pred_nT
 		a.set_Tt()
 		a.signal_vector = stimuli_PW
-		mean_substracted_est_PW[:, iR] = a.convolve_stimulus_kernel(estimated_kernel)
-		errors_PW[iR] = sp.sum((mean_substracted_est_PW[:, iR] - mean_subtracted_data_PW)**2.0)
+		mean_subtracted_est_PW[:, iR] = \
+				a.convolve_stimulus_kernel(estimated_kernel)
+		errors_PW[iR] = sp.sum((mean_subtracted_est_PW[:, iR]  \
+								- mean_subtracted_data_PW)**2.0)
 	opt_regularization = sp.argmin(errors_PW)
-	opt_pred_path = mean_substracted_est_PW[:, opt_regularization]
+	opt_pred_path = mean_subtracted_est_PW[:, opt_regularization]
 	opt_pred_kernel = estimated_kernels[:, opt_regularization]
-
 	
-	# Plot estimated kernels, predicted response, and stimuli
+	# Plot estimated kernels, predicted response, and stimuli, save
 	fig = plt.figure()
 	fig.set_size_inches(10, 8)
 
@@ -99,12 +101,16 @@ def plot_MWC_kernel_twin_data(data_flags, pred_seed = 10**8):
 	plt.xlim(0, (kernel_length - 1)*a.dt)
 	
 	plt.subplot(312)
-	plt.scatter(Tt_EW, mean_subtracted_data_EW, color='black', zorder=1002, s=0.2)
-	plt.scatter(Tt_PW, mean_subtracted_data_PW, color='black', zorder=1002, s=0.2)
-	plt.plot(Tt_PW, mean_subtracted_true_PW[:, 1], color='black', zorder=1001, lw=0.5)
+	plt.scatter(Tt_EW, mean_subtracted_data_EW, color='black', 
+					zorder=1002, s=0.2)
+	plt.scatter(Tt_PW, mean_subtracted_data_PW, color='black', 
+					zorder=1002, s=0.2)
+	plt.plot(Tt_PW, mean_subtracted_true_PW[:, 1], color='black', 
+				zorder=1001, lw=0.5)
 	for iR in range(regularization_range):
-		plt.plot(Tt_PW, mean_substracted_est_PW[:, iR], color='dodgerblue', lw=0.3)
-	plt.plot(Tt_PW, mean_substracted_est_PW[:, opt_regularization], color='orange', zorder=1003, lw=0.5)
+		plt.plot(Tt_PW, mean_subtracted_est_PW[:, iR], 
+					color='dodgerblue', lw=0.3)
+	plt.plot(Tt_PW, opt_pred_path, color='orange', zorder=1003, lw=0.5)
 	plt.axvline(est_nT*a.dt, ymin=0, ymax=1, color='yellow', lw=0.5)
 	plt.xlim(0, a.dt*(pred_nT + est_nT))
 	
@@ -113,6 +119,15 @@ def plot_MWC_kernel_twin_data(data_flags, pred_seed = 10**8):
 	plt.plot(Tt_PW, mean_subtracted_stimuli_PW, color='dodgerblue')
 	
 	save_est_kernel_pred_plot(fig, data_flags)
+
+	# Save optimal objects
+	optimal_data_dict = dict()
+	opt_objs = ['opt_pred_kernel', 'opt_pred_path', 
+						'opt_regularization', 'Tt_PW', 
+						'data_PW', 'true_PW', 'stimuli_PW']
+	for obj in opt_objs:
+		exec('optimal_data_dict["%s"] = %s' % (obj, obj))
+	save_opt_est_kernel_objs(opt_objs, data_flags)
 
 
 if __name__ == '__main__':

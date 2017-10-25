@@ -116,3 +116,16 @@ def save_est_kernel_pred_plot(fig, data_flags):
 				% (out_dir, data_dt, data_sigma, kernel_length))	
 	plt.savefig('%s/est_kernel_plot_dt=%s_sigma=%s_kernel-length=%s.svg'
                     % (out_dir, data_dt, data_sigma, kernel_length))
+
+def save_opt_est_kernel_objs(opt_objs, data_flags):
+	
+	data_ID = data_flags[0]
+	data_dt = data_flags[1]
+	data_sigma = data_flags[2]
+	kernel_length = data_flags[3]
+
+	out_dir = '%s/assimilation/%s' % (DATA_DIR, data_ID)
+	sp.save('%s/est_kernel_optimal_objects_objects_dt=%s' \
+				'_sigma=%s_kernel-length=%s.npy'
+				% (out_dir, data_dt, data_sigma, kernel_length), 
+				opt_objs)
