@@ -12,6 +12,7 @@ visit http://creativecommons.org/licenses/by-nc-sa/4.0/.
 import scipy as sp
 import scipy.io as sio
 import h5py
+import pickle
 from local_methods import def_data_dir
 
 
@@ -81,3 +82,18 @@ def load_estimated_kernels(data_flags):
 
 	return estimated_kernels
 
+def load_opt_est_kernel_objs(data_flags):
+	
+	data_ID = data_flags[0]
+	data_dt = data_flags[1]
+	data_sigma = data_flags[2]
+	kernel_length = data_flags[3]
+
+	in_dir = '%s/assimilation/%s' % (DATA_DIR, data_ID)
+	filename = '%s/est_kernel_optimal_objects_dt=%s' \
+				'_sigma=%s_kernel-length=%s.npy' \
+				% (in_dir, data_dt, data_sigma, kernel_length)
+	with open(filename, 'r') as infile:
+		opt_est_kernel_objs = pickle.load(infile)
+	
+	return opt_est_kernel_objs

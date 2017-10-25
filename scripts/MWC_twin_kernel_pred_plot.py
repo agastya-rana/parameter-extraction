@@ -18,8 +18,11 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from utils import get_flags
 from single_cell_FRET import single_cell_FRET
-from load_data import load_estimated_kernels, load_VA_twin_data
-from save_data import save_est_kernel_pred_plot, save_opt_est_kernel_objs
+from load_data import load_estimated_kernels, load_VA_twin_data, \
+						load_opt_est_kernel_objs
+from save_data import save_est_kernel_pred_plot, save_opt_est_kernel_objs, \
+						save_opt_est_kernel_pred_plot
+from plot_formats import kernel_pred_plot, opt_kernel_pred_plot
 from params_bounds import *
 from models import MWC_Tar
 
@@ -88,9 +91,8 @@ def plot_MWC_kernel_twin_data(data_flags, pred_seed = 10**8):
 	opt_pred_path = mean_subtracted_est_PW[:, opt_regularization]
 	opt_pred_kernel = estimated_kernels[:, opt_regularization]
 	
-	# Plot estimated kernels, predicted response, and stimuli, save
-	fig = plt.figure()
-	fig.set_size_inches(10, 8)
+	# Plot
+	fig = kernel_pred_plot(a.dt, a.kernel_length, Tt_EW, Tt_PW)
 
 	plt.subplot(311)
 	for estimated_kernel in estimated_kernels.T:
@@ -98,7 +100,6 @@ def plot_MWC_kernel_twin_data(data_flags, pred_seed = 10**8):
 					color='dodgerblue', lw=0.3)
 	plt.plot(sp.arange(kernel_length)*a.dt, opt_pred_kernel[::-1], 
 						color='orange', lw=0.5)
-	plt.xlim(0, (kernel_length - 1)*a.dt)
 	
 	plt.subplot(312)
 	plt.scatter(Tt_EW, mean_subtracted_data_EW, color='black', 
@@ -111,8 +112,6 @@ def plot_MWC_kernel_twin_data(data_flags, pred_seed = 10**8):
 		plt.plot(Tt_PW, mean_subtracted_est_PW[:, iR], 
 					color='dodgerblue', lw=0.3)
 	plt.plot(Tt_PW, opt_pred_path, color='orange', zorder=1003, lw=0.5)
-	plt.axvline(est_nT*a.dt, ymin=0, ymax=1, color='yellow', lw=0.5)
-	plt.xlim(0, a.dt*(pred_nT + est_nT))
 	
 	plt.subplot(313)
 	plt.plot(Tt_EW, mean_subtracted_stimuli_EW, color='dodgerblue')
@@ -122,14 +121,51 @@ def plot_MWC_kernel_twin_data(data_flags, pred_seed = 10**8):
 
 	# Save optimal objects
 	optimal_data_dict = dict()
-	opt_objs = ['opt_pred_kernel', 'opt_pred_path', 
-						'opt_regularization', 'Tt_PW', 
-						'data_PW', 'true_PW', 'stimuli_PW']
+	opt_objs = ['opt_pred_kernel', 'opt_pred_path', 'opt_regularization', 'Tt_PW', 
+						'mean_subtracted_data_PW', 'mean_subtracted_true_PW', 
+						'mean_subtracted_stimuli_PW']
 	for obj in opt_objs:
 		exec('optimal_data_dict["%s"] = %s' % (obj, obj))
-	save_opt_est_kernel_objs(opt_objs, data_flags)
+	save_opt_est_kernel_objs(optimal_data_dict, data_flags)
 
+	
+def plot_MWC_opt_kernel_twin_data(data_flags):
+	"""
+	Plot optimal kernels and predicted time series from saved data.
+	"""	
+	
+	optimal_data_dict = load_opt_est_kernel_objs(data_flags)
 
+	data_ID = str(data_flags[0])
+	FRET_noise = float(data_flags[2])
+	kernel_length = int(data_flags[3])
+		
+	for key in optimal_data_dict.keys():
+		exec('%s = optimal_data_dict["%s"]' % (key, key))
+	dt = Tt_PW[1] - Tt_PW[0]
+	
+	# Plot estimated kernels, predicted response, and stimuli, save
+	fig = opt_kernel_pred_plot(dt, kernel_length, Tt_PW)
+	
+	plt.subplot(311)	
+	plt.plot(sp.arange(kernel_length)*dt, opt_pred_kernel[::-1], 
+						color='dodgerblue', lw=0.5)
+	
+	plt.subplot(312)	
+	plt.scatter(Tt_PW, mean_subtracted_data_PW, color='black', 
+					zorder=1002, s=0.2)
+	plt.plot(Tt_PW, mean_subtracted_true_PW[:, 1], color='black', 
+				zorder=1001, lw=0.5)
+	plt.plot(Tt_PW, opt_pred_path, color='orange', zorder=1003, lw=0.5)
+	
+	plt.subplot(313)
+	plt.plot(Tt_PW, mean_subtracted_stimuli_PW, color='dodgerblue')
+	plt.xlim(Tt_PW[0], Tt_PW[-1])
+	
+	save_opt_est_kernel_pred_plot(fig, data_flags)
+	
 if __name__ == '__main__':
 	data_flags = get_flags()
 	plot_MWC_kernel_twin_data(data_flags)	
+	plot_MWC_opt_kernel_twin_data(data_flags)
+	

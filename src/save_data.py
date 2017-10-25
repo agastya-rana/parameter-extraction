@@ -12,10 +12,11 @@ visit http://creativecommons.org/licenses/by-nc-sa/4.0/.
 import scipy as sp
 import scipy.io as sio
 import os
-from local_methods import def_data_dir
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+from local_methods import def_data_dir
+import pickle
 
 DATA_DIR = def_data_dir()
 
@@ -117,7 +118,7 @@ def save_est_kernel_pred_plot(fig, data_flags):
 	plt.savefig('%s/est_kernel_plot_dt=%s_sigma=%s_kernel-length=%s.svg'
                     % (out_dir, data_dt, data_sigma, kernel_length))
 
-def save_opt_est_kernel_objs(opt_objs, data_flags):
+def save_opt_est_kernel_objs(optimal_data_dict, data_flags):
 	
 	data_ID = data_flags[0]
 	data_dt = data_flags[1]
@@ -125,7 +126,23 @@ def save_opt_est_kernel_objs(opt_objs, data_flags):
 	kernel_length = data_flags[3]
 
 	out_dir = '%s/assimilation/%s' % (DATA_DIR, data_ID)
-	sp.save('%s/est_kernel_optimal_objects_objects_dt=%s' \
-				'_sigma=%s_kernel-length=%s.npy'
-				% (out_dir, data_dt, data_sigma, kernel_length), 
-				opt_objs)
+	filename = '%s/est_kernel_optimal_objects_dt=%s' \
+				'_sigma=%s_kernel-length=%s.npy' \
+				% (out_dir, data_dt, data_sigma, kernel_length)
+	with open(filename, 'w') as outfile:
+		pickle.dump(optimal_data_dict, outfile)
+		
+def save_opt_est_kernel_pred_plot(fig, data_flags):
+
+	data_ID = data_flags[0]
+	data_dt = data_flags[1]
+	data_sigma = data_flags[2]
+	kernel_length = data_flags[3]
+
+	plt.tight_layout()
+	
+	out_dir = '%s/assimilation/%s' % (DATA_DIR, data_ID)
+	plt.savefig('%s/opt_est_kernel_pred_plot_dt=%s_sigma=%s_kernel-length=%s.png'
+				% (out_dir, data_dt, data_sigma, kernel_length))	
+	plt.savefig('%s/opt_est_kernel_plot_dt=%s_sigma=%s_kernel-length=%s.svg'
+                    % (out_dir, data_dt, data_sigma, kernel_length))
