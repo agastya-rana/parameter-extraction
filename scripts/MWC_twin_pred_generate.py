@@ -25,7 +25,7 @@ from models import MWC_Tar
 
 
 def MWC_twin_VA_pred_generate(data_flags, pred_seed=10**8, beta=50, 
-										IC_range=range(10)):
+										IC_range=range(1000)):
 	"""
 	Generate predictions and predicted errors of variational annealing 
 	time from estimated parameters and final states
