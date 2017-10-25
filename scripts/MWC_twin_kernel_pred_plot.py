@@ -22,7 +22,7 @@ from load_data import load_estimated_kernels, load_VA_twin_data, \
 						load_opt_est_kernel_objs
 from save_data import save_est_kernel_pred_plot, save_opt_est_kernel_objs, \
 						save_opt_est_kernel_pred_plot
-from plot_formats import kernel_pred_plot, opt_kernel_pred_plot
+from plot_formats import kernel_pred_fig, opt_kernel_pred_fig
 from params_bounds import *
 from models import MWC_Tar
 
@@ -92,7 +92,7 @@ def plot_MWC_kernel_twin_data(data_flags, pred_seed = 10**8):
 	opt_pred_kernel = estimated_kernels[:, opt_regularization]
 	
 	# Plot
-	fig = kernel_pred_plot(a.dt, a.kernel_length, Tt_EW, Tt_PW)
+	fig = kernel_pred_fig(a.dt, a.kernel_length, Tt_EW, Tt_PW)
 	plt.subplot(311)
 	plt.plot(Tt_EW, mean_subtracted_stimuli_EW, color='dodgerblue')
 	plt.plot(Tt_PW, mean_subtracted_stimuli_PW, color='dodgerblue')
@@ -132,16 +132,13 @@ def plot_MWC_opt_kernel_twin_data(data_flags):
 	"""	
 	
 	optimal_data_dict = load_opt_est_kernel_objs(data_flags)
-
-	data_ID = str(data_flags[0])
-	FRET_noise = float(data_flags[2])
 	kernel_length = int(data_flags[3])
 		
 	for key in optimal_data_dict.keys():
 		exec('%s = optimal_data_dict["%s"]' % (key, key))
 	dt = Tt_PW[1] - Tt_PW[0]
 	
-	fig = opt_kernel_pred_plot(dt, kernel_length, Tt_PW)	
+	fig = opt_kernel_pred_fig(dt, kernel_length, Tt_PW)	
 	plt.subplot(311)
 	plt.plot(Tt_PW, mean_subtracted_stimuli_PW, color='dodgerblue')
 	plt.xlim(Tt_PW[0], Tt_PW[-1])

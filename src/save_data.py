@@ -106,6 +106,20 @@ def save_opt_VA_objs(optimal_data_dict, data_flags):
 	with open(filename, 'w') as outfile:
 		pickle.dump(optimal_data_dict, outfile)
 
+def save_opt_VA_pred_plot(fig, data_flags):
+
+	data_ID = data_flags[0]
+	data_dt = data_flags[1]
+	data_sigma = data_flags[2]
+
+	plt.tight_layout()
+
+	out_dir = '%s/assimilation/%s' % (DATA_DIR, data_ID)
+	plt.savefig('%s/opt_VA_pred_plot_dt=%s_sigma=%s.png'
+				% (out_dir, data_dt, data_sigma))
+	plt.savefig('%s/opt_VA_plot_dt=%s_sigma=%s.svg'
+                    % (out_dir, data_dt, data_sigma))
+
 def save_estimated_kernels(estimated_kernels, data_flags):
 
 	data_ID = data_flags[0]

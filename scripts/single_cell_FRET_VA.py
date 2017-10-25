@@ -39,7 +39,7 @@ def single_cell_FRET_VA(data_flags):
 	scF.set_state_bounds(bounds_dict=bounds_Tar_3)
 	scF.set_bounds()
 	scF.Rm = 1.0/data_sigma**2.0
-
+	
 	# Load twin data from file / match scF params
 	data_dict = load_VA_twin_data(data_flags=data_flags)
 	measurements = data_dict['measurements'][:, 1:]
@@ -49,6 +49,7 @@ def single_cell_FRET_VA(data_flags):
 	scF.dt = scF.Tt[1]-scF.Tt[0]
 	scF.init_seed = init_seed
 	scF.initial_estimate()
+	scF.beta_array = sp.linspace(0, 50, 51)
 
 	# Initalize annealer class
 	annealer = va_ode.Annealer()
@@ -61,7 +62,7 @@ def single_cell_FRET_VA(data_flags):
 	tstart = time.time()
 	annealer.anneal(scF.x_init, scF.p_init, scF.alpha, scF.beta_array, 
 					scF.Rm, scF.Rf0, scF.Lidx, scF.Pidx, dt_model=None, 
-					init_to_data=True, bounds=scF.bounds, disc='trapezoid', 
+					init_to_data=True, bounds=scF.bounds, disc='euler', 
 					method='L-BFGS-B', opt_args=BFGS_options, 
 					adolcID=init_seed)
 	print("\nADOL-C annealing completed in %f s."%(time.time() - tstart))

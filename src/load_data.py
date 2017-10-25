@@ -75,12 +75,12 @@ def load_opt_VA_objs(data_flags):
 	data_sigma = data_flags[2]
 
 	in_dir = '%s/assimilation/%s' % (DATA_DIR, data_ID)
-	filename = '%s/est_kernel_optimal_objects_dt_sigma=%s.npy' \
+	filename = '%s/VA_optimal_objects_dt=%s_sigma=%s.npy' \
 				% (in_dir, data_dt, data_sigma)
 	with open(filename, 'r') as infile:
 		opt_VA_objs = pickle.load(infile)
 	
-	return opt_est_kernel_objs
+	return opt_VA_objs
 
 def load_estimated_kernels(data_flags):
 

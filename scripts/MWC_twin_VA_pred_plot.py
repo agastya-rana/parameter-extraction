@@ -25,12 +25,14 @@ from models import MWC_Tar
 
 
 def plot_MWC_VA_prediction_twin_data(data_flags, pred_seed=10**8, beta=50, 
-										IC_range=range(1000)):
+										IC_range=range(10)):
 	"""
 	Plot prediction of variational annealing time 
 	series from forward prediction of the model
 	"""	
 	
+	#TODO Just use this file to generate data; plot from different file
+
 	a = single_cell_FRET()
 
 	data_ID = str(data_flags[0])
@@ -104,7 +106,7 @@ def plot_MWC_VA_prediction_twin_data(data_flags, pred_seed=10**8, beta=50,
 	plt.plot(Tt_PW, true_PW[:, 1], color='black', zorder=1001, lw=0.5)
 	for init_seed in IC_range:
 		plt.plot(Tt_PW, est_PW[:, 1, init_seed], color='dodgerblue', lw=0.3)
-	plt.plot(Tt_PW, est_PW[:, 1, opt_IC], color='orange', zorder=1003, lw=0.5)
+	plt.plot(Tt_PW, opt_pred_path[:, 1], color='orange', zorder=1003, lw=0.5)
 	plt.axvline(est_nT*a.dt, ymin=0, ymax=1, color='yellow', lw=0.5)
 	plt.xlim(0, a.dt*(pred_nT + est_nT))
 	plt.ylim(-10, 30)
@@ -115,8 +117,7 @@ def plot_MWC_VA_prediction_twin_data(data_flags, pred_seed=10**8, beta=50,
 	for init_seed in IC_range:
 		plt.plot(Tt_EW, est_EW[:, 0, init_seed], color='dodgerblue', lw=0.3)
 		plt.plot(Tt_PW, est_PW[:, 0, init_seed], color='dodgerblue', lw=0.3)
-	plt.plot(Tt_EW, est_EW[:, 0, opt_IC], color='orange', zorder=1002, lw=0.3)
-	plt.plot(Tt_PW, est_PW[:, 0, opt_IC], color='orange', zorder=1002, lw=0.3)
+	plt.plot(Tt_PW, opt_pred_path[:, 0], color='orange', zorder=1002, lw=0.3)
 	
 	plt.subplot(313)
 	plt.plot(Tt_EW, stimuli_EW)

@@ -24,15 +24,12 @@ from params_bounds import *
 from models import MWC_Tar
 
 
-def plot_MWC_parameter_estimates(data_flags):
+def plot_MWC_parameter_estimates(data_flags, IC_range=range(1000), beta = 60
+									params_to_plot=[[7, 8], [5, 6]]):
 	"""
 	TODO
 	"""	
 	
-	beta = 60
-	IC_range = range(1000)
-	params_to_plot = [[7, 8], [5,6]]
-
 	a = single_cell_FRET()
 
 	data_ID = str(data_flags[0])
