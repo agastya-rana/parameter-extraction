@@ -213,11 +213,13 @@ class single_cell_FRET():
 					' must be length %s' % self.nT
 			self.signal_vector = stimulus
 
+		mean_subtracted_stimulus = self.signal_vector - sp.average(self.signal_vector)
+
 		self.kernel_estimator_nT = self.nT - self.kernel_length
 		self.kernel_Aa = sp.zeros((self.kernel_estimator_nT, self.kernel_length))
 		for row in range(self.kernel_estimator_nT):
 			self.kernel_Aa[row, :] = \
-				self.signal_vector[row: row + self.kernel_length][::-1]
+				mean_subtracted_stimulus[row: row + self.kernel_length]
 
 	def set_kernel_estimation_regularization(self):
 		self.kernel_tikhonov_matrix = sp.eye(self.kernel_length)*self.regularization
@@ -239,8 +241,10 @@ class single_cell_FRET():
 			'response_vector should be numpy array with length equal to' \
 				' stimulus data minus kernel length'
 
+		mean_subtracted_response_vector = response_vector - sp.average(response_vector)
+
 		estimated_kernel = sp.dot(sp.dot(self.kernel_inverse_hessian, 
-								self.kernel_Aa.T), response_vector)
+								self.kernel_Aa.T), mean_subtracted_response_vector)
 	
 		return estimated_kernel
 
@@ -256,14 +260,16 @@ class single_cell_FRET():
 				' must be length %s' % self.nT
 			self.signal_vector = stimulus
 
+		mean_subtracted_stimulus = self.signal_vector - sp.average(self.signal_vector) 
 		self.kernel_length = len(kernel)
-		response_vector = sp.zeros(self.nT)
+		mean_subtracted_response_vector = sp.zeros(self.nT)
 
 		for iT in range(self.nT):
 			if iT >= self.kernel_length:
-				response_vector[iT] = \
-					sp.sum(self.signal_vector[iT - self.kernel_length: iT]*kernel)
+				mean_subtracted_response_vector[iT] = \
+					sp.sum(mean_subtracted_stimulus[iT - self.kernel_length: iT]*kernel)
 			else:
-				response_vector[iT] = \
-					sp.sum(self.signal_vector[:iT]*kernel[self.kernel_length - iT:])
-		return response_vector
+				mean_subtracted_response_vector[iT] = \
+					sp.sum(mean_subtracted_stimulus[:iT]*kernel[self.kernel_length - iT:])
+		
+		return mean_subtracted_response_vector
