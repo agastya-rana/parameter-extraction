@@ -72,18 +72,18 @@ def bounds_Tar_2():
 
 def bounds_Tar_3():
 
-    state_bounds = [[0.0, 5.0], [-20, 20]]
+    state_bounds = [[1.0, 4.0], [-10, 20]]
 
     param_bounds = OrderedDict()
-    param_bounds['K_off_a'] = [0.01, 0.05]
-    param_bounds['K_on_a'] = [0.5, 5.0]
-    param_bounds['Nn'] = [3., 8.]
+    param_bounds['K_off_a'] = [0.01, 0.1]
+    param_bounds['K_on_a'] = [0.2, 10.0]
+    param_bounds['Nn'] = [4., 6.]
     param_bounds['alpha_m'] = [0.1, 10.0]
-    param_bounds['m_0'] = [0.5, 5.0]
-    param_bounds['a_0'] = [0.0, 1.0]
-    param_bounds['tau_m'] = [1., 500.]
-    param_bounds['k_FR'] = [0., 100.]
-    param_bounds['tau_FR'] = [0, 100.]
+    param_bounds['m_0'] = [1.0, 4.0]
+    param_bounds['a_0'] = [0.1, 0.9]
+    param_bounds['tau_m'] = [1., 200.]
+    param_bounds['k_FR'] = [1., 100.]
+    param_bounds['tau_FR'] = [0.1, 10.]
 
     bounds = dict()
     bounds['states'] = state_bounds

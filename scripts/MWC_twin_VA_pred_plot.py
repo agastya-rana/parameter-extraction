@@ -19,46 +19,34 @@ import matplotlib.pyplot as plt
 from utils import get_flags
 from single_cell_FRET import single_cell_FRET
 from load_data import load_VA_twin_estimates, load_VA_twin_data
-from save_data import save_est_VA_pred_plot
+from save_data import save_est_VA_pred_plot, save_opt_VA_objs
 from params_bounds import *
 from models import MWC_Tar
 
 
-def plot_MWC_VA_prediction_twin_data(data_flags):
+def plot_MWC_VA_prediction_twin_data(data_flags, pred_seed=10**8, beta=50, 
+										IC_range=range(1000)):
 	"""
-	TODO
+	Plot prediction of variational annealing time 
+	series from forward prediction of the model
 	"""	
 	
-	beta = 50
-	if len(data_flags) > 3:
-		pred_nT = int(data_flags[3])
-		pred_density = int(data_flags[4])
-	pred_seed = 10**8
-	IC_range = range(1000)
-
 	a = single_cell_FRET()
 
 	data_ID = str(data_flags[0])
 	a.dt = float(data_flags[1])
 	FRET_noise = float(data_flags[2])
+	pred_nT = int(data_flags[3])
+	pred_density = int(data_flags[4])
 
-	# numpy arrays to hold true/data/estimates; EW = estimation window
-	true_EW = None
-	true_PW = None
-	data_EW = None
-	data_PW = None
-	est_EW = None
-	est_params = None
-	est_PW = None
-	
 	# Load measured and true trajectories
 	data_dict = load_VA_twin_data(data_flags)
-	data_EW = data_dict['measurements']
+	data_EW = data_dict['measurements'][:, 1] 
 	true_EW = data_dict['true_states'][:, 1:]
 	stimuli_EW = data_dict['stimuli']
-	est_nT = len(data_EW[:, 0])
+	est_nT = len(data_EW)
 	Tt_EW = sp.arange(0, est_nT*a.dt, a.dt)	
-	Tt_PW = sp.arange(Tt_EW[-1], Tt_EW[-1] +  pred_nT*a.dt, a.dt)
+	Tt_PW = sp.arange(Tt_EW[-1], Tt_EW[-1] + pred_nT*a.dt, a.dt)
 
 	# Generate true prediction and prediction 'data'
 	a.nT = pred_nT
@@ -70,7 +58,7 @@ def plot_MWC_VA_prediction_twin_data(data_flags):
 	a.x_integrate_init = true_EW[-1, :]
 	a.df_integrate()
 	true_PW = a.true_states[:, :]
-	data_PW = true_PW + sp.random.normal(0, FRET_noise, size=(pred_nT, a.nD))
+	data_PW = true_PW[:, 1] + sp.random.normal(0, FRET_noise, size=(pred_nT))
 	
 	# Load estimated states and generate predicted states
 	est_EW = sp.zeros((est_nT, a.nD, len(IC_range)))
@@ -95,11 +83,12 @@ def plot_MWC_VA_prediction_twin_data(data_flags):
 		for iP, Pval in enumerate(est_params[:, init_seed]):
 			a.true_params[iP] = Pval
 
-		print est_params[:, init_seed]
 		a.df_integrate()
 		est_PW[:, :, init_seed] = a.true_states[:, :]
-		errors_PW[init_seed] = sp.sum((est_PW[:, :, init_seed] - data_PW)**2.0)
-
+		errors_PW[init_seed] = sp.sum((est_PW[:, 1, init_seed] - data_PW)**2.0)
+		print est_params[:, init_seed]
+		print errors_PW[init_seed]
+	
 	# Find optimal estimate
 	opt_IC = sp.argmin(errors_PW)
 	opt_pred_path = est_PW[:, :, opt_IC]
@@ -110,8 +99,8 @@ def plot_MWC_VA_prediction_twin_data(data_flags):
 	fig.set_size_inches(10, 8)
 
 	plt.subplot(311)
-	plt.scatter(Tt_EW, data_EW[:, 1], color='black', zorder=1002, s=0.2)
-	plt.scatter(Tt_PW, data_PW[:, 1], color='black', zorder=1002, s=0.2)
+	plt.scatter(Tt_EW, data_EW, color='black', zorder=1002, s=0.2)
+	plt.scatter(Tt_PW, data_PW, color='black', zorder=1002, s=0.2)
 	plt.plot(Tt_PW, true_PW[:, 1], color='black', zorder=1001, lw=0.5)
 	for init_seed in IC_range:
 		plt.plot(Tt_PW, est_PW[:, 1, init_seed], color='dodgerblue', lw=0.3)
@@ -134,9 +123,15 @@ def plot_MWC_VA_prediction_twin_data(data_flags):
 	plt.plot(Tt_PW, stimuli_PW)
 	save_est_VA_pred_plot(fig, data_flags)
 
-	# Print optimal params	
-	print ('Parameters minimizing prediction error: %s' % est_params[:, opt_IC])
+	# Save optimal objects
+	optimal_data_dict = dict()
+	opt_objs = ['opt_IC', 'opt_pred_path', 'opt_pred_params', 'Tt_PW',
+				'stimuli_PW', 'true_PW', 'data_PW']
+	for obj in opt_objs:
+		exec('optimal_data_dict["%s"] = %s' % (obj, obj))
+	save_opt_VA_objs(optimal_data_dict, data_flags)
 
+	
 if __name__ == '__main__':
 	data_flags = get_flags()
 	plot_MWC_VA_prediction_twin_data(data_flags)							

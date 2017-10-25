@@ -94,6 +94,18 @@ def save_est_params_plot(fig, data_flags):
     plt.savefig('%s/est_params_plot_dt=%s_sigma=%s.svg' 
 					% (out_dir, data_dt, data_sigma))
 	
+def save_opt_VA_objs(optimal_data_dict, data_flags):
+	
+	data_ID = data_flags[0]
+	data_dt = data_flags[1]
+	data_sigma = data_flags[2]
+
+	out_dir = '%s/assimilation/%s' % (DATA_DIR, data_ID)
+	filename = '%s/VA_optimal_objects_dt=%s_sigma=%s.npy' \
+				% (out_dir, data_dt, data_sigma)
+	with open(filename, 'w') as outfile:
+		pickle.dump(optimal_data_dict, outfile)
+
 def save_estimated_kernels(estimated_kernels, data_flags):
 
 	data_ID = data_flags[0]
