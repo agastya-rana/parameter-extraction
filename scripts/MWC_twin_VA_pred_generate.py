@@ -9,13 +9,10 @@ To view a copy of this license, visit
 http://creativecommons.org/licenses/by-nc-sa/4.0/.
 """
 
-import sys, time
+import sys
 sys.path.append('../src')
 import scipy as sp
 sp.set_printoptions(precision=3)
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
 from utils import get_flags
 from single_cell_FRET import single_cell_FRET
 from load_data import load_VA_twin_estimates, load_VA_twin_data
@@ -68,6 +65,7 @@ def MWC_twin_VA_pred_generate(data_flags, pred_seed=10**8, beta=50,
 
 	for init_seed in IC_range:
 		print init_seed, 
+		sys.stdout.flush()
 		est_data_dict = load_VA_twin_estimates(data_flags, init_seed)
 		est_EW[:, :, init_seed] = est_data_dict['est_states'][beta, :, 1:]
 		est_params[:, init_seed] = est_data_dict['est_params'][beta, :]
