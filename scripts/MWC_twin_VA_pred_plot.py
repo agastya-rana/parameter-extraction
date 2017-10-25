@@ -25,7 +25,7 @@ from models import MWC_Tar
 
 
 def plot_MWC_VA_prediction_twin_data(data_flags, pred_seed=10**8, beta=50, 
-										IC_range=range(10)):
+										IC_range=range(1000)):
 	"""
 	Plot prediction of variational annealing time 
 	series from forward prediction of the model
