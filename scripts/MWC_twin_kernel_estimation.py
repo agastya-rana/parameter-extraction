@@ -19,7 +19,7 @@ from save_data import save_estimated_kernels
 from params_bounds import *
 
 
-def single_cell_FRET_linear_kernel(data_flags, 
+def single_cell_FRET_kernel(data_flags, 
 			log_regularizations=sp.linspace(-3, 3, 10)):
 	"""
 	Function to estimate a linear kernel on FRET data. 
@@ -59,4 +59,4 @@ def single_cell_FRET_linear_kernel(data_flags,
 
 if __name__ == '__main__':
 	data_flags = get_flags()
-	single_cell_FRET_linear_kernel(data_flags)
+	single_cell_FRET_kernel(data_flags)

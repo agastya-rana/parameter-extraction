@@ -70,16 +70,16 @@ def save_estimates(annealer, data_flags):
 	annealer.save_action_errors('%s/action_errors_dt=%s_sigma=%s_IC=%s.npy' 
 							% (out_dir, data_dt, data_sigma, init_seed))
 
-def save_est_VA_pred_plot(fig, data_flags):
+def save_VA_pred_plot(fig, data_flags):
 
 	data_ID = data_flags[0]
 	data_dt = data_flags[1]
 	data_sigma = data_flags[2]
 
 	out_dir = '%s/assimilation/%s' % (DATA_DIR, data_ID)
-	plt.savefig('%s/est_VA_pred_plot_dt=%s_sigma=%s.png' 
+	plt.savefig('%s/VA_pred_plot_dt=%s_sigma=%s.png' 
 					% (out_dir, data_dt, data_sigma))
-	plt.savefig('%s/est_VA_pred_plot_dt=%s_sigma=%s.svg' 
+	plt.savefig('%s/VA_pred_plot_dt=%s_sigma=%s.svg' 
 					% (out_dir, data_dt, data_sigma))
 
 def save_est_params_plot(fig, data_flags):
@@ -93,7 +93,19 @@ def save_est_params_plot(fig, data_flags):
 					% (out_dir, data_dt, data_sigma))
     plt.savefig('%s/est_params_plot_dt=%s_sigma=%s.svg' 
 					% (out_dir, data_dt, data_sigma))
-	
+
+def save_all_VA_objs(VA_all_objects_dict, data_flags):
+
+	data_ID = data_flags[0]
+	data_dt = data_flags[1]
+	data_sigma = data_flags[2]
+
+	out_dir = '%s/assimilation/%s' % (DATA_DIR, data_ID)
+	filename = '%s/VA_all_objects_dt=%s_sigma=%s.npy' \
+				% (out_dir, data_dt, data_sigma)
+	with open(filename, 'w') as outfile:
+		pickle.dump(VA_all_objects_dict, outfile)
+
 def save_opt_VA_objs(optimal_data_dict, data_flags):
 	
 	data_ID = data_flags[0]
@@ -128,10 +140,10 @@ def save_estimated_kernels(estimated_kernels, data_flags):
 	kernel_length = data_flags[3]
 
 	out_dir = '%s/assimilation/%s' % (DATA_DIR, data_ID)
-	sp.save('%s/est_linear_kernel_dt=%s_sigma=%s_kernel-length=%s.npy'
+	sp.save('%s/kernel_dt=%s_sigma=%s_kernel-length=%s.npy'
 			% (out_dir, data_dt, data_sigma, kernel_length), estimated_kernels)
 
-def save_est_kernel_pred_plot(fig, data_flags):
+def save_kernel_pred_plot(fig, data_flags):
 
 	data_ID = data_flags[0]
 	data_dt = data_flags[1]
@@ -141,12 +153,12 @@ def save_est_kernel_pred_plot(fig, data_flags):
 	plt.tight_layout()
 
 	out_dir = '%s/assimilation/%s' % (DATA_DIR, data_ID)
-	plt.savefig('%s/est_kernel_pred_plot_dt=%s_sigma=%s_kernel-length=%s.png'
+	plt.savefig('%s/kernel_pred_plot_dt=%s_sigma=%s_kernel-length=%s.png'
 				% (out_dir, data_dt, data_sigma, kernel_length))	
-	plt.savefig('%s/est_kernel_plot_dt=%s_sigma=%s_kernel-length=%s.svg'
+	plt.savefig('%s/kernel_pred_plot_dt=%s_sigma=%s_kernel-length=%s.svg'
                     % (out_dir, data_dt, data_sigma, kernel_length))
 
-def save_opt_est_kernel_objs(optimal_data_dict, data_flags):
+def save_opt_kernel_objs(optimal_data_dict, data_flags):
 	
 	data_ID = data_flags[0]
 	data_dt = data_flags[1]
@@ -154,13 +166,13 @@ def save_opt_est_kernel_objs(optimal_data_dict, data_flags):
 	kernel_length = data_flags[3]
 
 	out_dir = '%s/assimilation/%s' % (DATA_DIR, data_ID)
-	filename = '%s/est_kernel_optimal_objects_dt=%s' \
+	filename = '%s/kernel_optimal_objects_dt=%s' \
 				'_sigma=%s_kernel-length=%s.npy' \
 				% (out_dir, data_dt, data_sigma, kernel_length)
 	with open(filename, 'w') as outfile:
 		pickle.dump(optimal_data_dict, outfile)
 		
-def save_opt_est_kernel_pred_plot(fig, data_flags):
+def save_opt_kernel_pred_plot(fig, data_flags):
 
 	data_ID = data_flags[0]
 	data_dt = data_flags[1]
@@ -170,8 +182,8 @@ def save_opt_est_kernel_pred_plot(fig, data_flags):
 	plt.tight_layout()
 	
 	out_dir = '%s/assimilation/%s' % (DATA_DIR, data_ID)
-	plt.savefig('%s/opt_est_kernel_pred_plot_dt=%s_sigma=%s' \
+	plt.savefig('%s/opt_kernel_pred_plot_dt=%s_sigma=%s' \
 				'_kernel-length=%s.png'
 				% (out_dir, data_dt, data_sigma, kernel_length))	
-	plt.savefig('%s/opt_est_kernel_plot_dt=%s_sigma=%s_kernel-length=%s.svg'
+	plt.savefig('%s/opt_kernel_pred_plot_dt=%s_sigma=%s_kernel-length=%s.svg'
                     % (out_dir, data_dt, data_sigma, kernel_length))

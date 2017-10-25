@@ -48,9 +48,9 @@ def plot_MWC_opt_VA_pred(data_flags):
 	plt.subplot(313)
 	plt.plot(Tt_PW, stimuli_PW)
 
-	save_opt_VA_pred_plot(fig, data_flags)
-
 	print "Optimal estimated parameters: %s" % opt_pred_params
+	
+	save_opt_VA_pred_plot(fig, data_flags)
 
 	
 if __name__ == '__main__':

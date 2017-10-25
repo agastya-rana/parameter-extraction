@@ -19,9 +19,9 @@ import matplotlib.pyplot as plt
 from utils import get_flags
 from single_cell_FRET import single_cell_FRET
 from load_data import load_estimated_kernels, load_VA_twin_data, \
-						load_opt_est_kernel_objs
-from save_data import save_est_kernel_pred_plot, save_opt_est_kernel_objs, \
-						save_opt_est_kernel_pred_plot
+						load_opt_kernel_objs
+from save_data import save_kernel_pred_plot, save_opt_kernel_objs, \
+						save_opt_kernel_pred_plot
 from plot_formats import kernel_pred_fig, opt_kernel_pred_fig
 from params_bounds import *
 from models import MWC_Tar
@@ -114,7 +114,7 @@ def plot_MWC_kernel_twin_data(data_flags, pred_seed = 10**8):
 	plt.plot(sp.arange(kernel_length)*a.dt, opt_pred_kernel[::-1], 
 						color='orange', lw=0.5)
 	
-	save_est_kernel_pred_plot(fig, data_flags)
+	save_kernel_pred_plot(fig, data_flags)
 
 	# Save optimal objects
 	optimal_data_dict = dict()
@@ -123,7 +123,7 @@ def plot_MWC_kernel_twin_data(data_flags, pred_seed = 10**8):
 				'mean_subtracted_stimuli_PW']
 	for obj in opt_objs:
 		exec('optimal_data_dict["%s"] = %s' % (obj, obj))
-	save_opt_est_kernel_objs(optimal_data_dict, data_flags)
+	save_opt_kernel_objs(optimal_data_dict, data_flags)
 
 	
 def plot_MWC_opt_kernel_twin_data(data_flags):
@@ -131,7 +131,7 @@ def plot_MWC_opt_kernel_twin_data(data_flags):
 	Plot optimal kernels and predicted time series from saved data.
 	"""	
 	
-	optimal_data_dict = load_opt_est_kernel_objs(data_flags)
+	optimal_data_dict = load_opt_kernel_objs(data_flags)
 	kernel_length = int(data_flags[3])
 		
 	for key in optimal_data_dict.keys():
@@ -152,7 +152,7 @@ def plot_MWC_opt_kernel_twin_data(data_flags):
 	plt.plot(sp.arange(kernel_length)*dt, opt_pred_kernel[::-1], 
 						color='dodgerblue', lw=0.7)
 
-	save_opt_est_kernel_pred_plot(fig, data_flags)
+	save_opt_kernel_pred_plot(fig, data_flags)
 	
 if __name__ == '__main__':
 	data_flags = get_flags()

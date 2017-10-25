@@ -82,6 +82,20 @@ def load_opt_VA_objs(data_flags):
 	
 	return opt_VA_objs
 
+def load_all_VA_objs(data_flags):
+	
+	data_ID = data_flags[0]
+	data_dt = data_flags[1]
+	data_sigma = data_flags[2]
+
+	in_dir = '%s/assimilation/%s' % (DATA_DIR, data_ID)
+	filename = '%s/VA_all_objects_dt=%s_sigma=%s.npy' \
+				% (in_dir, data_dt, data_sigma)
+	with open(filename, 'r') as infile:
+		all_VA_objs = pickle.load(infile)
+	
+	return all_VA_objs
+
 def load_estimated_kernels(data_flags):
 
 	data_ID = data_flags[0]
@@ -91,12 +105,12 @@ def load_estimated_kernels(data_flags):
 
 	in_dir = '%s/assimilation/%s' % (DATA_DIR, data_ID)
 	estimated_kernels = \
-		sp.load('%s/est_linear_kernel_dt=%s_sigma=%s_kernel-length=%s.npy'
+		sp.load('%s/kernel_dt=%s_sigma=%s_kernel-length=%s.npy'
 			 % (in_dir, data_dt, data_sigma, kernel_length))	
 
 	return estimated_kernels
 
-def load_opt_est_kernel_objs(data_flags):
+def load_opt_kernel_objs(data_flags):
 	
 	data_ID = data_flags[0]
 	data_dt = data_flags[1]
@@ -104,10 +118,10 @@ def load_opt_est_kernel_objs(data_flags):
 	kernel_length = data_flags[3]
 
 	in_dir = '%s/assimilation/%s' % (DATA_DIR, data_ID)
-	filename = '%s/est_kernel_optimal_objects_dt=%s' \
+	filename = '%s/kernel_optimal_objects_dt=%s' \
 				'_sigma=%s_kernel-length=%s.npy' \
 				% (in_dir, data_dt, data_sigma, kernel_length)
 	with open(filename, 'r') as infile:
-		opt_est_kernel_objs = pickle.load(infile)
+		opt_kernel_objs = pickle.load(infile)
 	
-	return opt_est_kernel_objs
+	return opt_kernel_objs
