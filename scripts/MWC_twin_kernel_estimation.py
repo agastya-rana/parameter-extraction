@@ -33,7 +33,7 @@ def single_cell_FRET_linear_kernel(data_flags):
 	data_sigma = float(data_flags[2])
 	kernel_length = int(data_flags[3])
 
-	regularizations = 10.**sp.linspace(-5, 5, 500)
+	regularizations = 10.**sp.linspace(-5, 5, 20)
 
 	# Initialize FRET class 
 	scF = single_cell_FRET()

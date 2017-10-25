@@ -64,6 +64,7 @@ class single_cell_FRET():
 		self.kernel_tikhonov_matrix = None
 		self.kernel_inverse_hessian = None
 		self.kernel_Aa = None
+		self.kernel_estimator_nT = self.nT - self.kernel_length
 
 
 	#############################################
@@ -255,6 +256,14 @@ class single_cell_FRET():
 				' must be length %s' % self.nT
 			self.signal_vector = stimulus
 
-		response_vector = sp.convolve(kernel, self.signal_vector, mode='same')
+		self.kernel_length = len(kernel)
+		response_vector = sp.zeros(self.nT)
 
+		for iT in range(self.nT):
+			if iT >= self.kernel_length:
+				response_vector[iT] = \
+					sp.sum(self.signal_vector[iT - self.kernel_length: iT]*kernel)
+			else:
+				response_vector[iT] = \
+					sp.sum(self.signal_vector[:iT]*kernel[self.kernel_length - iT:])
 		return response_vector

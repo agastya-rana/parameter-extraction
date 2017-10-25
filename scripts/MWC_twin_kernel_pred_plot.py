@@ -96,7 +96,12 @@ def plot_MWC_kernel_twin_data(data_flags):
 	fig = plt.figure()
 	fig.set_size_inches(10, 8)
 
-	plt.subplot(211)
+	for estimated_kernel in estimated_kernels.T:
+		plt.subplot(311)
+		plt.plot(sp.arange(len(estimated_kernel))*a.dt, estimated_kernel, 
+					color='dodgerblue', lw=0.3)
+		
+	plt.subplot(312)
 	plt.scatter(Tt_EW, data_EW[:, 1], color='black', zorder=1002, s=0.2)
 	plt.scatter(Tt_PW, data_PW[:, 1], color='black', zorder=1002, s=0.2)
 	plt.plot(Tt_PW, true_PW[:, 1], color='black', zorder=1001, lw=0.5)
@@ -107,7 +112,7 @@ def plot_MWC_kernel_twin_data(data_flags):
 	plt.xlim(0, a.dt*(pred_nT + est_nT))
 	plt.ylim(-10, 30)
 
-	plt.subplot(212)
+	plt.subplot(313)
 	plt.plot(Tt_EW, stimuli_EW)
 	plt.plot(Tt_PW, stimuli_PW)
 	save_est_kernel_pred_plot(fig, data_flags)
