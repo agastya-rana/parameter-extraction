@@ -112,6 +112,8 @@ def save_est_kernel_pred_plot(fig, data_flags):
 	data_sigma = data_flags[2]
 	kernel_length = data_flags[3]
 
+	plt.tight_layout()
+
 	out_dir = '%s/assimilation/%s' % (DATA_DIR, data_ID)
 	plt.savefig('%s/est_kernel_pred_plot_dt=%s_sigma=%s_kernel-length=%s.png'
 				% (out_dir, data_dt, data_sigma, kernel_length))	
@@ -142,7 +144,8 @@ def save_opt_est_kernel_pred_plot(fig, data_flags):
 	plt.tight_layout()
 	
 	out_dir = '%s/assimilation/%s' % (DATA_DIR, data_ID)
-	plt.savefig('%s/opt_est_kernel_pred_plot_dt=%s_sigma=%s_kernel-length=%s.png'
+	plt.savefig('%s/opt_est_kernel_pred_plot_dt=%s_sigma=%s' \
+				'_kernel-length=%s.png'
 				% (out_dir, data_dt, data_sigma, kernel_length))	
 	plt.savefig('%s/opt_est_kernel_plot_dt=%s_sigma=%s_kernel-length=%s.svg'
                     % (out_dir, data_dt, data_sigma, kernel_length))
