@@ -37,17 +37,17 @@ def plot_MWC_opt_VA_pred(data_flags):
 	fig = opt_VA_pred_fig(dt, Tt_PW)
 
 	plt.subplot(311)
+	plt.plot(Tt_PW, stimuli_PW)
+
+	plt.subplot(312)
 	plt.scatter(Tt_PW, data_PW, color='black', zorder=1002, s=0.2)
 	plt.plot(Tt_PW, true_PW[:, 1], color='black', zorder=1001, lw=0.5)
 	plt.plot(Tt_PW, opt_pred_path[:, 1], color='orange', zorder=1003, lw=0.5)
 
-	plt.subplot(312)
+	plt.subplot(313)
 	plt.plot(Tt_PW, true_PW[:, 0], color='black', zorder=1001)
 	plt.plot(Tt_PW, opt_pred_path[:, 0], color='orange', zorder=1002, lw=0.3)
 	
-	plt.subplot(313)
-	plt.plot(Tt_PW, stimuli_PW)
-
 	print "Optimal estimated parameters: %s" % opt_pred_params
 	
 	save_opt_VA_pred_plot(fig, data_flags)

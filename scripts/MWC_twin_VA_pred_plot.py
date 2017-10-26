@@ -37,8 +37,12 @@ def plot_MWC_VA_pred(data_flags):
 	opt_pred_path = VA_opt_objects_dict['opt_pred_path']
 	
 	fig = VA_pred_fig(dt, Tt_EW, Tt_PW)
-	
+		
 	plt.subplot(311)
+	plt.plot(Tt_EW, stimuli_EW)
+	plt.plot(Tt_PW, stimuli_PW)
+	
+	plt.subplot(312)
 	plt.scatter(Tt_EW, data_EW, color='black', zorder=1002, s=0.2)
 	plt.scatter(Tt_PW, data_PW, color='black', zorder=1002, s=0.2)
 	plt.plot(Tt_PW, true_PW[:, 1], color='black', zorder=1001, lw=0.5)
@@ -46,7 +50,7 @@ def plot_MWC_VA_pred(data_flags):
 		plt.plot(Tt_PW, est_PW[:, 1, init_seed], color='dodgerblue', lw=0.3)
 	plt.plot(Tt_PW, opt_pred_path[:, 1], color='orange', zorder=1003, lw=0.5)
 	
-	plt.subplot(312)
+	plt.subplot(313)
 	plt.plot(Tt_EW, true_EW[:, 0], color='black', zorder=1001)
 	plt.plot(Tt_PW, true_PW[:, 0], color='black', zorder=1001)
 	for init_seed in IC_range:
@@ -54,10 +58,7 @@ def plot_MWC_VA_pred(data_flags):
 		plt.plot(Tt_PW, est_PW[:, 0, init_seed], color='dodgerblue', lw=0.3)
 	plt.plot(Tt_PW, opt_pred_path[:, 0], color='orange', zorder=1002, lw=0.3)
 	
-	plt.subplot(313)
-	plt.plot(Tt_EW, stimuli_EW)
-	plt.plot(Tt_PW, stimuli_PW)
-	
+
 	save_VA_pred_plot(fig, data_flags)
 	
 	
