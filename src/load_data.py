@@ -18,6 +18,7 @@ from local_methods import def_data_dir
 
 DATA_DIR = def_data_dir()
 
+
 def load_stim_file(stim_file):
 
 	filename = '%s/stim/%s.stim' % (DATA_DIR, stim_file)
@@ -54,78 +55,3 @@ def load_FRET_recording(dir, mat_file='FRET_data_workspace', cell=1):
 	data_dict['FRET_idx'] = FRET_idx
 	
 	return data_dict
-
-def load_VA_twin_estimates(data_flags, init_seed):
-	
-	data_dict = dict()
-	data_ID  = data_flags[0]
-	data_dt = data_flags[1]
-	data_sigma = data_flags[2]
-
-	in_dir = '%s/assimilation/%s' % (DATA_DIR, data_ID)
-	data_dict['est_states'] = sp.load('%s/paths_dt=%s_sigma=%s_IC=%s.npy' \
-							% (in_dir, data_dt, data_sigma, init_seed))
-	data_dict['est_params'] = sp.load('%s/params_dt=%s_sigma=%s_IC=%s.npy' \
-							% (in_dir, data_dt, data_sigma, init_seed))
-	data_dict['errors'] = sp.load('%s/action_errors_dt=%s_sigma=%s_IC=%s.npy' \
-							% (in_dir, data_dt, data_sigma, init_seed))
-
-	return data_dict
-
-def load_opt_VA_objs(data_flags):
-	
-	data_ID = data_flags[0]
-	data_dt = data_flags[1]
-	data_sigma = data_flags[2]
-
-	in_dir = '%s/assimilation/%s' % (DATA_DIR, data_ID)
-	filename = '%s/VA_optimal_objects_dt=%s_sigma=%s.npy' \
-				% (in_dir, data_dt, data_sigma)
-	with open(filename, 'r') as infile:
-		opt_VA_objs = pickle.load(infile)
-	
-	return opt_VA_objs
-
-def load_all_VA_objs(data_flags):
-	
-	data_ID = data_flags[0]
-	data_dt = data_flags[1]
-	data_sigma = data_flags[2]
-
-	in_dir = '%s/assimilation/%s' % (DATA_DIR, data_ID)
-	filename = '%s/VA_all_objects_dt=%s_sigma=%s.npy' \
-				% (in_dir, data_dt, data_sigma)
-	with open(filename, 'r') as infile:
-		all_VA_objs = pickle.load(infile)
-	
-	return all_VA_objs
-
-def load_estimated_kernels(data_flags):
-
-	data_ID = data_flags[0]
-	data_dt = data_flags[1]
-	data_sigma = data_flags[2]
-	kernel_length = data_flags[3]
-
-	in_dir = '%s/assimilation/%s' % (DATA_DIR, data_ID)
-	estimated_kernels = \
-		sp.load('%s/kernel_dt=%s_sigma=%s_kernel-length=%s.npy'
-			 % (in_dir, data_dt, data_sigma, kernel_length))	
-
-	return estimated_kernels
-
-def load_opt_kernel_objs(data_flags):
-	
-	data_ID = data_flags[0]
-	data_dt = data_flags[1]
-	data_sigma = data_flags[2]
-	kernel_length = data_flags[3]
-
-	in_dir = '%s/assimilation/%s' % (DATA_DIR, data_ID)
-	filename = '%s/kernel_optimal_objects_dt=%s' \
-				'_sigma=%s_kernel-length=%s.npy' \
-				% (in_dir, data_dt, data_sigma, kernel_length)
-	with open(filename, 'r') as infile:
-		opt_kernel_objs = pickle.load(infile)
-	
-	return opt_kernel_objs

@@ -40,6 +40,7 @@ def single_cell_FRET_VA(data_flag, init_seed):
 	# Initalize estimation 
 	scF.init_seed = init_seed
 	scF.set_init_est()
+	scF.set_est_pred_windows()
 
 	# Initalize annealer class
 	annealer = va_ode.Annealer()
