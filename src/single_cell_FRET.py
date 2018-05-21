@@ -90,8 +90,8 @@ class single_cell_FRET():
 		# Overwrite variables with passed arguments	
 		for key in kwargs:
 			
-			assert hasattr(self, '%s' % key), "%s not a single_cell_FRET "\
-				"attribute. Double-check or add to __init__" % key
+			assert hasattr(self, '%s' % key), "'%s' is not an attribute of "\
+				"the single_cell_FRET class. Check or add to __init__" % key
 			
 			val = kwargs[key]
 			

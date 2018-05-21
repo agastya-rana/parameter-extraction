@@ -23,6 +23,7 @@ class MWC_Tar():
 
 		self.param_names = ['K_off_a', 'K_on_a', 'Nn', 'alpha_m', 'm_0',
 							'a_0', 'tau_m', 'k_FR', 'tau_FR']
+		self.state_names = ['methyl', 'FRET index']
 		
 		# Set state and parameter dimensions
 		self.nD = 2

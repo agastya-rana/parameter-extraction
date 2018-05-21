@@ -65,6 +65,37 @@ def save_estimates(scF, annealer, data_flag):
 		cPickle.dump(scF, f, protocol=2)
 	print ('\n%s-%s data saved to %s.' % (data_flag, scF.init_seed, out_dir))
 
+def save_stim_and_meas_plots(scF, data_flag, save_plots=True):
+	
+	fig = plt.figure()
+	
+	# Plot stimuli
+	num_plots = len(scF.L_idxs) + 1
+	plt.subplot(num_plots, 1, 1)
+	plt.plot(scF.Tt, scF.stim)
+	
+	# Plot measured data (and true states if they exist)
+	for iL_idx, iL in enumerate(scF.L_idxs):
+		plt.subplot(num_plots, 1, iL_idx + 2)
+		plt.scatter(scF.Tt, scF.meas_data[:, iL_idx], s=2, color='red', 
+					label='%s' % scF.model().state_names[iL])
+		if scF.true_states is not None:
+			plt.plot(scF.Tt, scF.true_states[:, iL])
+	plt.legend()
+	
+	if save_plots == True:
+		out_dir = '%s/meas_data' % DATA_DIR
+		if not os.path.exists(out_dir):
+			os.makedirs(out_dir)
+		plt.savefig('%s/%s.png' % (out_dir, data_flag))
+	else:
+		plt.show()
+	
+	
+	
+	
+	
+	
 def save_VA_pred_plot(fig, data_flags):
 
 	data_ID = data_flags[0]

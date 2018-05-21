@@ -14,7 +14,8 @@ sys.path.append('../src')
 import scipy as sp
 from utils import get_flag
 from load_specs import read_specs_file, compile_all_run_vars
-from save_data import save_stim, save_true_states, save_meas_data
+from save_data import save_stim, save_true_states, save_meas_data, \
+						save_stim_and_meas_plots
 from single_cell_FRET import single_cell_FRET
 
 
@@ -35,6 +36,8 @@ def gen_twin_data(data_flag):
 	save_stim(scF, data_flag)
 	save_true_states(scF, data_flag)
 	save_meas_data(scF, data_flag)
+	save_stim_and_meas_plots(scF, data_flag)
+	
 	
 if __name__ == '__main__':
 	data_flag = get_flag()
