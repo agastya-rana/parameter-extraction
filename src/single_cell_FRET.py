@@ -275,6 +275,7 @@ class single_cell_FRET():
 		return self.model().df(t, x, (p, stim))
 
 	def set_est_pred_windows(self):
+
 		assert self.est_beg_T is not None, "Before setting estimation and "\
 			"prediction windows, set est_beg_T"
 		assert self.est_end_T is not None, "Before setting estimation and "\
@@ -285,7 +286,6 @@ class single_cell_FRET():
 		est_beg_idx = int(self.est_beg_T/self.dt)
 		est_end_idx = min(int(self.est_end_T/self.dt), self.nT - 1)
 		pred_end_idx = min(int(self.pred_end_T/self.dt), self.nT - 1)
-
 		self.est_wind_idxs = sp.arange(est_beg_idx, est_end_idx)		
 		self.pred_wind_idxs = sp.arange(est_end_idx, pred_end_idx)		
 
