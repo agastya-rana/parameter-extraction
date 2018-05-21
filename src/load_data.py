@@ -12,7 +12,8 @@ visit http://creativecommons.org/licenses/by-nc-sa/4.0/.
 import scipy as sp
 import scipy.io as sio
 import h5py
-import pickle
+import cPickle
+import gzip
 from local_methods import def_data_dir
 
 
@@ -55,3 +56,21 @@ def load_FRET_recording(dir, mat_file='FRET_data_workspace', cell=1):
 	data_dict['FRET_idx'] = FRET_idx
 	
 	return data_dict
+	
+def load_est_data_VA(data_flag, IC):
+	
+	in_dir = '%s/objects/%s' % (DATA_DIR, data_flag)
+	
+	with gzip.open('%s/obj_IC=%s.pklz' % (in_dir, IC), 'rb') as f:
+		obj = cPickle.load(f)
+	params = sp.load('%s/params_IC=%s.npy' % (in_dir, IC))
+	paths = sp.load('%s/paths_IC=%s.npy' % (in_dir, IC))
+	errors = sp.load('%s/action_errors_IC=%s.npy' % (in_dir, IC))
+	
+	est_dict = dict()
+	est_dict['obj'] = obj
+	est_dict['params'] = params
+	est_dict['paths'] = paths
+	est_dict['errors'] = errors
+	
+	return est_dict
