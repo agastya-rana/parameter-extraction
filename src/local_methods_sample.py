@@ -18,7 +18,6 @@ def def_data_dir():
 	scripts in this project
 	"""
 	
-	data_dir = "C:\Users/nk479/Dropbox (emonetlab)/" \
-				"users/nirag_kadakia/data/FRET-data-assimilation"
+	data_dir = 'path/to/data_directory'
 	
 	return data_dir
