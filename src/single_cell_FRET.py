@@ -21,7 +21,7 @@ import models
 from utils import smooth_vec
 
 INT_PARAMS = ['nT', 'nD', 'step_stim_density', 'step_stim_seed']
-LIST_PARAMS = ['L_idxs', 'x0', 'step_stim_vals', 'P_idxs']
+LIST_PARAMS = ['L_idxs', 'x0', 'step_stim_vals', 'P_idxs', 'beta_array']
 MODEL_PARAMS = ['model']
 STR_PARAMS = ['stim_file', 'stim_type', 'stim_smooth_type', 'params_set', 
 				'bounds_set', 'meas_file']
@@ -75,7 +75,7 @@ class single_cell_FRET():
 
 		# Variables for annealing run
 		self.alpha = 2.0
-		self.beta_array = sp.linspace(0, 60, 61)
+		self.beta_array = range(0, 61)
 		self.Rf0 = 1e-6
 
 		# Variables for linear kernel estimation
@@ -211,9 +211,9 @@ class single_cell_FRET():
 			print 'Measured data imported from %s.txt.' % self.meas_file
 		else:
 			assert self.true_states is not None, "Since no measurement file "\
-				"is specified, twin data will be generated. Before calling "\
-				"set_meas_data(), first generate true data with "\
-				"gen_true_states "
+				"is specified, twin data will be generated. But before calling "\
+				"set_meas_data(), you must first generate true data with "\
+				"gen_true_states."
 			
 			self.meas_data = sp.zeros((self.nT, len(self.L_idxs)))
 			sp.random.seed(self.meas_data_seed)
@@ -279,7 +279,7 @@ class single_cell_FRET():
 	
 	def df_data_generation(self, x, t, p):
 		"""
-		Function to return value of vector field in format used for scipy.odeint
+		Function to return value of vector field in format used for sp.odeint
 		"""
 		
 		return self.model().df(t, x, (p, self.eval_stim(t)))
@@ -289,8 +289,8 @@ class single_cell_FRET():
 		Forward integrate the model given true parameters and x0
 		"""
 		
-		self.true_states = odeint(self.df_data_generation, self.x0, 
-							self.Tt, args=(self.model().params[self.params_set], ))
+		self.true_states = odeint(self.df_data_generation, self.x0, self.Tt, 
+									args=(self.model().params[self.params_set], ))
 		
 
 

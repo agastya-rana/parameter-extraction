@@ -17,15 +17,22 @@ from utils import get_flag
 from single_cell_FRET import single_cell_FRET
 from load_specs import read_specs_file, compile_all_run_vars
 from load_data import load_meas_file, load_stim_file
+from save_data import save_estimates
 
 
 def single_cell_FRET_VA(data_flag, init_seed):
 	
-	# Load specifications from file; to be passed to single_cell_FRET object
+	# Load specifications from file; pass to single_cell_FRET object
 	list_dict = read_specs_file(data_flag)
 	vars_to_pass = compile_all_run_vars(list_dict)
 	scF = single_cell_FRET(**vars_to_pass)
 	
+	# If these files not set; data was generated and saved as data_flag
+	if scF.stim_file is None:
+		scF.stim_file = data_flag
+	if scF.meas_file is None:
+		scF.meas_file = data_flag
+
 	# Load stimulus and measurements
 	scF.set_stim()
 	scF.set_meas_data()
@@ -39,7 +46,7 @@ def single_cell_FRET_VA(data_flag, init_seed):
 	annealer.set_model(scF.df_estimation, scF.nD)
 	annealer.set_data(scF.meas_data, stim=scF.stim, t=scF.Tt)
 
-	# Set Rm to 
+	# Set Rm as inverse covariance; all parameters measured for now
 	Rm = 1.0/scF.meas_noise**2.0
 	P_idxs = sp.arange(scF.nP)
 	
@@ -54,7 +61,7 @@ def single_cell_FRET_VA(data_flag, init_seed):
 					adolcID=init_seed)
 	print("\nADOL-C annealing completed in %f s."%(time.time() - tstart))
 
-	save_estimates(annealer, data_flags)
+	save_estimates(scF, annealer, data_flag)
 
 
 if __name__ == '__main__':

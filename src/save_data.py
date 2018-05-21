@@ -10,11 +10,11 @@ visit http://creativecommons.org/licenses/by-nc-sa/4.0/.
 """
 
 import scipy as sp
-import scipy.io as sio
 import os
 import matplotlib.pyplot as plt
+import cPickle
+import gzip
 from local_methods import def_data_dir
-import pickle
 
 DATA_DIR = def_data_dir()
 
@@ -49,63 +49,21 @@ def save_meas_data(obj, data_flag):
 	sp.savetxt('%s/%s.txt' % (out_dir, data_flag), data_to_save, 
 				fmt='%.6f', delimiter='\t')
 
-
-				
-				
-				
-				
-				
-				
-				
-def save_VA_twin_data(time, states, stimuli, data_flags,
-						measured_vars_and_noise=[[0, 1]]):
+def save_estimates(scF, annealer, data_flag):
 	
-	data_ID = data_flags[0]
-	data_dt = data_flags[1]
-	data_sigma = data_flags[2]
-
-	nL = len(measured_vars_and_noise)
-	nT = len(time)
-	noisy_states = sp.zeros((nT, nL))
-	noises = []
-	
-	for meas_idx, vars_and_noise in enumerate(measured_vars_and_noise):
-		noisy_states[:, meas_idx] = states[:, vars_and_noise[0]]
-		noisy_states[:, meas_idx] += \
-			sp.random.normal(0, vars_and_noise[1],  nT)
-		noises.append(vars_and_noise[1])
-					
-	true_data = sp.vstack((time, states.T)).T
-	twin_data = sp.vstack((time, noisy_states.T)).T
-	
-	out_dir = '%s/assimilation/%s' % (DATA_DIR, data_ID)
+	out_dir = '%s/objects/%s' % (DATA_DIR, data_flag)
 	if not os.path.exists(out_dir):
 		os.makedirs(out_dir)
 	
-	sp.save('%s/measured_states_dt=%s_sigma=%s.npy' 
-				% (out_dir, data_dt, data_sigma), twin_data)
-	sp.save('%s/true_states_dt=%s_sigma=%s.npy' 
-			% (out_dir, data_dt, data_sigma), true_data)
-	sp.save('%s/stimulus_dt=%s_sigma=%s.npy' 
-			% (out_dir, data_dt, data_sigma), stimuli)
+	annealer.save_params('%s/params_IC=%s.npy' % (out_dir, scF.init_seed))
+	annealer.save_paths('%s/paths_IC=%s.npy' % (out_dir, scF.init_seed))
+	annealer.save_action_errors('%s/action_errors_IC=%s.npy' 
+								% (out_dir, scF.init_seed))
 
-def save_estimates(annealer, data_flags):
-	
-	data_ID = data_flags[0]
-	data_dt = data_flags[1]
-	data_sigma = data_flags[2]
-	init_seed = data_flags[3]
-
-	out_dir = '%s/assimilation/%s' % (DATA_DIR, data_ID)
-	if not os.path.exists(out_dir):
-		os.makedirs(out_dir)
-
-	annealer.save_params('%s/params_dt=%s_sigma=%s_IC=%s.npy' 
-							% (out_dir, data_dt, data_sigma, init_seed))
-	annealer.save_paths('%s/paths_dt=%s_sigma=%s_IC=%s.npy'
-							% (out_dir, data_dt, data_sigma, init_seed))
-	annealer.save_action_errors('%s/action_errors_dt=%s_sigma=%s_IC=%s.npy' 
-							% (out_dir, data_dt, data_sigma, init_seed))
+	obj_file = ('%s/obj_IC=%s.pklz' % (out_dir, scF.init_seed))
+	with gzip.open(obj_file, 'wb') as f:
+		cPickle.dump(scF, f, protocol=2)
+	print ('\n%s-%s data saved to %s.' % (data_flag, scF.init_seed, out_dir))
 
 def save_VA_pred_plot(fig, data_flags):
 
