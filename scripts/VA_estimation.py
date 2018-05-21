@@ -12,12 +12,11 @@ http://creativecommons.org/licenses/by-nc-sa/4.0/.
 import sys, time
 sys.path.append('../src')
 import scipy as sp
-#from varanneal import va_ode
+from varanneal import va_ode
 from utils import get_flag
 from single_cell_FRET import single_cell_FRET
 from load_specs import read_specs_file, compile_all_run_vars
 from load_data import load_meas_file, load_stim_file
-
 
 
 def single_cell_FRET_VA(data_flag, init_seed):
@@ -38,7 +37,7 @@ def single_cell_FRET_VA(data_flag, init_seed):
 	# Initalize annealer class
 	annealer = va_ode.Annealer()
 	annealer.set_model(scF.df_estimation, scF.nD)
-	annealer.set_data(measurements, stim=scF.stim,  t=scF.Tt)
+	annealer.set_data(scF.meas_data, stim=scF.stim, t=scF.Tt)
 
 	# Set Rm to 
 	Rm = 1.0/scF.meas_noise**2.0
