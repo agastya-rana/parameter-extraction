@@ -294,9 +294,6 @@ class single_cell_FRET():
 		assert len(self.pred_wind_idxs) > 0, \
 			'Prediction window has len 0; change est_end_T and/or pred_end_T'
 
-		self.est_Tt = self.Tt[self.est_wind_idxs]
-		self.pred_Tt = self.Tt[self.pred_wind_idxs]
-
 	
 
 	#############################################
