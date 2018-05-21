@@ -19,7 +19,7 @@ from single_cell_FRET import single_cell_FRET
 
 
 def gen_py_data_from_mat(dir='170913/Device1/FRET1', 
-							mat_file='FRET_data_workspace', cell=12):
+							mat_file='FRET_data_workspace', cell=17):
 	
 	data = load_FRET_recording(dir, cell=cell, mat_file=mat_file)
 	

@@ -20,18 +20,25 @@ DATA_DIR = def_data_dir()
 
 def load_stim_file(stim_file):
 
-	filename = '%s/stimuli/%s.txt' % (DATA_DIR, stim_file)
+	filename = '%s/stim/%s.stim' % (DATA_DIR, stim_file)
 	stim = sp.loadtxt(filename)
 	
 	return stim
 	
 def load_meas_file(meas_file):
 
-	filename = '%s/meas_data/%s.txt' % (DATA_DIR, meas_file)
+	filename = '%s/meas_data/%s.meas' % (DATA_DIR, meas_file)
 	meas_data = sp.loadtxt(filename)
 	
 	return meas_data
 
+def load_true_file(true_file):
+
+	filename = '%s/true_states/%s.true' % (DATA_DIR, true_file)
+	true_states = sp.loadtxt(filename)
+	
+	return true_states
+	
 def load_FRET_recording(dir, mat_file='FRET_data_workspace', cell=1):
 	
 	filename = '%s/recordings/%s/%s.mat' % (DATA_DIR, dir, mat_file)

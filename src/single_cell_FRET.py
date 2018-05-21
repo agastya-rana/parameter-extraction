@@ -128,7 +128,7 @@ class single_cell_FRET():
 		
 		if self.stim_file is not None:
 			self.import_stim_data()
-			print 'Stimulus data imported from %s.txt.' % self.stim_file
+			print 'Stimulus data imported from %s.stim.' % self.stim_file
 		else:
 			if self.stim_type == 'step':
 				self.set_step_stim()
@@ -208,7 +208,7 @@ class single_cell_FRET():
 		
 		if self.meas_file is not None:
 			self.import_meas_data()
-			print 'Measured data imported from %s.txt.' % self.meas_file
+			print 'Measured data imported from %s.meas.' % self.meas_file
 		else:
 			assert self.true_states is not None, "Since no measurement file "\
 				"is specified, twin data will be generated. But before calling "\
@@ -225,7 +225,7 @@ class single_cell_FRET():
 		Import measured data from file
 		"""
 		
-		Tt_meas_data = load_meas_file(self.stim_file)
+		Tt_meas_data = load_meas_file(self.meas_file)
 		self.meas_data = Tt_meas_data[:, 1:]
 		
 		assert (sp.all(Tt_meas_data[:, 0] == self.Tt)), "Tt vector in "\
@@ -233,7 +233,7 @@ class single_cell_FRET():
 		assert self.meas_data.shape[1] == len(self.L_idxs), "Dimension of "\
 			"imported measurement vectors must be same as length of L_idxs"
 
-			
+	
 		
 	#############################################
 	#####			VA parameters			#####
@@ -292,7 +292,7 @@ class single_cell_FRET():
 		self.true_states = odeint(self.df_data_generation, self.x0, self.Tt, 
 									args=(self.model().params[self.params_set], ))
 		
-
+	
 
 	#############################################
 	#####		Kernel estimation			#####
