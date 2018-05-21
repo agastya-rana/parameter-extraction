@@ -12,16 +12,53 @@ visit http://creativecommons.org/licenses/by-nc-sa/4.0/.
 import scipy as sp
 import scipy.io as sio
 import os
-import matplotlib
-matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from local_methods import def_data_dir
 import pickle
 
 DATA_DIR = def_data_dir()
 
+
+def save_stim(obj, data_flag):
+
+	out_dir = '%s/stimuli' % DATA_DIR
+	if not os.path.exists(out_dir):
+		os.makedirs(out_dir)
+
+	data_to_save = sp.vstack((obj.Tt, obj.stim)).T
+	sp.savetxt('%s/%s.txt' % (out_dir, data_flag), data_to_save, 
+				fmt='%.6f', delimiter='\t')
+		
+def save_true_states(obj, data_flag):
+
+	out_dir = '%s/true_states' % DATA_DIR
+	if not os.path.exists(out_dir):
+		os.makedirs(out_dir)
+
+	data_to_save = sp.vstack((obj.Tt, obj.true_states.T)).T
+	sp.savetxt('%s/%s.txt' % (out_dir, data_flag), data_to_save, 
+				fmt='%.6f', delimiter='\t')
+
+def save_meas_data(obj, data_flag):
+
+	out_dir = '%s/meas_data' % DATA_DIR
+	if not os.path.exists(out_dir):
+		os.makedirs(out_dir)
+
+	data_to_save = sp.vstack((obj.Tt, obj.meas_data.T)).T
+	sp.savetxt('%s/%s.txt' % (out_dir, data_flag), data_to_save, 
+				fmt='%.6f', delimiter='\t')
+
+
+				
+				
+				
+				
+				
+				
+				
 def save_VA_twin_data(time, states, stimuli, data_flags,
-					measured_vars_and_noise=[[0, 1]]):
+						measured_vars_and_noise=[[0, 1]]):
 	
 	data_ID = data_flags[0]
 	data_dt = data_flags[1]

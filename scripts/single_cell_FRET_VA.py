@@ -12,56 +12,44 @@ http://creativecommons.org/licenses/by-nc-sa/4.0/.
 import sys, time
 sys.path.append('../src')
 import scipy as sp
-from varanneal import va_ode
-from utils import get_flags
+#from varanneal import va_ode
+from utils import get_flag
 from single_cell_FRET import single_cell_FRET
-from load_data import load_VA_twin_data
-from save_data import save_estimates
-from params_bounds import *
+from load_specs import read_specs_file, compile_all_run_vars
+from load_data import load_meas_file, load_stim_file
 
 
-def single_cell_FRET_VA(data_flags):
-	"""
-	Function to run a full annealing cycle on FRET data. 
-	Uses data saved from MWC_twin_data.py; run this first.
-	command line arguments: data_flag, dt, data noise, and 
-	initial condition seed.
-	"""	
 
-	data_ID = data_flags[0]
-	data_dt = float(data_flags[1])
-	data_sigma = float(data_flags[2])
-	init_seed = int(data_flags[3])
-
-	# Initialize FRET class 
-	scF = single_cell_FRET()
-	scF.set_param_bounds(bounds_dict=bounds_Tar_3)
-	scF.set_state_bounds(bounds_dict=bounds_Tar_3)
-	scF.set_bounds()
-	scF.Rm = 1.0/data_sigma**2.0
+def single_cell_FRET_VA(data_flag, init_seed):
 	
-	# Load twin data from file / match scF params
-	data_dict = load_VA_twin_data(data_flags=data_flags)
-	measurements = data_dict['measurements'][:, 1:]
-	stimuli = data_dict['stimuli'][:]
-	scF.Tt = data_dict['measurements'][:, 0]
-	scF.nT = len(scF.Tt)
-	scF.dt = scF.Tt[1]-scF.Tt[0]
+	# Load specifications from file; to be passed to single_cell_FRET object
+	list_dict = read_specs_file(data_flag)
+	vars_to_pass = compile_all_run_vars(list_dict)
+	scF = single_cell_FRET(**vars_to_pass)
+	
+	# Load stimulus and measurements
+	scF.set_stim()
+	scF.set_meas_data()
+	
+	# Initalize estimation 
 	scF.init_seed = init_seed
-	scF.initial_estimate()
-	scF.beta_array = sp.linspace(0, 50, 51)
+	scF.set_init_est()
 
 	# Initalize annealer class
 	annealer = va_ode.Annealer()
 	annealer.set_model(scF.df_estimation, scF.nD)
-	annealer.set_data(measurements, stim=stimuli,  t=scF.Tt)
+	annealer.set_data(measurements, stim=scF.stim,  t=scF.Tt)
 
+	# Set Rm to 
+	Rm = 1.0/scF.meas_noise**2.0
+	P_idxs = sp.arange(scF.nP)
+	
 	# Estimate
 	BFGS_options = {'gtol':1.0e-8, 'ftol':1.0e-8, 'maxfun':1000000, 
 						'maxiter':1000000}
 	tstart = time.time()
 	annealer.anneal(scF.x_init, scF.p_init, scF.alpha, scF.beta_array, 
-					scF.Rm, scF.Rf0, scF.Lidx, scF.Pidx, dt_model=None, 
+					Rm, scF.Rf0, scF.L_idxs, P_idxs, dt_model=None, 
 					init_to_data=True, bounds=scF.bounds, disc='euler', 
 					method='L-BFGS-B', opt_args=BFGS_options, 
 					adolcID=init_seed)
@@ -71,5 +59,6 @@ def single_cell_FRET_VA(data_flags):
 
 
 if __name__ == '__main__':
-	data_flags = get_flags()
-	single_cell_FRET_VA(data_flags)
+	data_flag = str(sys.argv[1])
+	init_seed = int(sys.argv[2])
+	single_cell_FRET_VA(data_flag, init_seed)

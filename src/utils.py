@@ -1,7 +1,7 @@
 """
-General, miscellaneous functions for CS decoding scripts.
+General, miscellaneous functions for FRET data assimilation
 
-Created by Nirag Kadakia at 23:30 07-31-2017
+Created by Nirag Kadakia at 12:30 10-16-2017
 This work is licensed under the 
 Creative Commons Attribution-NonCommercial-ShareAlike 4.0 
 International License. 
@@ -10,6 +10,7 @@ visit http://creativecommons.org/licenses/by-nc-sa/4.0/.
 """
 
 import scipy as sp
+from scipy.ndimage.filters import gaussian_filter
 import sys
 
 def get_flags():
@@ -66,81 +67,7 @@ def noisify(Ss, params=[0, 1]):
 	
 	return Ss
 
-def project_tensor(tensor, axes, projection_components, projected_axes):
-	"""
-	Project a tensor array of rank > 2 to lower dimensions
-	along given axes.
-	
-	Args:
-		tensor: numpy array whose shape has length > 2
-		axes: dictionary whose keys are the names of the variables
-						to be projected to and whose values are their 
-						respective ranges as rank-1 numpy arrays.
-		projection_components: dictionary of axes to project along, whose 
-					keys are the names of the projected axis variablse and 
-					whose values indicate the component along which to 
-					take the projection. Index must be less than or equal 
-					to the length of this axis.
-		projected_axes: 2-element list indicated which indices of axes 
-						are to be projected to. 
-		
-	Returns:
-		tensor: the projected tensor of shape 1 less than the input tensor.
-	"""
-
-	assert len(tensor.shape) > 2, \
-		'Cannot project a rank 1 or 2 tensor to two dimensions'
-	assert len(projected_axes) == 2, 'Can only project to two dimensions'
-	
-	for idx, name in enumerate(axes.keys()):
-		if idx == projected_axes[0]:
-			pass
-		elif idx == projected_axes[1]:
-			pass
-		else:
-			proj_axis = axes.keys().index(name)
-			
-			try:
-				print ('Setting %s fixed..' % name)
-				proj_element = projection_components[name]
-			except:
-				print ('Need to specify iterated variable values that ' \
-						'are not being plotted in projection_components ' \
-						'dictionary')
-				quit()
-			
-			assert (proj_element < len(axes[name])), \
-					'Fixed index out of range, %s >= %s'\
-					% (proj_element, len(axes[name]))
-			proj_vec = sp.zeros(len(axes[name]))
-			proj_vec[proj_element] = 1.0
-			
-			tensor = sp.tensordot(tensor, proj_vec, [proj_axis, 0])
-	
-	return tensor
-	
-def clip_array(array_dict, min=1e-10, max=1e10):
-	"""
-	Clip an array to a particular interval.
-	"""
-	
-	for name, array in array_dict.items():
-		
-		lower_bound_elements = sp.sum(array < min)
-		if lower_bound_elements > 0:
-			print 'Clipping %s; %s lower bound elements' \
-					% (name, lower_bound_elements)
-			array_dict[name] = array.clip(min=min)
-	
-		upper_bound_elements = sp.sum(array > max)
-		if upper_bound_elements > 0:
-			print 'Clipping %s; %s upper bound elements' \
-					% (name, upper_bound_elements)
-			array_dict[name] = array.clip(max=max)
-	
-	return array_dict
-
-def smooth(x, window_len=11, window='hanning'):
+def smooth_vec(x, window_len=11, window='gaussian'):
 	"""
 	Smooth 1D data using a window with requested size. This method is 
 	based on the convolution of a scaled window with the signal.
@@ -168,24 +95,26 @@ def smooth(x, window_len=11, window='hanning'):
 			return y[(window_len/2-1):-(window_len/2)] instead of just y.
 	"""
 
+	if window == 'gaussian':
+		x = gaussian_filter(x, sigma=window_len)
+		return x
 
 	if x.ndim != 1:
 		raise ValueError, "smooth only accepts 1 dimension arrays."
 	if x.size < window_len:
 		raise ValueError, "Input vector needs to be bigger than window size."
-	if window_len<3:
+	if window_len < 3:
 		return x
 
 	if not window in ['flat', 'hanning', 'hamming', 'bartlett', 'blackman']:
 		raise ValueError, "Window is one of 'flat', 'hanning'," \
 							"'hamming', 'bartlett', 'blackman'"
 
-
 	s = sp.r_[x[window_len-1:0:-1],x,x[-2:-window_len-1:-1]]
-	if window == 'flat': #moving average
-		w = sp.ones(window_len,'d')
+	if window == 'flat': # moving average
+		w = sp.ones(window_len, 'd')
 	else:
-		w = eval('sp.'+window+'(window_len)')
+		w = eval('sp.' + window + '(window_len)')
 
-	y = sp.convolve(w/w.sum(),s,mode='valid')
-	return y
+	y = sp.convolve(w/w.sum(), s, mode='valid')
+	return y[:len(x)]
