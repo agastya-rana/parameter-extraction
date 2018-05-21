@@ -66,9 +66,9 @@ class single_cell_FRET():
 		self.est_beg_T = None
 		self.est_end_T = None
 		self.pred_end_T = None
-		self.est_window_idxs = None
-		self.pred_window_idxs = None
-		
+		self.est_wind_idxs = None
+		self.pred_wind_idxs = None		
+
 		# Variables for optimization of single annealing step
 		self.nP = 9
 		self.param_bounds = None	
@@ -282,17 +282,23 @@ class single_cell_FRET():
 		assert self.pred_end_T is not None, "Before setting estimation and "\
 			"prediction windows, set pred_end_T"
 		
-		self.est_window_idxs = [0, 0]
-		self.est_windows_idxs[0] = int(self.est_beg_T/dt)
-		self.est_windows_idxs[1] = min(int(self.est_end_T/dt), len(Tt) - 1)
-		self.pred_windows_idxs[0] = min(int(self.est_end_T/dt), len(Tt) -1)
-		self.pred_windows_idxs[1] = min(int(self.pred_beg_T/dt), len(Tt) - 1)
-		
-		assert self.pred_window_idxs[1] - pred_window_idxs[0] > 1,
+		est_beg_idx = int(self.est_beg_T/self.dt)
+		est_end_idx = min(int(self.est_end_T/self.dt), self.nT - 1)
+		pred_end_idx = min(int(self.pred_end_T/self.dt), self.nT - 1)
+
+		self.est_wind_idxs = sp.arange(est_beg_idx, est_end_idx)		
+		self.pred_wind_idxs = sp.arange(est_end_idx, pred_end_idx)		
+
+		assert len(self.est_wind_idxs) > 0, \
+			'Estimation window has len 0; change est_beg_T and/or est_end_T'
+		assert len(self.pred_wind_idxs) > 0, \
 			'Prediction window has len 0; change est_end_T and/or pred_end_T'
-		
+
+		self.est_Tt = self.Tt[self.est_wind_idxs]
+		self.pred_Tt = self.Tt[self.pred_wind_idxs]
+
 	
-	
+
 	#############################################
 	#####	Twin data generation functions	#####
 	#############################################
@@ -312,7 +318,7 @@ class single_cell_FRET():
 		"""
 		
 		self.true_states = odeint(self.df_data_generation, self.x0, self.Tt, 
-									args=(self.model().params[self.params_set], ))
+								args=(self.model().params[self.params_set], ))
 		
 	
 

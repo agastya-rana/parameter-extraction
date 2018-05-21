@@ -13,7 +13,6 @@ import sys, time
 sys.path.append('../src')
 import scipy as sp
 from varanneal import va_ode
-from utils import get_flag
 from single_cell_FRET import single_cell_FRET
 from load_specs import read_specs_file, compile_all_run_vars
 from load_data import load_meas_file, load_stim_file
@@ -27,13 +26,11 @@ def single_cell_FRET_VA(data_flag, init_seed):
 	vars_to_pass = compile_all_run_vars(list_dict)
 	scF = single_cell_FRET(**vars_to_pass)
 	
-	# If these files not set; data was generated and saved as data_flag
+	# If stim and meas were not imported, then data was saved as data_flag
 	if scF.stim_file is None:
 		scF.stim_file = data_flag
 	if scF.meas_file is None:
 		scF.meas_file = data_flag
-
-	# Load stimulus and measurements
 	scF.set_stim()
 	scF.set_meas_data()
 	
@@ -45,7 +42,9 @@ def single_cell_FRET_VA(data_flag, init_seed):
 	# Initalize annealer class
 	annealer = va_ode.Annealer()
 	annealer.set_model(scF.df_estimation, scF.nD)
-	annealer.set_data(scF.meas_data, stim=scF.stim, t=scF.Tt)
+	annealer.set_data(scF.meas_data[scF.est_wind_idxs, :], 
+						stim=scF.stim[scF.est_wind_idxs], 
+						t=scF.Tt[scF.est_wind_idxs])
 
 	# Set Rm as inverse covariance; all parameters measured for now
 	Rm = 1.0/scF.meas_noise**2.0
@@ -55,9 +54,10 @@ def single_cell_FRET_VA(data_flag, init_seed):
 	BFGS_options = {'gtol':1.0e-8, 'ftol':1.0e-8, 'maxfun':1000000, 
 						'maxiter':1000000}
 	tstart = time.time()
-	annealer.anneal(scF.x_init, scF.p_init, scF.alpha, scF.beta_array, 
-					Rm, scF.Rf0, scF.L_idxs, P_idxs, dt_model=None, 
-					init_to_data=True, bounds=scF.bounds, disc='euler', 
+	annealer.anneal(scF.x_init[scF.est_wind_idxs], scF.p_init, 
+					scF.alpha, scF.beta_array, Rm, scF.Rf0, 
+					scF.L_idxs, P_idxs, dt_model=None, init_to_data=True, 
+					bounds=scF.bounds, disc='euler', 
 					method='L-BFGS-B', opt_args=BFGS_options, 
 					adolcID=init_seed)
 	print("\nADOL-C annealing completed in %f s."%(time.time() - tstart))

@@ -11,6 +11,8 @@ visit http://creativecommons.org/licenses/by-nc-sa/4.0/.
 
 import scipy as sp
 import os
+import matplotlib
+matplotlib.use('agg')
 import matplotlib.pyplot as plt
 import cPickle
 import gzip
