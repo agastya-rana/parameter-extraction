@@ -209,6 +209,17 @@ class MWC_MM_2_var():
 		
 		# Bounds dictionaries
 		self.bounds = dict()
+		self.bounds['exact'] = dict()
+		self.bounds['exact']['states'] = [[0.0, 10.0], [-100, 100]]
+		self.bounds['exact']['params'] = [[18, 18],		# K_I binding constant
+										[0.5, 0.5],		# m_0 bkg methyl level
+										[2., 2.,		# alpha_m 
+										[0.32, 0.32],	# K_R
+										[0.30, 0.30],	# K_B 
+										[5., 5.],		# N cluster size
+										[1e-3, 1],		# V_R
+										[1e-3, 1], 		# V_B
+										[50., 50.]]		# a-->FRET scalar
 		self.bounds['1a'] = dict()
 		self.bounds['1a']['states'] = [[0.0, 10.0], [-100, 100]]
 		self.bounds['1a']['params'] = [[1, 50],			# K_I binding constant
