@@ -21,7 +21,8 @@ import models
 from utils import smooth_vec
 
 INT_PARAMS = ['nT', 'nD', 'step_stim_density', 'step_stim_seed']
-LIST_PARAMS = ['L_idxs', 'x0', 'step_stim_vals', 'P_idxs', 'beta_array']
+LIST_PARAMS = ['L_idxs', 'x0', 'step_stim_vals', 'P_idxs', 'beta_array', 
+				'meas_noise']
 MODEL_PARAMS = ['model']
 STR_PARAMS = ['stim_file', 'stim_type', 'stim_smooth_type', 'params_set', 
 				'bounds_set', 'meas_file']
@@ -53,7 +54,7 @@ class single_cell_FRET():
 		self.meas_data = None
 		self.meas_file = None
 		self.meas_data_seed = 0
-		self.meas_noise = 1.0
+		self.meas_noise = [1.0]
 		
 		# Variables for integrating model/twin data generation
 		self.model = models.MWC_Tar
@@ -222,8 +223,13 @@ class single_cell_FRET():
 			
 			self.meas_data = sp.zeros((self.nT, len(self.L_idxs)))
 			sp.random.seed(self.meas_data_seed)
-			self.meas_data = self.true_states[:, self.L_idxs] + \
-				sp.random.normal(0, self.meas_noise, size=self.meas_data.shape)
+			
+			assert len(self.meas_noise) == len(self.L_idxs), "meas_noise must "\
+				"be a list of length L_idxs = %s" % len(self.L_idxs)
+			
+			for iL_idx, iL in enumerate(self.L_idxs):
+				self.meas_data[:, iL_idx] = self.true_states[:, iL] + \
+					sp.random.normal(0, self.meas_noise[iL_idx], self.nT)
 			
 	def import_meas_data(self):
 		"""
@@ -313,6 +319,9 @@ class single_cell_FRET():
 		"""
 		Forward integrate the model given true parameters and x0
 		"""
+		
+		assert len(self.x0) == self.nD, "Initial state has dimension %s != "\
+			"model dimension %s" % (len(self.x0), self.nD)
 		
 		self.true_states = odeint(self.df_data_generation, self.x0, self.Tt, 
 								args=(self.model().params[self.params_set], ))
