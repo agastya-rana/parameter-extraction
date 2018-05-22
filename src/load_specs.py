@@ -66,16 +66,10 @@ def read_specs_file(data_flag, data_dir=data_dir):
 				var_type = keys[0]
 				if var_type == 'data_var':
 					var_name = keys[1]
-					try:
-						data_vars[var_name] = float(keys[2])
-					except ValueError:
-						data_vars[var_name] = str(keys[2])
+					data_vars[var_name] = str(keys[2])
 				elif var_type == 'est_var':
 					var_name = keys[1]
-					try:
-						est_vars[var_name] = float(keys[2])
-					except ValueError:
-						est_vars[var_name] = str(keys[2])
+					est_vars[var_name] = str(keys[2])
 				elif var_type == 'est_spec':
 					var_name = keys[1]
 					est_specs[var_name] = keys[2:]
