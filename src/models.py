@@ -213,7 +213,7 @@ class MWC_MM_2_var():
 		self.bounds['exact']['states'] = [[0.0, 10.0], [-100, 100]]
 		self.bounds['exact']['params'] = [[18, 18],		# K_I binding constant
 										[0.5, 0.5],		# m_0 bkg methyl level
-										[2., 2.,		# alpha_m 
+										[2., 2.],		# alpha_m 
 										[0.32, 0.32],	# K_R
 										[0.30, 0.30],	# K_B 
 										[5., 5.],		# N cluster size
