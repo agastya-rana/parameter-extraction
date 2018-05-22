@@ -56,7 +56,7 @@ class generic_model_class():
 		The vector field function. 
 		
 		Args:
-			t: float giving time at which to evaluate non-autonomous vector field.
+			t: float; time at which to evaluate non-autonomous vector field.
 			x: numpy array of arbitrary shape, provided axis -1 
 						has length self.nD. This allows vectorized 
 						evaluation.
@@ -197,8 +197,8 @@ class MWC_MM_2_var():
 		
 		# True parameter dictionaries
 		self.params = dict()
-		self.params['1'] = [1., 	# K_I binding constant
-							2.0, 	# m_0 bkgrnd methyl level
+		self.params['1'] = [18., 	# K_I binding constant
+							0.5, 	# m_0 bkgrnd methyl level
 							2.0, 	# alpha_m 
 							0.32, 	# K_R
 							0.30,	# K_B 
@@ -210,15 +210,15 @@ class MWC_MM_2_var():
 		# Bounds dictionaries
 		self.bounds = dict()
 		self.bounds['1a'] = dict()
-		self.bounds['1a']['states'] = [[1.0, 2.0], [-100, 100]]
-		self.bounds['1a']['params'] = [[0.01, 0.05],	# K_I binding constant
-										[0.2, 0.7],		# m_0 bkgrnd methyl level
-										[4, 6],			# alpha_m 
-										[0.1, 10],		# K_R
-										[0.1, 10],		# K_B 
-										[1, 200],		# N cluster size
-										[1, 200],		# V_R
-										[0.01, 5], 		# V_B
+		self.bounds['1a']['states'] = [[0.0, 10.0], [-100, 100]]
+		self.bounds['1a']['params'] = [[1, 50],			# K_I binding constant
+										[0, 10],		# m_0 bkg methyl level
+										[3, 7],			# alpha_m 
+										[0.32, 0.32],	# K_R
+										[0.30, 0.30],	# K_B 
+										[1, 10],		# N cluster size
+										[1e-3, 1],		# V_R
+										[1e-3, 1], 		# V_B
 										[0, 100]]		# a-->FRET scalar
 					
 	def df(self, t, x, (p, stim)):

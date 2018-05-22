@@ -47,7 +47,7 @@ def single_cell_FRET_VA(data_flag, init_seed):
 						t=scF.Tt[scF.est_wind_idxs])
 
 	# Set Rm as inverse covariance; all parameters measured for now
-	Rm = 1.0/scF.meas_noise**2.0
+	Rm = 1.0/sp.asarray(scF.meas_noise)**2.0
 	P_idxs = sp.arange(scF.nP)
 	
 	# Estimate
