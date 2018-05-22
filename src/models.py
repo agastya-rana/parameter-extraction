@@ -224,7 +224,7 @@ class MWC_MM_2_var():
 		self.bounds['1b']['states'] = [[0.0, 10.0], [-100, 100]]
 		self.bounds['1b']['params'] = [[15, 25],		# K_I binding constant
 										[0.5, 0.5],		# m_0 bkg methyl level
-										[1.0, 3.0],		# alpha_m 
+										[2.0, 2.0],		# alpha_m 
 										[0.32, 0.32],	# K_R
 										[0.30, 0.30],	# K_B 
 										[1, 10],		# N cluster size
