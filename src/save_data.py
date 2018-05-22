@@ -87,3 +87,13 @@ def save_meas_plots(scF, data_flag):
 	out_dir = '%s/meas_data' % DATA_DIR
 	plt.savefig('%s/%s.png' % (out_dir, data_flag))
 	plt.close()
+
+def save_pred_data(data_dict, data_flag):
+	
+	out_dir = '%s/objects/%s' % (DATA_DIR, data_flag)
+	if not os.path.exists(out_dir):
+		os.makedirs(out_dir)
+	
+	filename = '%s/preds.pklz' % out_dir
+	with open(filename, 'wb') as f:
+		cPickle.dump(data_dict, f, cPickle.HIGHEST_PROTOCOL)
