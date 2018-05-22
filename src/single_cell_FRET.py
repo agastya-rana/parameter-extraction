@@ -57,7 +57,7 @@ class single_cell_FRET():
 		self.meas_noise = [1.0]
 		
 		# Variables for integrating model/twin data generation
-		self.model = models.MWC_Tar
+		self.model = models.MWC_Tar()
 		self.params_set = 'Tar_1'
 		self.bounds_set = 'Tar_1'
 		self.true_states = None
@@ -108,7 +108,7 @@ class single_cell_FRET():
 			elif key in MODEL_PARAMS:
 				assert hasattr(models, '%s' % val), 'Model class "%s" not in '\
 					'models module' % val
-				exec ('self.%s = models.%s' % (key, val))
+				exec ('self.%s = models.%s()' % (key, val))
 			elif key in LIST_PARAMS:
 				try:
 					exec('len(%s)' % val)
@@ -256,11 +256,11 @@ class single_cell_FRET():
 		
 		print 'Initializing estimate with seed %s' % self.init_seed
 		
-		assert (self.nD == self.model().nD), 'self.nD != %s.nD' % self.model
-		assert (self.nP == self.model().nP), 'self.nP != %s.nP' % self.model
+		assert (self.nD == self.model.nD), 'self.nD != %s.nD' % self.model
+		assert (self.nP == self.model.nP), 'self.nP != %s.nP' % self.model
 		
-		self.state_bounds = self.model().bounds[self.bounds_set]['states']
-		self.param_bounds = self.model().bounds[self.bounds_set]['params']
+		self.state_bounds = self.model.bounds[self.bounds_set]['states']
+		self.param_bounds = self.model.bounds[self.bounds_set]['params']
 		self.bounds = sp.vstack((self.state_bounds, self.param_bounds))
 		self.x_init = sp.zeros((self.nT, self.nD))
 		self.p_init = sp.zeros(self.nP)
@@ -278,7 +278,7 @@ class single_cell_FRET():
 		Function to return value of vector field in format used for varanneal
 		"""
 		
-		return self.model().df(t, x, (p, stim))
+		return self.model.df(t, x, (p, stim))
 
 	def set_est_pred_windows(self):
 
@@ -313,7 +313,7 @@ class single_cell_FRET():
 		Function to return value of vector field in format used for sp.odeint
 		"""
 		
-		return self.model().df(t, x, (p, self.eval_stim(t)))
+		return self.model.df(t, x, (p, self.eval_stim(t)))
 	
 	def gen_true_states(self):
 		"""
@@ -324,7 +324,7 @@ class single_cell_FRET():
 			"model dimension %s" % (len(self.x0), self.nD)
 		
 		self.true_states = odeint(self.df_data_generation, self.x0, self.Tt, 
-								args=(self.model().params[self.params_set], ))
+								args=(self.model.params[self.params_set], ))
 		
 	
 
