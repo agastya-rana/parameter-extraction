@@ -220,6 +220,7 @@ class MWC_MM_2_var():
 										[1e-3, 1],		# V_R
 										[1e-3, 1], 		# V_B
 										[0, 100]]		# a-->FRET scalar
+		self.bounds['1b'] = dict()
 		self.bounds['1b']['states'] = [[0.0, 10.0], [-100, 100]]
 		self.bounds['1b']['params'] = [[15, 25],		# K_I binding constant
 										[0.5, 0.5],		# m_0 bkg methyl level
