@@ -20,18 +20,19 @@ import matplotlib.pyplot as plt
 def pred_plot(data_flag):
 	
 	pred_dict = load_pred_data(data_flag)
-	pred_dict['path']
-	opt_idx = sp.nanargmin(pred_dict['errors'])
-	opt_path = pred_dict['path'][:, :, opt_idx]
+	opt_IC = sp.nanargmin(pred_dict['errors'])
+	opt_path = pred_dict['path'][:, :, opt_IC]
 	
-	est_dict = load_est_data_VA(data_flag, opt_idx)
+	est_dict = load_est_data_VA(data_flag, opt_IC)
 	scF = est_dict['obj']
 	est_params = est_dict['params']
 	
 	for iL_idx, iL in enumerate(scF.L_idxs):
-		plt.scatter(scF.Tt[scF.pred_wind_idxs], scF.meas_data[scF.pred_wind_idxs, iL_idx], color='r', s=3)
+		plt.scatter(scF.Tt[scF.pred_wind_idxs], 
+			scF.meas_data[scF.pred_wind_idxs, iL_idx], color='r', s=3)
 		plt.plot(scF.Tt[scF.pred_wind_idxs], opt_path[:, iL])
-		plt.scatter(scF.Tt[scF.est_wind_idxs], scF.meas_data[scF.est_wind_idxs, iL_idx], color='r', s=3)
+		plt.scatter(scF.Tt[scF.est_wind_idxs], 
+			scF.meas_data[scF.est_wind_idxs, iL_idx], color='r', s=3)
 	print est_params[-1, :]
 	plt.show()
 	

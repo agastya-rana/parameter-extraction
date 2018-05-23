@@ -19,7 +19,7 @@ from load_data import load_meas_file, load_stim_file
 from save_data import save_estimates
 
 
-def single_cell_FRET_VA(data_flag, init_seed):
+def est_VA(data_flag, init_seed):
 	
 	# Load specifications from file; pass to single_cell_FRET object
 	list_dict = read_specs_file(data_flag)
@@ -34,7 +34,7 @@ def single_cell_FRET_VA(data_flag, init_seed):
 	scF.set_stim()
 	scF.set_meas_data()
 	
-	# Initalize estimation 
+	# Initalize estimation; set the estimation and prediction windows
 	scF.init_seed = init_seed
 	scF.set_init_est()
 	scF.set_est_pred_windows()
@@ -68,4 +68,4 @@ def single_cell_FRET_VA(data_flag, init_seed):
 if __name__ == '__main__':
 	data_flag = str(sys.argv[1])
 	init_seed = int(sys.argv[2])
-	single_cell_FRET_VA(data_flag, init_seed)
+	est_VA(data_flag, init_seed)

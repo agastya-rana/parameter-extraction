@@ -46,12 +46,11 @@ def gen_pred(data_flag, IC_range=range(1000)):
 		scF.params_set = 'est_params'
 		scF.model.params[scF.params_set] = est_params
 		
-		# Set the prediction window, stimuli, initial state, and meas data
-		scF.Tt = scF.Tt[scF.pred_wind_idxs]
+		# Set the prediction stimuli and grab the meas data in the pred window
 		scF.stim = scF.stim[scF.pred_wind_idxs]
 		scF.meas_data = scF.meas_data[scF.pred_wind_idxs]
 		
-		# Generate the prediction and grab the measured data
+		# Generate the forward prediction using estimated parameter dictionary
 		scF.x0 = est_path[-1, :]
 		scF.gen_true_states()
 		
@@ -59,8 +58,8 @@ def gen_pred(data_flag, IC_range=range(1000)):
 									- scF.meas_data)**2.0)
 		pred_path[:, :, iC] = scF.true_states
 		
-	data_dict = {'errors': pred_errors, 'path': pred_path}
-	save_pred_data(data_dict, data_flag)
+	pred_dict = {'errors': pred_errors, 'path': pred_path}
+	save_pred_data(pred_dict, data_flag)
 	
 	
 if __name__ == '__main__':

@@ -1,5 +1,6 @@
 """
-Quick plots of all stimuli and measurements for all specs files.
+Quick plots of all stimuli and measurements for which data
+exists in the stmi/ and meas/ folders
 
 Created by Nirag Kadakia at 14:45 05-21-2018
 This work is licensed under the 
