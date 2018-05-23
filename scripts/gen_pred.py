@@ -32,6 +32,7 @@ def gen_pred(data_flag, IC_range=range(1000)):
 		except:
 			print '%s_IC=%s.npy not found; skipping...' % (data_flag, iC)
 			continue
+		sys.stdout.flush()
 		
 		# Grab obj at final beta; some attributes will be overwritten
 		scF = data_dict['obj']
