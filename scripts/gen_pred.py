@@ -47,6 +47,7 @@ def gen_pred(data_flag, IC_range=range(1000)):
 		scF.model.params[scF.params_set] = est_params
 		
 		# Set the prediction stimuli and grab the meas data in the pred window
+		scF.Tt = scF.Tt[scF.pred_wind_idxs]
 		scF.stim = scF.stim[scF.pred_wind_idxs]
 		scF.meas_data = scF.meas_data[scF.pred_wind_idxs]
 		
