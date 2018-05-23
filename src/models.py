@@ -209,9 +209,9 @@ class MWC_MM_2_var():
 		
 		# Bounds dictionaries
 		self.bounds = dict()
-		self.bounds['exact'] = dict()
-		self.bounds['exact']['states'] = [[0.0, 10.0], [-100, 100]]
-		self.bounds['exact']['params'] = [[18, 18],		# K_I binding constant
+		self.bounds['VR_VB'] = dict()
+		self.bounds['VR_VB']['states'] = [[0.0, 10.0], [-100, 100]]
+		self.bounds['VR_VB']['params'] = [[18, 18],		# K_I binding constant
 										[0.5, 0.5],		# m_0 bkg methyl level
 										[2., 2.],		# alpha_m 
 										[0.32, 0.32],	# K_R
@@ -242,6 +242,18 @@ class MWC_MM_2_var():
 										[1e-3, 1],		# V_R
 										[1e-3, 1], 		# V_B
 										[1, 100]]		# a-->FRET scalar
+		self.bounds['1c'] = dict()
+		self.bounds['1c']['states'] = [[0.0, 10.0], [-100, 100]]
+		self.bounds['1c']['params'] = [[18, 18],		# K_I binding constant
+										[0.5, 0.5],		# m_0 bkg methyl level
+										[2.0, 2.0],		# alpha_m 
+										[0.32, 0.32],	# K_R
+										[0.30, 0.30],	# K_B 
+										[1, 50],		# N cluster size
+										[1e-3, 1],		# V_R
+										[1e-3, 1], 		# V_B
+										[1, 100]]		# a-->FRET scalar
+										
 	def df(self, t, x, (p, stim)):
 		
 		Mm = x[...,0]
