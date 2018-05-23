@@ -18,7 +18,7 @@ from load_data import load_est_data_VA
 from save_data import save_pred_data
 	
 
-def pred_plot(data_flag, IC_range=range(1000)):
+def gen_pred(data_flag, IC_range=range(1000)):
 	
 	pred_errors = sp.empty(len(IC_range))
 	pred_errors[:] = sp.nan
@@ -39,7 +39,7 @@ def pred_plot(data_flag, IC_range=range(1000)):
 		est_path = data_dict['paths'][-1, :, 1:]
 		if pred_path is None:
 			pred_path = sp.zeros((len(scF.pred_wind_idxs), 
-							len(scF.L_idxs), len(IC_range)))
+							scF.nD, len(IC_range)))
 				
 		# Set estimated parameters as a new parameter dictionary
 		scF.params_set = 'est_params'
@@ -56,7 +56,7 @@ def pred_plot(data_flag, IC_range=range(1000)):
 		
 		pred_errors[iC] = sp.sum((scF.true_states[:, scF.L_idxs] 
 									- scF.meas_data)**2.0)
-		pred_path[:, :, iC] = scF.meas_data
+		pred_path[:, :, iC] = scF.true_states
 		
 	data_dict = {'errors': pred_errors, 'path': pred_path}
 	save_pred_data(data_dict, data_flag)
@@ -64,4 +64,4 @@ def pred_plot(data_flag, IC_range=range(1000)):
 	
 if __name__ == '__main__':
 	data_flag = get_flag()
-	pred_plot(data_flag)	
+	gen_pred(data_flag)	

@@ -94,6 +94,7 @@ def save_pred_data(data_dict, data_flag):
 	if not os.path.exists(out_dir):
 		os.makedirs(out_dir)
 	
-	filename = '%s/preds.pklz' % out_dir
+	filename = '%s/preds.pkl' % out_dir
 	with open(filename, 'wb') as f:
 		cPickle.dump(data_dict, f, cPickle.HIGHEST_PROTOCOL)
+	print ('Prediction data saved to %s.' % (data_flag))

@@ -10,6 +10,7 @@ visit http://creativecommons.org/licenses/by-nc-sa/4.0/.
 """
 
 import scipy as sp
+import os
 import scipy.io as sio
 import h5py
 import cPickle
@@ -74,3 +75,15 @@ def load_est_data_VA(data_flag, IC):
 	est_dict['errors'] = errors
 	
 	return est_dict
+	
+def load_pred_data(data_flag):
+	
+	out_dir = '%s/objects/%s' % (DATA_DIR, data_flag)
+	if not os.path.exists(out_dir):
+		os.makedirs(out_dir)
+	
+	filename = '%s/preds.pkl' % out_dir
+	with open(filename, 'rb') as f:
+		data_dict = cPickle.load(f)
+		
+	return data_dict
