@@ -252,7 +252,7 @@ class MWC_MM_2_var():
 										[1, 10],		# N cluster size
 										[1e-3, 1],		# V_R
 										[1e-3, 1], 		# V_B
-										[1, 100]]		# a-->FRET scalar
+										[50., 50.]]		# a-->FRET scalar
 		self.bounds['1c'] = dict()
 		self.bounds['1c']['states'] = [[0.0, 10.0], [-100, 100]]
 		self.bounds['1c']['params'] = [[18, 18],		# K_I binding constant
