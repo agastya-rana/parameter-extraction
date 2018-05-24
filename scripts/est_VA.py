@@ -57,7 +57,7 @@ def est_VA(data_flag, init_seed):
 	annealer.anneal(scF.x_init[scF.est_wind_idxs], scF.p_init, 
 					scF.alpha, scF.beta_array, Rm, scF.Rf0, 
 					scF.L_idxs, P_idxs, dt_model=None, init_to_data=True, 
-					bounds=scF.bounds, disc='euler', 
+					bounds=scF.bounds, disc='trapezoid', 
 					method='L-BFGS-B', opt_args=BFGS_options, 
 					adolcID=init_seed)
 	print("\nADOL-C annealing completed in %f s."%(time.time() - tstart))
