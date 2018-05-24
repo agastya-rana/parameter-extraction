@@ -331,7 +331,7 @@ class MWC_MM_2_var_shift():
 							0.015, 	# V_R
 							0.012,	# V_B
 							50.0,	# a-->FRET scalar
-							0.0,	# FRET signal background shift
+							0.0]	# FRET signal background shift
 		
 		# Bounds dictionaries
 		self.bounds['1a'] = dict()
