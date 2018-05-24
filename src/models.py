@@ -145,14 +145,14 @@ class MWC_Tar():
 										[35., 45.],
 										[0.45, 0.55]]
 		self.bounds['1c'] = dict()
-		self.bounds['1c']['states'] = 	[[0.0, 5.0], [0, 100.0]]
-		self.bounds['1c']['params'] = 	[[1.0, 100.0],			# K_off_a
-										[1e5, 1e5],				# K_on_a
-										[0, 50.],				# Nn
-										[0.0, 5.0],				# alpha_m
-										[0.0, 5.0],				# m_0
-										[0.3, 0.3],				# a_0
-										[1., 1e3],				# tau_m
+		self.bounds['1c']['states'] = 	[[0.0, 10.0], [0.0, 100.0]]
+		self.bounds['1c']['params'] = 	[[10.0, 20.0],			# K_off_a
+										[1.e3, 1.e3],			# K_on_a
+										[1.0, 30.],				# Nn
+										[1.0, 5.0],				# alpha_m
+										[0.0, 3.0],				# m_0
+										[0.25, 0.4],			# a_0
+										[5., 1.e3],				# tau_m
 										[10., 50.],				# k_FR
 										[0.5, 0.5]]				# tau_FR
 											
@@ -177,7 +177,7 @@ class MWC_Tar():
 		Aa = (1. + sp.exp(Ee))**-1.0
 
 		df_vec[..., 0]  = (a_0 - Aa)/tau_m
-		df_vec[..., 1]  = k_FR*Aa - FR/tau_FR
+		df_vec[..., 1]  = (k_FR*Aa - FR)/tau_FR
 
 		return df_vec
 		
