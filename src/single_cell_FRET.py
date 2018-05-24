@@ -20,7 +20,7 @@ from load_data import load_stim_file, load_meas_file
 import models
 from utils import smooth_vec
 
-INT_PARAMS = ['nT', 'nD', 'step_stim_density', 'step_stim_seed']
+INT_PARAMS = ['nT', 'nD', 'nP', 'step_stim_density', 'step_stim_seed']
 LIST_PARAMS = ['L_idxs', 'x0', 'step_stim_vals', 'P_idxs', 'beta_array', 
 				'meas_noise']
 MODEL_PARAMS = ['model']
