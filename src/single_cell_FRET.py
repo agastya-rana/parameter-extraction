@@ -256,8 +256,8 @@ class single_cell_FRET():
 		
 		print 'Initializing estimate with seed %s' % self.init_seed
 		
-		assert (self.nD == self.model.nD), 'self.nD != %s.nD' % self.model
-		assert (self.nP == self.model.nP), 'self.nP != %s.nP' % self.model
+		assert (self.nD == self.model.nD), 'self.nD != %s' % self.model.nD
+		assert (self.nP == self.model.nP), 'self.nP != %s' % self.model.nP
 		
 		self.state_bounds = self.model.bounds[self.bounds_set]['states']
 		self.param_bounds = self.model.bounds[self.bounds_set]['params']
