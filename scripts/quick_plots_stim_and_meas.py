@@ -25,7 +25,8 @@ stim_path = '%s/stim' % def_data_dir()
 data_flags = []
 for (dirpath, dirnames, filenames) in os.walk(stim_path):
 	for filename in filenames:
-		data_flags.append(os.path.splitext(filename)[0])
+		if filename.endswith('.stim'):
+			data_flags.append(os.path.splitext(filename)[0])
 
 for data_flag in data_flags:
 	
@@ -42,7 +43,8 @@ meas_path = '%s/meas_data' % def_data_dir()
 data_flags = []
 for (dirpath, dirnames, filenames) in os.walk(meas_path):
 	for filename in filenames:
-		data_flags.append(os.path.splitext(filename)[0])
+		if filename.endswith('.meas'):
+			data_flags.append(os.path.splitext(filename)[0])
 
 for data_flag in data_flags:
 	
