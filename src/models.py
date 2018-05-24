@@ -264,6 +264,17 @@ class MWC_MM_2_var():
 										[1e-3, 1],		# V_R
 										[1e-3, 1], 		# V_B
 										[1, 100]]		# a-->FRET scalar
+		self.bounds['1e'] = dict()
+		self.bounds['1e']['states'] = [[0.0, 5.0], [0, 100]]
+		self.bounds['1e']['params'] = [[1, 100],		# K_I binding constant
+										[0.5, 0.5],		# m_0 bkg methyl level
+										[2.0, 2.0],		# alpha_m 
+										[0.0, 1.0],		# K_R
+										[0.0, 1.0],		# K_B 
+										[0, 200],		# N cluster size
+										[1e-3, 1],		# V_R
+										[1e-3, 1], 		# V_B
+										[0, 100]]		# a-->FRET scalar
 		
 	def df(self, t, x, (p, stim)):
 		
@@ -276,7 +287,7 @@ class MWC_MM_2_var():
 		f_c = sp.log(1. + stim/K_I)
 		f_m = alpha_m*(m_0 - Mm)
 		Ee = Nn*(f_m + f_c)
-		Aa = 1/(1. + sp.exp(Ee))
+		Aa = 1./(1. + sp.exp(Ee))
 
 		df_vec[..., 0] = V_R*(1 - Aa)/(K_R + (1 - Aa)) \
 						- V_B*Aa**2/(K_B + Aa)
