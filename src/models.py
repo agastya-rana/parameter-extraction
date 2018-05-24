@@ -145,15 +145,15 @@ class MWC_Tar():
 										[35., 45.],
 										[0.45, 0.55]]
 		self.bounds['1c'] = dict()
-		self.bounds['1c']['states'] = 	[[0.0, 10.0], [0.0, 100.0]]
-		self.bounds['1c']['params'] = 	[[10.0, 20.0],			# K_off_a
+		self.bounds['1c']['states'] = 	[[1.0, 3.0], [0.1, 50.0]]
+		self.bounds['1c']['params'] = 	[[1.0, 100.0],			# K_off_a
 										[1.e3, 1.e3],			# K_on_a
-										[1.0, 30.],				# Nn
-										[1.0, 5.0],				# alpha_m
-										[0.0, 3.0],				# m_0
-										[0.25, 0.4],			# a_0
-										[5., 1.e3],				# tau_m
-										[10., 50.],				# k_FR
+										[1.0, 50.],				# Nn
+										[2.0, 2.0],				# alpha_m
+										[0.5, 0.5],				# m_0
+										[0.1, 0.5],				# a_0
+										[1., 1.e3],				# tau_m
+										[1.,  50.],				# k_FR
 										[0.5, 0.5]]				# tau_FR
 											
 	def df(self, t, x, (p, stim)):
