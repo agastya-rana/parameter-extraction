@@ -109,7 +109,7 @@ class MWC_Tar():
 		
 		# True parameter dictionaries
 		self.params = dict()
-		self.params['Tar_1'] = [0.02, 
+		self.params['1'] =	 [0.02, 
 								0.5, 
 								5.0, 
 								2.0, 
@@ -121,9 +121,9 @@ class MWC_Tar():
 		
 		# Bounds dictionaries
 		self.bounds = dict()
-		self.bounds['Tar_1a'] = dict()
-		self.bounds['Tar_1a']['states'] = 	[[1.0, 2.0], [0, 20]]
-		self.bounds['Tar_1a']['params'] = 	[[0.01, 0.05],
+		self.bounds['1a'] = dict()
+		self.bounds['1a']['states'] = 	[[1.0, 2.0], [0, 20]]
+		self.bounds['1a']['params'] = 	[[0.01, 0.05],
 											[0.2, 0.7],
 											[4, 6],
 											[0.1, 10],
@@ -133,18 +133,29 @@ class MWC_Tar():
 											[1, 200],
 											[0.01, 5]]
 			
-		self.bounds['Tar_1b'] = dict()
-		self.bounds['Tar_1b']['states'] = 	[[1.0, 2.0], [0, 20]]
-		self.bounds['Tar_1b']['params'] = 	[[0.018, 0.022],
-											[0.45, 0.55],
-											[4.5, 5.5],
-											[1.8, 2.1],
-											[1.4, 1.6],
-											[0.31, 0.35],
-											[30., 40.],
-											[35., 45.],
-											[0.45, 0.55]]
-					
+		self.bounds['1b'] = dict()
+		self.bounds['1b']['states'] = 	[[1.0, 2.0], [0, 20]]
+		self.bounds['1b']['params'] = 	[[0.018, 0.022],
+										[0.45, 0.55],
+										[4.5, 5.5],
+										[1.8, 2.1],
+										[1.4, 1.6],
+										[0.31, 0.35],
+										[30., 40.],
+										[35., 45.],
+										[0.45, 0.55]]
+		self.bounds['1c'] = dict()
+		self.bounds['1c']['states'] = 	[[0.0, 5.0], [0, 100.0]]
+		self.bounds['1c']['params'] = 	[[1.0, 100.0],			# K_off_a
+										[1e5, 1e5.],			# K_on_a
+										[0, 50.],				# Nn
+										[0.0, 5.0],				# alpha_m
+										[0.0, 5.0],				# m_0
+										[0.3, 0.3],				# a_0
+										[1., 1e3],				# tau_m
+										[10., 50.],				# k_FR
+										[0.5, 0.5]]				# tau_FR
+											
 	def df(self, t, x, (p, stim)):
 		"""
 		Taken from Clausznitzer,...,Sourjik, Endres 2014 PLoS Comp Bio.
@@ -374,14 +385,14 @@ class MWC_MM_2_var_shift():
 										[-50, 50]]		# FRET y-shift
 		self.bounds['1d'] = dict()
 		self.bounds['1d']['states'] = [[0.0, 5.0], [0, 100]]
-		self.bounds['1d']['params'] = [[1, 100],		# K_I binding constant
+		self.bounds['1d']['params'] = [[18., 18.],		# K_I binding constant
 										[0.5, 0.5],		# m_0 bkg methyl level
 										[2.0, 2.0],		# alpha_m 
-										[0.0, 1.0],		# K_R
-										[0.0, 1.0],		# K_B 
+										[0.3, 0.3],		# K_R
+										[0.3, 0.3],		# K_B 
 										[0, 200],		# N cluster size
-										[1e-3, 1],		# V_R
-										[1e-3, 1], 		# V_B
+										[1e-3, 0.2],	# V_R
+										[1e-3, 0.2], 	# V_B
 										[10, 50],		# a-->FRET scalar
 										[0, 0]]			# FRET y-shift
 										
