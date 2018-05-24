@@ -372,7 +372,20 @@ class MWC_MM_2_var_shift():
 										[1e-3, 1], 		# V_B
 										[10, 50],		# a-->FRET scalar
 										[-50, 50]]		# FRET y-shift
+		self.bounds['1d'] = dict()
+		self.bounds['1d']['states'] = [[0.0, 5.0], [0, 100]]
+		self.bounds['1d']['params'] = [[1, 100],		# K_I binding constant
+										[0.5, 0.5],		# m_0 bkg methyl level
+										[2.0, 2.0],		# alpha_m 
+										[0.0, 1.0],		# K_R
+										[0.0, 1.0],		# K_B 
+										[0, 200],		# N cluster size
+										[1e-3, 1],		# V_R
+										[1e-3, 1], 		# V_B
+										[10, 50],		# a-->FRET scalar
+										[0, 0]]			# FRET y-shift
 										
+		
 	def df(self, t, x, (p, stim)):
 		
 		Mm = x[...,0]
