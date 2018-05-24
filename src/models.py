@@ -295,3 +295,73 @@ class MWC_MM_2_var():
 		
 		return df_vec
 		
+class MWC_MM_2_var_shift():
+	""" 
+	2-variable MWC with Michaelis Minton methylation dynamics. 
+	The dynamical variables are methylation state and FRET index. 
+	
+	In general, we assume K_I, m_0, alpha_m, K_R and K_B are fixed. So 
+	one may hold these parameter bounds as tight around some presumed value.
+	"""
+	
+	def __init__(self, **kwargs):
+
+		self.nD = 2
+		self.nP = 10
+		self.state_names = ['methyl', 'FRET index']
+		self.param_names = ['K_I', 
+							'm_0', 
+							'alpha_m', 
+							'K_R', 
+							'K_B', 
+							'Nn', 
+							'V_R', 
+							'V_B',
+							'FR_scale',
+							'FR_shift']
+		
+		# True parameter dictionaries
+		self.params = dict()
+		self.params['1'] = [18., 	# K_I binding constant
+							0.5, 	# m_0 bkgrnd methyl level
+							2.0, 	# alpha_m 
+							0.32, 	# K_R
+							0.30,	# K_B 
+							5.0, 	# N cluster size
+							0.015, 	# V_R
+							0.012,	# V_B
+							50.0,	# a-->FRET scalar
+							0.0,	# FRET signal background shift
+		
+		# Bounds dictionaries
+		self.bounds['1a'] = dict()
+		self.bounds['1a']['states'] = [[0.0, 5.0], [0, 100]]
+		self.bounds['1a']['params'] = [[1, 100],		# K_I binding constant
+										[0.5, 0.5],		# m_0 bkg methyl level
+										[2.0, 2.0],		# alpha_m 
+										[0.0, 1.0],		# K_R
+										[0.0, 1.0],		# K_B 
+										[0, 200],		# N cluster size
+										[1e-3, 1],		# V_R
+										[1e-3, 1], 		# V_B
+										[0, 100],		# a-->FRET scalar
+										[-50, 50]]		# FRET y-shift
+	def df(self, t, x, (p, stim)):
+		
+		Mm = x[...,0]
+		FR_idx = x[...,1]
+		K_I, m_0, alpha_m, K_R, K_B, Nn, V_R, V_B, FR_scale, FR_shift = p
+		
+		df_vec = sp.empty_like(x)	
+		
+		f_c = sp.log(1. + stim/K_I)
+		f_m = alpha_m*(m_0 - Mm)
+		Ee = Nn*(f_m + f_c)
+		Aa = 1./(1. + sp.exp(Ee))
+
+		df_vec[..., 0] = V_R*(1 - Aa)/(K_R + (1 - Aa)) \
+						- V_B*Aa**2/(K_B + Aa)
+		df_vec[..., 1]  = FR_scale*Aa - FR_shift - FR_idx/0.5
+		
+		return df_vec
+		
