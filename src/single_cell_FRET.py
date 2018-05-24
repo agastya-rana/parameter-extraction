@@ -270,8 +270,8 @@ class single_cell_FRET():
 			self.x_init[:, iD] = sp.random.uniform(self.state_bounds[iD][0], 
 									self.state_bounds[iD][1], self.nT)
 		for iP in range(self.nP):
-			self.p_init[iP] = sp.random.uniform(self.param_bounds[iD][0],
-    	                            self.param_bounds[iD][1])
+			self.p_init[iP] = sp.random.uniform(self.param_bounds[iP][0],
+    	                            self.param_bounds[iP][1])
 
 	def df_estimation(self, t, x, (p, stim)):
 		"""
