@@ -387,7 +387,7 @@ class MWC_MM_2_var_shift():
 		self.bounds['1d']['states'] = [[0.0, 5.0], [0, 100]]
 		self.bounds['1d']['params'] = [[18., 18.],		# K_I binding constant
 										[0.5, 0.5],		# m_0 bkg methyl level
-										[2.0, 2.0],		# alpha_m 
+										[1.0, 4.0],		# alpha_m 
 										[0.3, 0.3],		# K_R
 										[0.3, 0.3],		# K_B 
 										[0, 200],		# N cluster size
