@@ -334,6 +334,7 @@ class MWC_MM_2_var_shift():
 							0.0]	# FRET signal background shift
 		
 		# Bounds dictionaries
+		self.bounds = dict()
 		self.bounds['1a'] = dict()
 		self.bounds['1a']['states'] = [[0.0, 5.0], [0, 100]]
 		self.bounds['1a']['params'] = [[1, 100],		# K_I binding constant
