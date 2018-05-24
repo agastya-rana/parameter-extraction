@@ -147,7 +147,7 @@ class MWC_Tar():
 		self.bounds['1c'] = dict()
 		self.bounds['1c']['states'] = 	[[0.0, 5.0], [0, 100.0]]
 		self.bounds['1c']['params'] = 	[[1.0, 100.0],			# K_off_a
-										[1e5, 1e5.],			# K_on_a
+										[1e5, 1e5],				# K_on_a
 										[0, 50.],				# Nn
 										[0.0, 5.0],				# alpha_m
 										[0.0, 5.0],				# m_0
