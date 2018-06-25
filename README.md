@@ -26,13 +26,25 @@ To install items 4 and 5, follow the instructions in the VarAnneal repository re
 
 ## Usage
 
+### Define up the local data directory
+
+The directory in which both input and output data will be stored is saved in a file called 
+
+
+
 Generally speaking, the data assimilation procedure for FRET data consists of 3 steps:
 
 1. Record data or generate synthetic (fake) data
 2. Generate many estimates of unknowns using data assimilation with a subset of recorded data
 3. Find optimal parameter estimates by comparing predictions from each estimated variable set against remainder of data
 
-The first 
+The algorithmic specifications for these 3 steps in their entirety are all saved in a specifications file, 
+
+
+
+
+
+In practice, the code uses the constrained optimization algorithm L-BFGS, which can accept upper and lower bounds for each static parameter and time-dependent state variable to be estimated. 
 
 
 
