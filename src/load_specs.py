@@ -32,7 +32,11 @@ def read_specs_file(data_flag, data_dir=data_dir):
 	
 	It accepts these 3 types of inputs, labeled by the first column: variables
 	relevant to data input and outpu and generation, those relevant to 
-	estimation, and the type of estimation to be done.
+	estimation, and the type of estimation to be done. At this point, 
+	there is no functional distinction between est_var and data_var, they 
+	are only tags for personal reference, and are read in as data types
+	appropriate to the variable name. 
+	
 	
 	Args: 
 		data_flag: Name of specifications file.
