@@ -65,7 +65,7 @@ The data is 2 tab-delimited columns; the first consists of the time points, the 
 
 Sometimes you may have many stimuli and measurement files you want to get a quick visualization of (e.g. to see if the data is garbage or usable). To generate quick plots for all .stim and .meas files that exist, run:
 
-```python quick_plots_stim_and_meas
+```{python} quick_plots_stim_and_meas
 $ python quick_plots_stim_and_meas
 ```
 
@@ -156,7 +156,7 @@ Run a full variational annealing estimate using ```scripts/est_VA.py```. This sc
 
 For specs file ```FRET-1-estimation.txt```, we can perform a variational annealing estimate with initial seed 3:
 
-```python est_VA.py 
+```python
 $ python est_VA.py FRET-1-estimation 3
 
 -- Input vars and params loaded from 170913Device1FRET1cell7.txt
