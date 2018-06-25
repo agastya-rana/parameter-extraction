@@ -90,24 +90,24 @@ The specs file contains all the information about which recorded data *and* the 
 A typical specs file looks like:
 
 ```
-# DATA 				   	VARIABLE NAME			VALUE
-data_var				nD						2
-data_var				nT						767
-data_var				dt						0.5
-data_var				nP						10
-data_var				meas_noise				[1.0]
-data_var				L_idxs					[1]
+# DATA                  VARIABLE NAME           VALUE
+data_var                nD                      2
+data_var                nT                      767
+data_var                dt                      0.5
+data_var                nP                      10
+data_var                meas_noise              [1.0]
+data_var                L_idxs                  [1]
 
-# ESTIMATION VARS	 	VARIABLE NAME			VALUE
-est_var					model					MWC_MM_2_var_shift
-est_var					bounds_set				1d
-est_var					est_beg_T				5
-est_var					est_end_T				150
-est_var					pred_end_T				300
-	
+# ESTIMATION VARS       VARIABLE NAME           VALUE
+est_var                 model                   MWC_MM_2_var_shift
+est_var                 bounds_set              1d
+est_var                 est_beg_T               5
+est_var                 est_end_T               150
+est_var                 pred_end_T              300
+    
 
-# ESTIMATION SPECS		ESTIMATION SPECS		VALUE
-est_spec				est_type				VA
+# ESTIMATION SPECS      ESTIMATION SPECS        VALUE
+est_spec                est_type                VA
 ```
 
 Hashed lines are ignored. Each line is a separate algorithmic parameter, pertaining to one of a) data assimilation, b) prediction generation, or c) (if applicable), the fake data generation. Each line contains 3 or more strings, each separated by tabs or spaces.
