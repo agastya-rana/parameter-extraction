@@ -18,7 +18,7 @@ from load_data import load_est_data_VA
 from save_data import save_pred_data
 	
 
-def gen_pred(data_flag, IC_range=range(1000)):
+def gen_pred_data(data_flag, IC_range=range(1000)):
 	
 	pred_errors = sp.empty(len(IC_range))
 	pred_errors[:] = sp.nan
@@ -65,4 +65,4 @@ def gen_pred(data_flag, IC_range=range(1000)):
 	
 if __name__ == '__main__':
 	data_flag = get_flag()
-	gen_pred(data_flag)	
+	gen_pred_data(data_flag)	
