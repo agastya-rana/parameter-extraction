@@ -156,7 +156,7 @@ Run a full variational annealing estimate using ```scripts/est_VA.py```. This sc
 
 For specs file ```FRET-1-estimation.txt```, we can perform a variational annealing estimate with initial seed 3:
 
-```python
+```
 $ python est_VA.py FRET-1-estimation 3
 
 -- Input vars and params loaded from 170913Device1FRET1cell7.txt
