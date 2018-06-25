@@ -53,7 +53,7 @@ data_dir/recordings/170913/Device1/FRET1/FRET_data_workspace.mat
 
 Working from the /scripts folder,  we can generate a stimulus and measurement file for cell 7 via:
 
-```{python}
+```python
 from gen_py_data_from_mat import gen_py_data_from_mat
 gen_py_data_from_mat(dir='170913/Device1/FRET1', mat_file='FRET_data_workspace', cell=17)
 ```
