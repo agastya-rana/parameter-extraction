@@ -22,19 +22,15 @@ To install items 4 and 5, follow the instructions in the VarAnneal repository re
 
 
 
-### Tests: (forthcoming)
-
-
-
 ## Usage
 
-### Create src/local_methods.py and define the local data directory
+### Define the local data directory
 
-Before doing any estimations, you must define the data directories. The directory in which both input and output data will be stored is defined in src/local_methods.py. The existing repository has a src/local_methods_sample.py, which you should copy to src/local_methods.py (this file is in gitignore). Within the def_data_dir() function, define ```data_dir```  as the absolute path to where your i/o data will be stored. 
+Before doing any estimations, you must define the data directory. The directory in which both input and output data will be stored is defined in src/local_methods.py. The existing repository has a src/local_methods_sample.py, which you should copy to src/local_methods.py (this file is in gitignore). Within the def_data_dir() function, define ```data_dir```  as the absolute path to where your i/o data will be stored. 
 
-### Put recorded data in data_dir/recordings
+### Put recorded data the data directory
 
-Recorded FRET data is currently being saved in the Emonet Lab as .mat structures. These recordings should be saved within a 'recordings' subfolder of the main data directory. Recordings may exist in further subfolders of this directory. For example, currently, Emonet Lab FRET data is saved by date (yymmdd), device number, and recording session:
+Recorded FRET data is currently being saved in the Emonet Lab as .mat structures. These recordings should be saved within a 'recordings' subfolder of ```data_dir```. Recordings may exist in further subfolders of this directory. For example, currently, Emonet Lab FRET data is saved by date (yymmdd), device number, and recording session:
 
 ```
 data_dir/recordings/170913/Device1/FRET1/FRET_data_workspace.mat
@@ -43,15 +39,15 @@ data_dir/recordings/170918/Device2/FRET3/FRET_data_workspace.mat
 
 ### Generate stimulus and measured data files from MATLAB data
 
-Data assimilation utilizes a stimulus file and a measured data file. If fake data is generated (below), then there may also be a ground truth file. Before performing the estimation, any recorded data from the FRET experimental setup that is saved as a MATLAB structure (which contains recorded FRET data and the delivered stimulus) will need to be parsed for the individual stimulus and measurement files. 
+Data assimilation utilizes a stimulus file and a measured data file. If fake data is generated (below), then there may also be a ground truth file. Before performing the estimation, any recorded data from the FRET experimental setup that is saved as a MATLAB structure (which contains recorded FRET data and the delivered stimulus) will need to be parsed into the individual stimulus and measurement files. 
 
-For example, suppose we have a recorded data set with FRET data from 30 cells, saved in:
+Suppose we have a recorded data set with FRET data from 30 cells, saved in:
 
 ```
 data_dir/recordings/170913/Device1/FRET1/FRET_data_workspace.mat
 ```
 
-Working from the /scripts folder,  we can generate a stimulus and measurement file for cell 7 via:
+Working from the ```./scripts``` folder,  we can generate a stimulus and measurement file for cell 7 via:
 
 ```python
 from gen_py_data_from_mat import gen_py_data_from_mat
@@ -77,15 +73,15 @@ This will generate .png plots for stimuli and measurements in the respective fol
 
 ### Each estimation -- not data set -- is defined by a unique specs file 
 
-The data assimilation procedure for FRET data consists of 3 steps:
+To assimilate a FRET data set, you must create an associated "specs" .txt file. The data assimilation procedure for FRET data consists of 3 steps:
 
 1. Record data or generate synthetic (fake) data
 2. Generate many estimates of unknowns using data assimilation with a subset of the data
 3. Find optimal parameter estimates by comparing predictions from each estimated variable set against remainder of data
 
-The algorithmic specifications for this set of 3 steps are saved in unique text "specs" files. These specs files are stored in the ```data_dir/specs``` folder, which you should create. 
+The algorithmic specifications for all 3 steps are saved in a unique specs file. These specs files are stored in the ```data_dir/specs``` subfolder, which you should create. 
 
-The specs file contains all the information about which recorded data *and* the parameters of the assimilation. It may also contain parameters of generated fake data, if not using recorded data. Since a specs file is unique to an assimilation, and NOT a data set, distinct estimations utilizing the same data set (say, using different model equations or parameter bounds) each will have a distinct specs file. 
+The specs file contains all the information about which recorded dataset to use *and* the parameters of the assimilation. It may also contain parameters of generated fake data, if not using recorded data. Since a specs file is unique to an assimilation, and NOT a data set, distinct estimations utilizing the same data set (say, using different model equations or parameter bounds) would each have a distinct specs file. 
 
 A typical specs file looks like:
 
@@ -95,6 +91,8 @@ data_var                nD                      2
 data_var                nT                      767
 data_var                dt                      0.5
 data_var                nP                      10
+data_var                stim_file               170913_Device1_FRET1_cell_7
+data_var                meas_file               170913_Device1_FRET1_cell_7
 data_var                meas_noise              [1.0]
 data_var                L_idxs                  [1]
 
@@ -110,21 +108,19 @@ est_var                 pred_end_T              300
 est_spec                est_type                VA
 ```
 
-Hashed lines are ignored. Each line is a separate algorithmic parameter, pertaining to one of a) data assimilation, b) prediction generation, or c) (if applicable), the fake data generation. Each line contains 3 or more strings, each separated by tabs or spaces.
+Hashed lines are ignored. Each line is a separate algorithmic parameter, pertaining to one of a) data assimilation, b) prediction generation, or c) (if applicable), the fake data generation. Each line contains 3 or more strings, separated by tabs or spaces.
 
-The first string indicates the type of specification -- relevant to data generation and data input (data_var), to estimation procedure (est_var), or to the type of estimation itself (est_spec). 
+The first string indicates the *type* of specification -- that is, is the variable relevant to data generation and data input (data_var), to estimation procedure (est_var), or to the type of estimation itself (est_spec). The second string is the name of the particular variable or algorithmic parameter that is being set, and the third (or further) string is the value of said variable. Be sure that all variables or values are strings *without* spaces. 
 
-The second string is the particular variable or algorithmic parameter that is being set.
-
-The third (or further) string is the value of said variable. 
+Let us go through some possible variables and their values.
 
 #### ```est_spec``` : The type of estimation
 
-Currently, there is only one ```est_spec```, which is the type of estimation, ```est_type```, and this has only one possible value, ```VA```, for estimation by variational annealing. This will soon accept other methods such as linear kernel estimation, etc.
+Currently, there is only one ```est_spec```, which is the type of estimation, ```est_type```, and this has only one possible value, ```VA``` -- estimation by variational annealing. This will soon accept other methods such as linear kernel estimation, etc.
 
 #### ```data_var``` / ```est_var```: Specifications of the estimation procedure
 
-Currently, there is no functional distinction between ```est_var``` and ```data_var```. The first is meant for specifications of the actual estimation, whereas the second is meant for specifications on the nature of the input data and the model. Since there is no distinction in practice, one may simply use ```data_var``` for any of these variables, though it may help to keep them distinct for bookkeeping. 
+Currently, there is no functional distinction between ```est_var``` and ```data_var```. The first is meant for specifications of the actual estimation, whereas the second is meant for specifications on the nature of the input data and the model. At this point, one may simply use ```data_var``` for any of these variables, though it may be handy to keep them distinct for bookkeeping. 
 
 There are several variables that are of this type:
 
@@ -132,17 +128,71 @@ There are several variables that are of this type:
 | :--------- | ---------------------------------------- | ---------------------------------------- |
 | nD         | dimension of model system                | int; typically 2 for FRET data. must match dimension of model system defined in src/models (see below) |
 | nT         | number of timepoints for full FRET trace (both for estimation and predictive cross validation) | int; must equal the number of rows in .meas and .stim |
-| dt         | timestep of data                         | float; must equal the timestep in the first column of both .meas and .stim |
 | nP         | number of parameters to be estimated     | int; must equal the dimension of the parameters in the model system defined in src/models (see below) |
+| dt         | timestep of data                         | float; must equal the timestep in the first column of both .meas and .stim |
+| stim_file  | stimulus filename                        | str; name (without .stim extension) of stimulus file. If not provided, then the name of the specs file is used instead |
+| meas_file  | measurement filename                     | str; name (without .meas extension) of measurement file. If not provided, then the name of the specs file is used instead |
 | meas_noise | covariance of measurement data           | list; assumed covariance of each measured variable |
 | L_idxs     | measured indices                         | list; indices of measured variables, corresponding to indices of state variables defined in src/models (see below) |
-| model      | the presumed model equations             | str; must be a class in src/models, following the layout as described in src/models.generic_model_class (see below). |
 | bounds_set | parameter bounds dictionary within model class to use | str; corresponds to one of the keys in the src/models.my_model.bounds dictionary, where my_model is the model class  (see below) |
+| model      | the presumed model equations             | str; must be a class in src/models, following the layout as described in src/models.generic_model_class (see below). |
 | est_beg_T  | initial estimation time                  | float; time at which to begin using estimated data; must be less than nT*dt |
-| est_end_T  | final estimation time                    | float; time at which estimated data ends; must be less than nT*dt |
-| pred_end_T | final prediction                         | float; ending time of prediction window for cross-validation and error estimation; prediction window begins at est_end_T, when the estimation ends. |
+| est_end_T  | final estimation time                    | float; time at which estimated data ends; must be less than nT*dt but greater than est_beg_T |
+| pred_end_T | final prediction                         | float; ending time of prediction window for cross-validation and error estimation; prediction window begins at est_end_T, when the estimation ends. Should be less than nT*dt but greater than est_end_T |
 
-### Test 
+Importantly, as noted above, one can omit the ```meas_file``` and ```stim_file``` variables if the specs file has the same name as the stimuli and measurement files. 
+
+### Defining model classes 
+
+The model class contains all the information on the dynamical model to which the data is assimilated. A generic  model class with associated methods is listed in src/models.generic_model_class, with comments and notes on how to generate your own model class. The model class contains the attribute ```bounds```, a dictionary whose keys are each themselves dictionaries holding the upper and lower bounds for states and parameter estimation, respectively. The method ```df``` defines the ODEs containing the model dynamics. 
+
+You can use the prescribed models, or there are several examples in src/models to guide you in defining your own.
+
+### Carry out a variational annealing estimation
+
+Finally, with our input data (measurement file and stimulus file), along with specs file, we can run a variational annealing estimate of our FRET data. 
+
+Run a full variational annealing estimate using ```scripts/est_VA.py```. This script accepts as command line arguments a) the specs text file name and b) a seed for random number generators. The seed is used to generate a random initial estimate for the state variables **x** at all points throughout the estimation window (.e.g between est_beg_T and est_pred_T), as well as for all the parameters to be estimated. The initial estimate is chosen uniformly within the bounds of the states or parameters.  This seed is important since due to the nonlinearity of the model dynamics, the cost function is not convex; different initializations may return different minima. Typically, one runs many estimates in parallel on a computing cluster. Later, these will be aggregated to find the optimal estimate.
+
+For specs file ```FRET-1-estimation.txt```, we can perform a variational annealing estimate with initial seed 3:
+
+```python est_VA.py 
+$ python est_VA.py FRET-1-estimation 3
+
+-- Input vars and params loaded from 170913Device1FRET1cell7.txt
+
+Stimulus data imported from 170913Device1FRET1cell7.stim.
+Measured data imported from 170913Device1FRET1cell7.meas.
+Initializing estimate with seed 3
+------------------------------
+Step 1 of 61
+beta = 0, RF = 1.00000000e-06
+
+Taping action evaluation...
+Done!
+Time = 0.0296578407288 s
+
+Beginning optimization...
+Optimization complete!
+Time = 0.306573152542 s
+Exit flag = 0
+Exit message: CONVERGENCE: REL_REDUCTION_OF_F_<=_FACTR*EPSMCH
+Iterations = 1
+Obj. function value = [ 0.35386092]
+
+------------------------------
+Step 2 of 61
+beta = 1, RF = 2.00000000e-06
+...
+```
+
+If either the specifications file, measurement file, or stimulus file is missing, it will return an error. The data, which is a pickled object, (.pklz) will be saved in ```data_dir/objects```, with the same name as the specs file.
+
+#### Working with fake (simulated) data
+
+
+
+
 
 
 
@@ -154,22 +204,10 @@ There are several variables that are of this type:
 
 Please read [CONTRIBUTING.md](https://gist.github.com/PurpleBooth/b24679402957c63ec426) for details on our code of conduct, and the process for submitting pull requests to us.
 
-## Versioning
-
-We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/your/project/tags). 
-
 ## Authors
 
-* **Billie Thompson** - *Initial work* - [PurpleBooth](https://github.com/PurpleBooth)
-
-See also the list of [contributors](https://github.com/your/project/contributors) who participated in this project.
+[**Nirag Kadakia**](http://nirag.ucsd.edu/)
 
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
-
-## Acknowledgments
-
-* Hat tip to anyone whose code was used
-* Inspiration
-* etc
