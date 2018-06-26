@@ -108,7 +108,7 @@ def save_opt_pred_plots(data_flag):
 	plt.savefig('%s/pred_plots.png' % out_dir)
 	plt.close()
 	
-def save_opt_pred_data(data_flag, stim, meas, est, opt_pred):
+def save_opt_pred_data(data_flag, stim, meas, est, opt_pred, opt_params):
 
 	out_dir = '%s/estimates/%s' % (DATA_DIR, data_flag)
 	if not os.path.exists(out_dir):
@@ -118,3 +118,4 @@ def save_opt_pred_data(data_flag, stim, meas, est, opt_pred):
 	sp.savetxt('%s/meas.txt' % out_dir, meas, fmt='%.4f', delimiter='\t')
 	sp.savetxt('%s/est.txt' % out_dir, est, fmt='%.4f', delimiter='\t')
 	sp.savetxt('%s/pred.txt' % out_dir, opt_pred, fmt='%.4f', delimiter='\t')
+	sp.savetxt('%s/params.txt' % out_dir, opt_params, fmt='%s', delimiter='\t')

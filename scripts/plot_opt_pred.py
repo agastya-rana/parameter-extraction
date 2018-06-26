@@ -88,8 +88,9 @@ def pred_plot(data_flag, beta_to_plot=-1):
 	meas_to_save = sp.vstack((full_Tt.T, scF.meas_data[full_range].T)).T
 	est_to_save = sp.vstack((est_Tt.T, est_path.T)).T
 	pred_to_save = sp.vstack((pred_Tt.T, opt_pred_path.T)).T
+	params_to_save = sp.vstack((scF.model.param_names, est_params[-1, :])).T
 	save_opt_pred_data(data_flag, stim_to_save, meas_to_save, 
-						est_to_save, pred_to_save)
+						est_to_save, pred_to_save, params_to_save)
 	
 	
 if __name__ == '__main__':
