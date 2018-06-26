@@ -98,3 +98,23 @@ def save_pred_data(data_dict, data_flag):
 	with open(filename, 'wb') as f:
 		cPickle.dump(data_dict, f, cPickle.HIGHEST_PROTOCOL)
 	print ('Prediction data saved to %s.' % (data_flag))
+
+def save_opt_pred_plots(data_flag):
+	
+	out_dir = '%s/estimates/%s' % (DATA_DIR, data_flag)
+	if not os.path.exists(out_dir):
+		os.makedirs(out_dir)
+	
+	plt.savefig('%s/pred_plots.png' % out_dir)
+	plt.close()
+	
+def save_opt_pred_data(data_flag, stim, meas, est, opt_pred):
+
+	out_dir = '%s/estimates/%s' % (DATA_DIR, data_flag)
+	if not os.path.exists(out_dir):
+		os.makedirs(out_dir)
+
+	sp.savetxt('%s/stim.txt' % out_dir, stim, fmt='%.4f', delimiter='\t')
+	sp.savetxt('%s/meas.txt' % out_dir, meas, fmt='%.4f', delimiter='\t')
+	sp.savetxt('%s/est.txt' % out_dir, est, fmt='%.4f', delimiter='\t')
+	sp.savetxt('%s/pred.txt' % out_dir, opt_pred, fmt='%.4f', delimiter='\t')

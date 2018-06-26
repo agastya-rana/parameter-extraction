@@ -79,9 +79,6 @@ def load_est_data_VA(data_flag, IC):
 def load_pred_data(data_flag):
 	
 	out_dir = '%s/objects/%s' % (DATA_DIR, data_flag)
-	if not os.path.exists(out_dir):
-		os.makedirs(out_dir)
-	
 	filename = '%s/preds.pkl' % out_dir
 	with open(filename, 'rb') as f:
 		data_dict = cPickle.load(f)
