@@ -190,6 +190,26 @@ If either the specifications file, measurement file, or stimulus file is missing
 
 ### Working with fake (simulated) data
 
+Sometimes you want to test the assimilation with fake noisy data. This can be done by integrating the presumed model equations, and then adding fake measurement noise. The added specifications for manual data generation to be listed in the specs file (say "FRET-fake-est-1.txt" are:
+
+| variable          | variable definition                      | values                                   |
+| ----------------- | ---------------------------------------- | ---------------------------------------- |
+| stim_type         | type of stimulus; at this point only step stimuli are accepted | str; ```step``` is only accepted value at this time |
+| step_stim_density | for step stimuli, the number of switches in the signal | int; should be less than nT              |
+| step_stim_seed    | for step stimuli, seed for random number generator for the stimuli values | int                                      |
+| step_stim_vals    | values for step stimuli                  | list; the distinct possible values of dynamic step stimuli. Ensure that there are no spaces between values in the specs file |
+| meas_noise        | standard deviations of the noise for each measured variable. To be added to "ground truth" data to generate the "noisy" observations | list; should be same length as L_idxs. Ensure that there are no spaces between values in the specs file. |
+| params_set        | the parameter set in the model definition to use to generate data | str; corresponds to one of the keys in the src/models.my_model.params dictionary, where my_model is the model class |
+| x0                | The initial state of the system for forward integration to generate data | list; should be same llength as nD       |
+
+See the src/models.generic_model_class example in the models module for an example of a parameter set dictionary.  With these parameters defined in the specs file, generate fake stimuli and measured data using
+
+```
+$ python gen_twin_data FRET-fake-est-1
+```
+
+The stimuli and measurements will, as before, be saved in the appropriate folders in data directory.
+
 ### Generating predictions
 
 To find an optimal estimate, we must next cross-validate our parameter estimates with another set of recorded data (the "prediction"). The time window used for the prediction is [est_end_T, end_pred_T], which are set in the specs file. 
@@ -209,13 +229,11 @@ pred_dict = {'errors': pred_errors, 'path': pred_path}
 ```
 which contains the predicted traces and errors. Again, this dictionary will be saved in the subfolder of ```data_dir/objects``` corresponding to the specs file name. 
 
-Finally, we want to find the optimal estimate given these 10000 predictions. 
-
-
-
-
-
-
+Finally, we want to find the optimal estimate given these 10000 predictions:
+```
+$ python plot_opt_pred.py FRET-1-estimation
+```
+This generates text files of the optimal predicted traces, estimated traces, and parameters, all saved in a subfolder of ```data_dir/estimates``` corresponding to the specs file name.
 
 
 ## Contributing
