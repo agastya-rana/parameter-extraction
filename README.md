@@ -1,8 +1,6 @@
 # FRET-data-assimilation
 
-![](.stim.svg)
-![](.stim.png)
-<img src=".stim.svg", width=800>
+![](.stim.png) ![](.FRET.png)
 
 Estimate parameters and hidden states of dynamical models from single-cell FRET data using *variational annealing* (Ye et al, *Phys. Rev. E* **92**, 052901, 2015), a technique of nonlinear data assimilation for pinpointing global minima among highly non-convex cost functions.
 
