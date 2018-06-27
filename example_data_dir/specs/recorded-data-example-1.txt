@@ -1,0 +1,22 @@
+# DATA 				   	VARIABLE NAME			VALUE
+data_var				nD						2
+data_var				nT						767
+data_var				dt						0.5	
+data_var				nP						10
+
+data_var				stim_file				170913_Device1_FRET1_cell_7
+data_var				meas_file				170913_Device1_FRET1_cell_7
+data_var				meas_noise				[1.0]
+data_var				L_idxs					[1]
+
+# ESTIMATION VARS	 	VARIABLE NAME			VALUE
+est_var					model					MWC_MM_2_var_shift
+est_var					params_set				1
+est_var					bounds_set				1d
+est_var					est_beg_T				5
+est_var					est_end_T				200
+est_var					pred_end_T				300
+	
+
+# ESTIMATION SPECS		ESTIMATION SPECS		VALUE
+est_spec				est_type				VA

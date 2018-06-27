@@ -1,0 +1,24 @@
+# DATA 				   	VARIABLE NAME			VALUE
+data_var				nD						2
+data_var				nT						1000
+data_var				dt						0.5
+data_var				model					MWC_MM_2_var
+data_var				L_idxs					[1]
+
+# DATA GENERATION VARS
+data_var				stim_type				step
+data_var				step_stim_density		30
+data_var				step_stim_seed			1
+data_var				meas_noise				[4.0]
+data_var				step_stim_vals 			[70,100,130]
+data_var				x0						[1.5,20.0]
+data_var				params_set				1
+
+# ESTIMATION VARS	 	VARIABLE NAME			VALUE
+est_var					bounds_set				1b
+est_var					est_beg_T				30
+est_var					est_end_T				350
+est_var					pred_end_T				450
+
+# ESTIMATION SPECS		ESTIMATION SPECS		VALUE
+est_spec				est_type				VA
