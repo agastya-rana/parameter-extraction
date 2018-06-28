@@ -18,11 +18,13 @@ from load_data import load_est_data_VA
 from save_data import save_pred_data
 	
 
-def gen_pred_data(data_flag, IC_range=range(1000)):
+def gen_pred_data(data_flag, IC_range=range(2)):
 	
 	pred_errors = sp.empty(len(IC_range))
 	pred_errors[:] = sp.nan
+	est_path = None
 	pred_path = None
+	pred_params = None
 	
 	for iC in IC_range:
 		
@@ -37,29 +39,36 @@ def gen_pred_data(data_flag, IC_range=range(1000)):
 		# Grab obj at final beta; some attributes will be overwritten
 		scF = data_dict['obj']
 		est_params = data_dict['params'][-1, :]
-		est_path = data_dict['paths'][-1, :, 1:]
 		if pred_path is None:
 			pred_path = sp.zeros((len(scF.pred_wind_idxs), 
 							scF.nD, len(IC_range)))
-				
+		if est_path is None:
+			est_path = sp.zeros((len(scF.est_wind_idxs), 
+							scF.nD, len(IC_range)))		
+		est_path[:, :, iC] = data_dict['paths'][-1, :, 1:]	
+	
 		# Set estimated parameters as a new parameter dictionary
 		scF.params_set = 'est_params'
 		scF.model.params[scF.params_set] = est_params
-		
+		if pred_params is None:
+			pred_params = sp.zeros((len(est_params), len(IC_range)))
+
 		# Set the prediction stimuli and grab the meas data in the pred window
 		scF.Tt = scF.Tt[scF.pred_wind_idxs]
 		scF.stim = scF.stim[scF.pred_wind_idxs]
 		scF.meas_data = scF.meas_data[scF.pred_wind_idxs]
 		
 		# Generate the forward prediction using estimated parameter dictionary
-		scF.x0 = est_path[-1, :]
+		scF.x0 = est_path[-1, :, iC]
 		scF.gen_true_states()
 		
 		pred_errors[iC] = sp.sum((scF.true_states[:, scF.L_idxs] 
 									- scF.meas_data)**2.0)
 		pred_path[:, :, iC] = scF.true_states
-		
-	pred_dict = {'errors': pred_errors, 'path': pred_path}
+		pred_params[:, iC] = est_params 		
+
+	pred_dict = {'errors': pred_errors, 'pred_path': pred_path, 
+					'est_path': est_path, 'params': pred_params}
 	save_pred_data(pred_dict, data_flag)
 	
 	

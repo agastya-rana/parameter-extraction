@@ -14,29 +14,43 @@ import sys
 sys.path.append('../src')
 import scipy as sp
 from utils import get_flag
-from load_data import load_est_data_VA, load_pred_data, load_true_file
+from single_cell_FRET import single_cell_FRET
+from load_specs import read_specs_file, compile_all_run_vars
+from load_data import load_pred_data, load_true_file
 from save_data import save_opt_pred_plots, save_opt_pred_data
 import matplotlib.pyplot as plt
 
-def pred_plot(data_flag, beta_to_plot=-1):
+def pred_plot(data_flag):
 	
+	# Load specs file data and object
+	list_dict = read_specs_file(data_flag)
+	vars_to_pass = compile_all_run_vars(list_dict)
+	scF = single_cell_FRET(**vars_to_pass)
+
+	# If stim and meas were not imported, then data was saved as data_flag
+	if scF.stim_file is None:
+		scF.stim_file = data_flag
+	if scF.meas_file is None:
+		scF.meas_file = data_flag
+	scF.set_stim()
+	scF.set_meas_data()
+	
+	# Initalize estimation; set the estimation and prediction windows
+	scF.set_est_pred_windows()
+
 	# Load all of the prediction data and estimation object and dicts
 	pred_dict = load_pred_data(data_flag)
 	opt_IC = sp.nanargmin(pred_dict['errors'])
-	opt_pred_path = pred_dict['path'][:, :, opt_IC]  
-	est_dict = load_est_data_VA(data_flag, opt_IC)
-
-	# Set the object, params, and path based on saved data.
-	scF = est_dict['obj']
-	est_params = est_dict['params']
-	est_path = est_dict['paths'][beta_to_plot, :, 1:]
-	errors = est_dict['errors'][:, 1]
-	
-	full_range = range(scF.est_wind_idxs[0], scF.pred_wind_idxs[-1])
+	opt_pred_path = pred_dict['pred_path'][:, :, opt_IC]  
+	est_path = pred_dict['est_path'][:, :, opt_IC]
+	est_params = pred_dict['params'][:, opt_IC]
+	est_range = scF.est_wind_idxs
+	pred_range = scF.pred_wind_idxs
+	full_range = sp.arange(scF.est_wind_idxs[0], scF.pred_wind_idxs[-1])
+	est_Tt = scF.Tt[est_range]	
+	pred_Tt = scF.Tt[pred_range]
 	full_Tt = scF.Tt[full_range]
-	est_Tt = scF.Tt[scF.est_wind_idxs]
-	pred_Tt = scF.Tt[scF.pred_wind_idxs]
-	
+
 	# Load true data if using synthetic data
 	true_states = None
 	try:
@@ -49,7 +63,7 @@ def pred_plot(data_flag, beta_to_plot=-1):
 	# Plot the stimulus
 	plt.subplot(num_plots, 1, 1)
 	plt.plot(full_Tt, scF.stim[full_range], color='r', lw=2)
-	plt.xlim(full_Tt[0], full_Tt[-1])
+	plt.xlim(full_Tt[0],full_Tt[-1])
 	plt.ylim(80, 160)
 	
 	# Plot the estimates
@@ -88,7 +102,7 @@ def pred_plot(data_flag, beta_to_plot=-1):
 	meas_to_save = sp.vstack((full_Tt.T, scF.meas_data[full_range].T)).T
 	est_to_save = sp.vstack((est_Tt.T, est_path.T)).T
 	pred_to_save = sp.vstack((pred_Tt.T, opt_pred_path.T)).T
-	params_to_save = sp.vstack((scF.model.param_names, est_params[-1, :])).T
+	params_to_save = sp.vstack((scF.model.param_names, est_params)).T
 	save_opt_pred_data(data_flag, stim_to_save, meas_to_save, 
 						est_to_save, pred_to_save, params_to_save)
 	
