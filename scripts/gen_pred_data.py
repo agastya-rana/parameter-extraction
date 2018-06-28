@@ -18,7 +18,7 @@ from load_data import load_est_data_VA
 from save_data import save_pred_data
 	
 
-def gen_pred_data(data_flag, IC_range=range(2)):
+def gen_pred_data(data_flag, IC_range=range(1000)):
 	
 	pred_errors = sp.empty(len(IC_range))
 	pred_errors[:] = sp.nan
@@ -39,6 +39,8 @@ def gen_pred_data(data_flag, IC_range=range(2)):
 		# Grab obj at final beta; some attributes will be overwritten
 		scF = data_dict['obj']
 		est_params = data_dict['params'][-1, :]
+		
+		# To hold all predicted and estimated paths for all ICs
 		if pred_path is None:
 			pred_path = sp.zeros((len(scF.pred_wind_idxs), 
 							scF.nD, len(IC_range)))
