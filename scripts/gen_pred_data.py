@@ -25,7 +25,8 @@ def gen_pred_data(data_flag, IC_range=range(1000)):
 	est_path = None
 	pred_path = None
 	pred_params = None
-	
+	num_valids = 0
+
 	for iC in IC_range:
 		
 		try:
@@ -68,10 +69,16 @@ def gen_pred_data(data_flag, IC_range=range(1000)):
 									- scF.meas_data)**2.0)
 		pred_path[:, :, iC] = scF.true_states
 		pred_params[:, iC] = est_params 		
+		
+		num_valids += 1
+	
+	if num_valids > 0:
+		pred_dict = {'errors': pred_errors, 'pred_path': pred_path, 
+						'est_path': est_path, 'params': pred_params}
+		save_pred_data(pred_dict, data_flag)
+	else:
+		print "No valid files. Nothing saved"
 
-	pred_dict = {'errors': pred_errors, 'pred_path': pred_path, 
-					'est_path': est_path, 'params': pred_params}
-	save_pred_data(pred_dict, data_flag)
 	
 	
 if __name__ == '__main__':
