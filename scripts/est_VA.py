@@ -8,22 +8,20 @@ International License.
 To view a copy of this license, visit 
 http://creativecommons.org/licenses/by-nc-sa/4.0/.
 """
-from __future__ import print_function
-
 import sys, time, os
+
+## TODO: FIND A BETTER WAY TO DO THIS
+## Problem is that just using current path location will only work if __name__ == __main__
 scripts_path = [i for i in sys.path if 'scripts' in i][0]
 sys.path.append(os.path.join(os.path.dirname(scripts_path),'src'))
-#print(sys.path)
+
 import scipy as sp
 from varanneal import va_ode
 from single_cell_FRET import single_cell_FRET
 from load_specs import read_specs_file, compile_all_run_vars
-from load_data import load_meas_file, load_stim_file
 from save_data import save_estimates
 
-
 def est_VA(data_flag):
-	
 	# Load specifications from file; pass to single_cell_FRET object
 	list_dict = read_specs_file(data_flag)
 	vars_to_pass = compile_all_run_vars(list_dict)
@@ -44,29 +42,24 @@ def est_VA(data_flag):
 	# Initalize annealer class
 	annealer = va_ode.Annealer()
 	annealer.set_model(scF.df_estimation, scF.nD)
-	annealer.set_data(scF.meas_data[scF.est_wind_idxs, :], 
-						stim=scF.stim[scF.est_wind_idxs], 
-						t=scF.Tt[scF.est_wind_idxs])
+	annealer.set_data(scF.meas_data[scF.est_wind_idxs, :], stim=scF.stim[scF.est_wind_idxs], t=scF.Tt[scF.est_wind_idxs])
 
 	# Set Rm as inverse covariance; all parameters measured for now
 	Rm = 1.0/sp.asarray(scF.meas_noise)**2.0
 	P_idxs = sp.arange(scF.nP)
 	
 	# Estimate
-	BFGS_options = {'gtol':1.0e-8, 'ftol':1.0e-8, 'maxfun':1000000, 
-						'maxiter':1000000}
+	BFGS_options = {'gtol':1.0e-8, 'ftol':1.0e-8, 'maxfun':1000000, 'maxiter':1000000}
 	tstart = time.time()
 	annealer.anneal(scF.x_init[scF.est_wind_idxs], scF.p_init, 
 					scF.alpha, scF.beta_array, Rm, scF.Rf0, 
 					scF.L_idxs, P_idxs, dt_model=None, init_to_data=True, 
 					bounds=scF.bounds, disc='trapezoid', 
 					method='L-BFGS-B', opt_args=BFGS_options)
-	print("\nADOL-C annealing completed in %f s."%(time.time() - tstart))
-
+	print("\nVariational annealing completed in {} s.".format(time.time() - tstart))
 	save_estimates(scF, annealer, data_flag)
 
 
 if __name__ == '__main__':
 	data_flag = str(sys.argv[1])
-	init_seed = int(sys.argv[2])
-	est_VA(data_flag, init_seed)
+	est_VA(data_flag)
