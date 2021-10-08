@@ -10,7 +10,7 @@ http://creativecommons.org/licenses/by-nc-sa/4.0/.
 """
 
 
-import scipy as sp
+import autograd.numpy as sp
 from collections import OrderedDict
 
 
@@ -403,17 +403,14 @@ class MWC_MM_2_var_shift():
 		Mm = x[...,0]
 		FR_idx = x[...,1]
 		K_I, m_0, alpha_m, K_R, K_B, Nn, V_R, V_B, FR_scale, FR_shift = p
-		
-		df_vec = sp.empty_like(x)	
-		
+
 		f_c = sp.log(1. + stim/K_I)
 		f_m = alpha_m*(m_0 - Mm)
 		Ee = Nn*(f_m + f_c)
 		Aa = 1./(1. + sp.exp(Ee))
 
-		df_vec[..., 0] = V_R*(1 - Aa)/(K_R + (1 - Aa)) \
-						- V_B*Aa**2/(K_B + Aa)
-		df_vec[..., 1]  = (FR_scale*Aa - FR_shift - FR_idx)/0.5
-		
+
+		df_vec = sp.array([V_R*(1 - Aa)/(K_R + (1 - Aa)) \
+						- V_B*Aa**2/(K_B + Aa), (FR_scale*Aa - FR_shift - FR_idx)/0.5]).T
 		return df_vec
 		

@@ -11,7 +11,8 @@ http://creativecommons.org/licenses/by-nc-sa/4.0/.
 
 import sys
 import os
-sys.path.append('../src')
+scripts_path = [i for i in sys.path if 'scripts' in i][0]
+sys.path.append(os.path.join(os.path.dirname(scripts_path),'src'))
 import scipy as sp
 from load_data import load_FRET_recording
 from save_data import save_stim, save_meas_data
@@ -31,6 +32,7 @@ def gen_py_data_from_mat(dir='170913/Device1/FRET1',
 	data_flag = '%s_cell_%s' % (dir.replace('/', '_'), cell)
 	save_stim(a, data_flag)
 	save_meas_data(a, data_flag)
-	
+
+
 if __name__ == '__main__':
 	gen_py_data_from_mat()

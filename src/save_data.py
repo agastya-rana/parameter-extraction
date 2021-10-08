@@ -15,7 +15,7 @@ import os
 import matplotlib
 matplotlib.use('agg')
 import matplotlib.pyplot as plt
-import cPickle
+import pickle
 import gzip
 from local_methods import def_data_dir
 
@@ -65,7 +65,7 @@ def save_estimates(scF, annealer, data_flag):
 
 	obj_file = ('%s/obj_IC=%s.pklz' % (out_dir, scF.init_seed))
 	with gzip.open(obj_file, 'wb') as f:
-		cPickle.dump(scF, f, protocol=2)
+		pickle.dump(scF, f, protocol=2)
 	print ('\n%s-%s data saved to %s.' % (data_flag, scF.init_seed, out_dir))
 
 def save_stim_plots(scF, data_flag):
@@ -97,7 +97,7 @@ def save_pred_data(data_dict, data_flag):
 	
 	filename = '%s/preds.pkl' % out_dir
 	with open(filename, 'wb') as f:
-		cPickle.dump(data_dict, f, cPickle.HIGHEST_PROTOCOL)
+		pickle.dump(data_dict, f, pickle.HIGHEST_PROTOCOL)
 	print ('Prediction data saved to %s.' % (data_flag))
 
 def save_opt_pred_plots(data_flag):

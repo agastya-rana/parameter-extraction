@@ -10,8 +10,10 @@ http://creativecommons.org/licenses/by-nc-sa/4.0/.
 """
 from __future__ import print_function
 
-import sys, time
-sys.path.append('../src')
+import sys, time, os
+scripts_path = [i for i in sys.path if 'scripts' in i][0]
+sys.path.append(os.path.join(os.path.dirname(scripts_path),'src'))
+#print(sys.path)
 import scipy as sp
 from varanneal import va_ode
 from single_cell_FRET import single_cell_FRET
@@ -20,7 +22,7 @@ from load_data import load_meas_file, load_stim_file
 from save_data import save_estimates
 
 
-def est_VA(data_flag, init_seed):
+def est_VA(data_flag):
 	
 	# Load specifications from file; pass to single_cell_FRET object
 	list_dict = read_specs_file(data_flag)
@@ -36,7 +38,6 @@ def est_VA(data_flag, init_seed):
 	scF.set_meas_data()
 	
 	# Initalize estimation; set the estimation and prediction windows
-	scF.init_seed = init_seed
 	scF.set_init_est()
 	scF.set_est_pred_windows()
 
@@ -59,8 +60,7 @@ def est_VA(data_flag, init_seed):
 					scF.alpha, scF.beta_array, Rm, scF.Rf0, 
 					scF.L_idxs, P_idxs, dt_model=None, init_to_data=True, 
 					bounds=scF.bounds, disc='trapezoid', 
-					method='L-BFGS-B', opt_args=BFGS_options, 
-					adolcID=init_seed)
+					method='L-BFGS-B', opt_args=BFGS_options)
 	print("\nADOL-C annealing completed in %f s."%(time.time() - tstart))
 
 	save_estimates(scF, annealer, data_flag)

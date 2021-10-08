@@ -12,8 +12,7 @@ visit http://creativecommons.org/licenses/by-nc-sa/4.0/.
 import scipy as sp
 import os
 import scipy.io as sio
-import h5py
-import cPickle
+import pickle
 import gzip
 from local_methods import def_data_dir
 
@@ -63,7 +62,7 @@ def load_est_data_VA(data_flag, IC):
 	in_dir = '%s/objects/%s' % (DATA_DIR, data_flag)
 	
 	with gzip.open('%s/obj_IC=%s.pklz' % (in_dir, IC), 'rb') as f:
-		obj = cPickle.load(f)
+		obj = pickle.load(f)
 	params = sp.load('%s/params_IC=%s.npy' % (in_dir, IC))
 	paths = sp.load('%s/paths_IC=%s.npy' % (in_dir, IC))
 	errors = sp.load('%s/action_errors_IC=%s.npy' % (in_dir, IC))
@@ -81,6 +80,6 @@ def load_pred_data(data_flag):
 	out_dir = '%s/objects/%s' % (DATA_DIR, data_flag)
 	filename = '%s/preds.pkl' % out_dir
 	with open(filename, 'rb') as f:
-		data_dict = cPickle.load(f)
+		data_dict = pickle.load(f)
 		
 	return data_dict
