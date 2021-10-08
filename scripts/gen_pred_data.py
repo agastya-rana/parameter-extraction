@@ -9,6 +9,7 @@ International License.
 To view a copy of this license, visit 
 http://creativecommons.org/licenses/by-nc-sa/4.0/.
 """
+from __future__ import print_function
 
 import sys
 sys.path.append('../src')
@@ -31,9 +32,9 @@ def gen_pred_data(data_flag, IC_range=range(1000)):
 		
 		try:
 			data_dict = load_est_data_VA(data_flag, iC)
-			print 'iC=%s' % iC
+			print('iC=%s' % iC)
 		except:
-			print '%s_IC=%s.npy not found; skipping...' % (data_flag, iC)
+			print('%s_IC=%s.npy not found; skipping...' % (data_flag, iC))
 			continue
 		sys.stdout.flush()
 		
@@ -77,7 +78,7 @@ def gen_pred_data(data_flag, IC_range=range(1000)):
 						'est_path': est_path, 'params': pred_params}
 		save_pred_data(pred_dict, data_flag)
 	else:
-		print "No valid files. Nothing saved"
+		print("No valid files. Nothing saved")
 
 	
 	

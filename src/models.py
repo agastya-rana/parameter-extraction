@@ -51,7 +51,7 @@ class generic_model_class():
 		self.bounds['bounds_set_2']['states'] = [[1.0, 5.0], [2, 200], [0, 50]]
 		self.bounds['bounds_set_2']['parameters'] = [[0, 5.0], [0, 100]]
 	
-	def df(self, t, x, (p, stim)):
+	def df(self, t, x, xxx_todo_changeme):
 		"""
 		The vector field function. 
 		
@@ -66,8 +66,7 @@ class generic_model_class():
 		Returns:
 			df_vec: numpy array of shape x; vector field.
 		"""
-
-		# Unpack states and parameters as shown below.
+		(p, stim) = xxx_todo_changeme
 		x1 = x[...,0]
 		x2 = x[...,1]
 		x3 = x[...,2]
@@ -156,12 +155,12 @@ class MWC_Tar():
 										[1.,  50.],				# k_FR
 										[0.5, 0.5]]				# tau_FR
 											
-	def df(self, t, x, (p, stim)):
+	def df(self, t, x, xxx_todo_changeme1):
 		"""
 		Taken from Clausznitzer,...,Sourjik, Endres 2014 PLoS Comp Bio.
 		Only Tar receptor, Tsr not included.  
 		"""
-
+		(p, stim) = xxx_todo_changeme1
 		Mm = x[...,0]
 		FR = x[...,1]
 		K_off_a, K_on_a, Nn, \
@@ -287,8 +286,9 @@ class MWC_MM_2_var():
 										[1e-3, 1], 		# V_B
 										[0, 100]]		# a-->FRET scalar
 		
-	def df(self, t, x, (p, stim)):
+	def df(self, t, x, xxx_todo_changeme2):
 		
+		(p, stim) = xxx_todo_changeme2
 		Mm = x[...,0]
 		FR_idx = x[...,1]
 		K_I, m_0, alpha_m, K_R, K_B, Nn, V_R, V_B, FR_scale = p
@@ -397,8 +397,9 @@ class MWC_MM_2_var_shift():
 										[0, 0]]		# FRET y-shift
 										
 		
-	def df(self, t, x, (p, stim)):
+	def df(self, t, x, xxx_todo_changeme3):
 		
+		(p, stim) = xxx_todo_changeme3
 		Mm = x[...,0]
 		FR_idx = x[...,1]
 		K_I, m_0, alpha_m, K_R, K_B, Nn, V_R, V_B, FR_scale, FR_shift = p

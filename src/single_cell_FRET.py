@@ -9,6 +9,7 @@ International License.
 To view a copy of this license, visit 
 http://creativecommons.org/licenses/by-nc-sa/4.0/.
 """
+from __future__ import print_function
 
 import scipy as sp
 import sys
@@ -113,7 +114,7 @@ class single_cell_FRET():
 				try:
 					exec('len(%s)' % val)
 				except:
-					print 'The value of %s (%s) is not a list' % (key, val)
+					print('The value of %s (%s) is not a list' % (key, val))
 					quit()
 				exec ('self.%s = %s' % (key, val))
 			else:
@@ -134,12 +135,12 @@ class single_cell_FRET():
 		
 		if self.stim_file is not None:
 			self.import_stim_data()
-			print 'Stimulus data imported from %s.stim.' % self.stim_file
+			print('Stimulus data imported from %s.stim.' % self.stim_file)
 		else:
 			if self.stim_type == 'step':
 				self.set_step_stim()
 			else:
-				print 'Stimulus type stim_type=%s unknown' % self.stim_type	
+				print('Stimulus type stim_type=%s unknown' % self.stim_type)	
 				quit()
 	
 		if self.stim_smooth_dt is not None:
@@ -214,7 +215,7 @@ class single_cell_FRET():
 		
 		if self.meas_file is not None:
 			self.import_meas_data()
-			print 'Measured data imported from %s.meas.' % self.meas_file
+			print('Measured data imported from %s.meas.' % self.meas_file)
 		else:
 			assert self.true_states is not None, "Since no measurement file "\
 				"is specified, twin data will be generated. But before calling "\
@@ -254,7 +255,7 @@ class single_cell_FRET():
 	
 	def set_init_est(self):
 		
-		print 'Initializing estimate with seed %s' % self.init_seed
+		print('Initializing estimate with seed %s' % self.init_seed)
 		
 		assert (self.nD == self.model.nD), 'self.nD != %s' % self.model.nD
 		assert (self.nP == self.model.nP), 'self.nP != %s' % self.model.nP
@@ -273,11 +274,11 @@ class single_cell_FRET():
 			self.p_init[iP] = sp.random.uniform(self.param_bounds[iP][0],
     	                            self.param_bounds[iP][1])
 
-	def df_estimation(self, t, x, (p, stim)):
+	def df_estimation(self, t, x, xxx_todo_changeme):
 		"""
 		Function to return value of vector field in format used for varanneal
 		"""
-		
+		(p, stim) = xxx_todo_changeme
 		return self.model.df(t, x, (p, stim))
 
 	def set_est_pred_windows(self):

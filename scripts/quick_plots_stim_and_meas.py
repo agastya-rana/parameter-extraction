@@ -9,6 +9,7 @@ International License.
 To view a copy of this license, visit 
 http://creativecommons.org/licenses/by-nc-sa/4.0/.
 """
+from __future__ import print_function
 
 import os
 import sys
@@ -19,7 +20,7 @@ from save_data import save_meas_plots, save_stim_plots
 from single_cell_FRET import single_cell_FRET
 
 
-print 'Plotting stimuli...'
+print('Plotting stimuli...')
 
 stim_path = '%s/stim' % def_data_dir()
 data_flags = []
@@ -37,7 +38,7 @@ for data_flag in data_flags:
 	save_stim_plots(scF, data_flag)
 
 	
-print 'Plotting measurements...'
+print('Plotting measurements...')
 
 meas_path = '%s/meas_data' % def_data_dir()
 data_flags = []

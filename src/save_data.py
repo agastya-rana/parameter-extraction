@@ -8,6 +8,7 @@ International License.
 To view a copy of this license, 
 visit http://creativecommons.org/licenses/by-nc-sa/4.0/.
 """
+from __future__ import print_function
 
 import scipy as sp
 import os
