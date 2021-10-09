@@ -10,15 +10,12 @@ visit http://creativecommons.org/licenses/by-nc-sa/4.0/.
 """
 
 import scipy as sp
-import os
 import scipy.io as sio
 import pickle
 import gzip
 from local_methods import def_data_dir
 
-
 DATA_DIR = def_data_dir()
-
 
 def load_stim_file(stim_file):
 

@@ -10,13 +10,11 @@ http://creativecommons.org/licenses/by-nc-sa/4.0/.
 """
 
 import sys
-sys.path.append('../src')
-import scipy as sp
-from utils import get_flag
-from load_specs import read_specs_file, compile_all_run_vars
-from save_data import save_stim, save_true_states, save_meas_data
-from single_cell_FRET import single_cell_FRET
-
+print(sys.path)
+from src.utils import get_flag
+from src.load_specs import read_specs_file, compile_all_run_vars
+from src.save_data import save_stim, save_true_states, save_meas_data
+from src.single_cell_FRET import single_cell_FRET
 
 def gen_twin_data(data_flag):
 	
