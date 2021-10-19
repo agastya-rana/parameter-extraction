@@ -70,13 +70,10 @@ class Model():
         df_vec = np.array([x1 * p1, x2]).T
         return df_vec
 
-class MWC(Model):
+class MWC_MM(Model):
     """
-	2-variable MWC with Michaelis Minton methylation dynamics. 
-	The dynamical variables are methylation state and FRET index. 
-	
-	In general, we assume K_I, m_0, alpha_m, K_R and K_B are fixed. So 
-	one may hold these parameter bounds as tight around some presumed value.
+	MWC model for activity; Michaelis-Menten model for methylation/demethylation.
+	Assume K_I, m_0, alpha_m, K_R, K_B are fixed; narrowly constrain these bounds.
 	"""
 
     def __init__(self, **kwargs):
@@ -94,7 +91,7 @@ class MWC(Model):
                             'FR_scale',
                             'FR_shift']
 
-        # True parameter dictionaries
+        # True parameter dictionaries; TODO: data from where???
         self.params = dict()
         self.params['1'] = [18.,  # K_I binding constant
                             0.5,  # m_0 bkgrnd methyl level
@@ -122,45 +119,8 @@ class MWC(Model):
                                        [0, 100],  # a-->FRET scalar
                                        [-50, 50]]  # FRET y-shift
 
-        self.bounds['1b'] = dict()
-        self.bounds['1b']['states'] = [[0.0, 5.0], [0, 100]]
-        self.bounds['1b']['params'] = [[1, 100],  # K_I binding constant
-                                       [0.5, 0.5],  # m_0 bkg methyl level
-                                       [2.0, 2.0],  # alpha_m
-                                       [0.0, 1.0],  # K_R
-                                       [0.0, 1.0],  # K_B
-                                       [0, 200],  # N cluster size
-                                       [1e-3, 1],  # V_R
-                                       [1e-3, 1],  # V_B
-                                       [25, 35],  # a-->FRET scalar
-                                       [-50, 50]]  # FRET y-shift
-        self.bounds['1c'] = dict()
-        self.bounds['1c']['states'] = [[0.0, 5.0], [0, 100]]
-        self.bounds['1c']['params'] = [[1, 100],  # K_I binding constant
-                                       [0.0, 3.0],  # m_0 bkg methyl level
-                                       [0.0, 5.0],  # alpha_m
-                                       [0.0, 1.0],  # K_R
-                                       [0.0, 1.0],  # K_B
-                                       [0, 200],  # N cluster size
-                                       [1e-3, 1],  # V_R
-                                       [1e-3, 1],  # V_B
-                                       [10, 50],  # a-->FRET scalar
-                                       [-50, 50]]  # FRET y-shift
-        self.bounds['1d'] = dict()
-        self.bounds['1d']['states'] = [[0.0, 5.0], [0, 100]]
-        self.bounds['1d']['params'] = [[18., 18.],  # K_I binding constant
-                                       [0.5, 5.0],  # m_0 bkg methyl level
-                                       [2.0, 2.0],  # alpha_m
-                                       [0.3, 0.3],  # K_R
-                                       [0.3, 0.3],  # K_B
-                                       [0, 15],  # N cluster size
-                                       [1e-3, 1e-1],  # V_R
-                                       [1e-3, 1e-1],  # V_B
-                                       [15, 60],  # a-->FRET scalar
-                                       [0, 0]]  # FRET y-shift
-
-    def df(self, t, x, xxx_todo_changeme3):
-        (p, stim) = xxx_todo_changeme3
+    def df(self, t, x, inputs):
+        p, stim = inputs
         Mm = x[..., 0]
         FR_idx = x[..., 1]
         K_I, m_0, alpha_m, K_R, K_B, Nn, V_R, V_B, FR_scale, FR_shift = p
