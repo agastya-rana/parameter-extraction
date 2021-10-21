@@ -1,13 +1,7 @@
 """
-Class for generating twin data and running variational annealing 
-on single cell FRET data.
+Single-cell FRET class that holds stimulus, model and inference parameters.
 
-Created by Nirag Kadakia at 23:00 10-16-2017
-This work is licensed under the 
-Creative Commons Attribution-NonCommercial-ShareAlike 4.0 
-International License. 
-To view a copy of this license, visit 
-http://creativecommons.org/licenses/by-nc-sa/4.0/.
+Created by Nirag Kadakia and Agastya Rana, 10-21-2021.
 """
 
 import scipy as sp
@@ -58,7 +52,7 @@ class single_cell_FRET():
 
         # Variables for integrating model/twin data generation
         self.model = models.MWC_MM()  ## Default is MWC MM model
-        self.params_set = 'Default'  ## Name of parameter set used in the model
+        self.params_set = 'Default'  ## Name of true parameter set used in the model (used for forward integration)
         self.bounds_set = 'Default'  ## Name of the bounds set used in the model inference algorithm
         self.true_states = None  ## Stores state of integrated system over the complete timetrace
         self.x0 = [2.3, 7.0]  ## TODO: why?
@@ -96,7 +90,6 @@ class single_cell_FRET():
         for key in kwargs:
             assert hasattr(self, '%s' % key), "'%s' is not an attribute of " \
                                               "the single_cell_FRET class. Check or add to __init__" % key
-
             val = kwargs[key]
 
             if key in INT_PARAMS:
@@ -116,6 +109,8 @@ class single_cell_FRET():
                 exec('self.%s = %s' % (key, val))
             else:
                 exec('self.%s = float(val)' % key)
+
+
 
     #############################################
     ##### 		Stimulus functions			#####
@@ -153,7 +148,7 @@ class single_cell_FRET():
         self.Tt = Tt_stim[:, 0]
         self.stim = Tt_stim[:, 1]
 
-    def generate_stim(self, stim_type):
+    def generate_stim(self, stim_type, **kwargs):
         """
         Generate a stimulus of type stim_type.
         'random_switch': switch stimulus to new random level a set number of times at random points
@@ -192,9 +187,25 @@ class single_cell_FRET():
             for i in range(1, dT):
                 self.stim[i] = np.random.choice(self.stim_vals, p=transition[self.stim[i - 1]])
 
-        elif stim_type == 'L1, L2 model':  ## TODO: Finish other stimulus inputs
+        elif stim_type == 'block':  ## TODO: Finish other stimulus inputs
+            ## t_s, dl_1, dl_2 must be kwargs
             self.stim = np.zeros(self.nT)
-            pass
+            adapt_time = 30 ## time given for adaptation
+            pre_stim = 10
+            for key in kwargs:
+                assert key in ['t_s', 'l1', 'l2'], 'Invalid input to stimulus generation.
+            t_s = float(kwargs['t_s'])
+            l1 = float(kwargs['l1'])
+            if 'l2' not in kwargs:
+                l2 = -l1
+            else:
+                l2 = float(kwargs['l2'])
+            block = np.concatenate((np.ones(int(pre_stim/self.dt))*self.stim_bg,
+                                    np.ones(int(t_s/self.dt))*(self.stim_bg+l1),
+                                    np.ones(int(adapt_time/self.dt))*self.stim_bg))
+            repeats = self.nT//len(block)
+            for i in range(repeats):
+                self.stim[i*len(block):(i+1)*len(block)] = block
 
     def eval_stim(self, t):
         """
@@ -237,14 +248,14 @@ class single_cell_FRET():
         """
 		Import measured data from file
 		"""
-
         Tt_meas_data = load_meas_file(self.meas_file)
-        self.meas_data = Tt_meas_data[:, 1:]
-
-        assert (sp.all(Tt_meas_data[:, 0] == self.Tt)), "Tt vector in " \
+        self.meas_data = Tt_meas_data[:, self.L_idxs]
+        ## TODO: allow the observed timetrace to be different from the input stimulus timetrace.
+        assert (np.all(Tt_meas_data[:, 0] == self.Tt)), "Tt vector in " \
                                                         "measured data file must be same as Tt"
         assert self.meas_data.shape[1] == len(self.L_idxs), "Dimension of " \
-                                                            "imported measurement vectors must be same as length of L_idxs"
+                                                            "imported measurement vectors must be same as length of " \
+                                                            "L_idxs "
 
     #############################################
     #####			VA parameters			#####
@@ -253,29 +264,29 @@ class single_cell_FRET():
     def set_init_est(self):
 
         print('Initializing estimate with seed %s' % self.init_seed)
-
         assert (self.nD == self.model.nD), 'self.nD != %s' % self.model.nD
         assert (self.nP == self.model.nP), 'self.nP != %s' % self.model.nP
-
         self.state_bounds = self.model.bounds[self.bounds_set]['states']
         self.param_bounds = self.model.bounds[self.bounds_set]['params']
-        self.bounds = sp.vstack((self.state_bounds, self.param_bounds))
-        self.x_init = sp.zeros((self.nT, self.nD))
-        self.p_init = sp.zeros(self.nP)
+        self.bounds = np.vstack((self.state_bounds, self.param_bounds))
+        self.x_init = np.zeros((self.nT, self.nD))
+        self.p_init = np.zeros(self.nP)
 
-        sp.random.seed(self.init_seed)
+        ## Generate random states within state bounds over timetrace
+        np.random.seed(self.init_seed)
         for iD in range(self.nD):
-            self.x_init[:, iD] = sp.random.uniform(self.state_bounds[iD][0],
+            self.x_init[:, iD] = np.random.uniform(self.state_bounds[iD][0],
                                                    self.state_bounds[iD][1], self.nT)
+        ## Generate random parameters in parameter bounds
         for iP in range(self.nP):
-            self.p_init[iP] = sp.random.uniform(self.param_bounds[iP][0],
+            self.p_init[iP] = np.random.uniform(self.param_bounds[iP][0],
                                                 self.param_bounds[iP][1])
 
-    def df_estimation(self, t, x, xxx_todo_changeme):
+    def df_estimation(self, t, x, inputs):
         """
 		Function to return value of vector field in format used for varanneal
 		"""
-        (p, stim) = xxx_todo_changeme
+        p, stim = inputs
         return self.model.df(t, x, (p, stim))
 
     def set_est_pred_windows(self):
@@ -299,24 +310,21 @@ class single_cell_FRET():
             'Prediction window has len 0; change est_end_T and/or pred_end_T'
 
     #############################################
-    #####	Twin data generation functions	#####
+    #####	Numerical Integration of Model	#####
     #############################################
 
     def df_data_generation(self, x, t, p):
         """
-		Function to return value of vector field in format used for sp.odeint
-		"""
-
+        Function to return value of vector field in format used for sp.odeint
+        """
         return self.model.df(t, x, (p, self.eval_stim(t)))
 
     def gen_true_states(self):
         """
-		Forward integrate the model given true parameters and x0
-		"""
-
+        Forward integrate the model given true parameters and x0.
+        """
         assert len(self.x0) == self.nD, "Initial state has dimension %s != " \
                                         "model dimension %s" % (len(self.x0), self.nD)
-
         self.true_states = odeint(self.df_data_generation, self.x0, self.Tt,
                                   args=(self.model.params[self.params_set],))
 
