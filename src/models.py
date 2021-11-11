@@ -1,12 +1,7 @@
 """
 MWC models and state bounds for FRET data assimilation.
 
-Created by Nirag Kadakia at 08:40 05-20-2018
-This work is licensed under the 
-Creative Commons Attribution-NonCommercial-ShareAlike 4.0 
-International License. 
-To view a copy of this license, visit 
-http://creativecommons.org/licenses/by-nc-sa/4.0/.
+Created by Nirag Kadakia and Agastya Rana, 10-21-2021.
 """
 
 import autograd.numpy as np
@@ -138,7 +133,7 @@ class MWC_linear(Model):
         self.bounds['default'] = dict()
         self.bounds['default']['states'] = [[0.0, 4.0], [0, 1]]
         self.bounds['default']['params'] = [[p,p] for p in self.params['default']]
-        self.bounds['default']['params'][-3] = [4, 8] ## N
+        self.bounds['default']['params'][-3] = [4, 15] ## N
         self.bounds['default']['params'][-2] = [0., 1.] ## a_ss
         self.bounds['default']['params'][-1] = [-0.5, 0.5] ## slope
 

@@ -15,13 +15,13 @@ import pickle
 import gzip
 from local_methods import def_data_dir
 
+## TODO: read and save data in JSON instead of arbitrary specs file??; use numpy files instead of txt
+
 DATA_DIR = def_data_dir()
 
 def load_stim_file(stim_file):
-
 	filename = '%s/stim/%s.stim' % (DATA_DIR, stim_file)
 	stim = sp.loadtxt(filename)
-	
 	return stim
 	
 def load_meas_file(meas_file):

@@ -8,9 +8,6 @@ International License.
 To view a copy of this license, visit 
 http://creativecommons.org/licenses/by-nc-sa/4.0/.
 """
-
-import sys
-print(sys.path)
 from src.utils import get_flag
 from src.load_specs import read_specs_file, compile_all_run_vars
 from src.save_data import save_stim, save_true_states, save_meas_data

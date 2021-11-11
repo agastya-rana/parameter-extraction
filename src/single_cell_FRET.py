@@ -15,9 +15,10 @@ import collections
 from utils import smooth_vec
 
 INT_PARAMS = ['nT', 'nD', 'nP', 'step_stim_density', 'step_stim_seed']
-LIST_PARAMS = ['L_idxs', 'x0', 'step_stim_vals', 'P_idxs', 'beta_array', 'meas_noise']
+LIST_PARAMS = ['L_idxs', 'x0', 'step_stim_vals', 'P_idxs', 'beta_array', 'meas_noise', 'params_set', 'stim_params']
 MODEL_PARAMS = ['model']
-STR_PARAMS = ['stim_file', 'stim_type', 'stim_smooth_type', 'params_set', 'bounds_set', 'meas_file']
+FLOAT_PARAMS = ['stim_l1', 'stim_ts']
+STR_PARAMS = ['stim_file', 'stim_type', 'stim_smooth_type', 'bounds_set', 'meas_file']
 
 
 class single_cell_FRET():
@@ -29,7 +30,7 @@ class single_cell_FRET():
         ## Timetrace Variables
         self.nD = 2  ## Number of dimensions
         self.dt = 0.1  ## Timestep
-        self.nT = 500  ## Number of timepoints
+        self.nT = 767  ## Number of timepoints
         self.Tt = np.arange(0, self.dt * self.nT, self.dt)  ## List of timepoints (timetrace)
         self.L_idxs = [1]  ## Index of the observable (non-hidden) components of the state vector
 
@@ -42,7 +43,11 @@ class single_cell_FRET():
         self.stim_random_seed = 1  ## Seed for random generation of stimulus
         self.stim_no_changes = 30  ## Number of stim changes in timetrace
         self.stim_vals = [0.085, 0.1, 0.115]  ## Stimulus values used
-        self.stim_bg = self.stim_vals[0]
+        self.stim_bg = self.stim_vals[1]
+        self.stim_params = None
+        self.stim_l1 = 0 ## For block stimulus
+        self.stim_l2 = None
+        self.stim_ts = 10 ## For block stimulus
 
         # Variables for generating/loading measured data
         self.meas_data = None
@@ -52,7 +57,7 @@ class single_cell_FRET():
 
         # Variables for integrating model/twin data generation
         self.model = models.MWC_MM()  ## Default is MWC MM model
-        self.params_set = 'Default'  ## Name of true parameter set used in the model (used for forward integration)
+        self.params_set = []  ## Value of true parameter set used in the model (used for forward integration)
         self.bounds_set = 'Default'  ## Name of the bounds set used in the model inference algorithm
         self.true_states = None  ## Stores state of integrated system over the complete timetrace
         self.x0 = [2.3, 7.0]  ## TODO: why?
@@ -96,6 +101,8 @@ class single_cell_FRET():
                 exec('self.%s = int(val)' % key)
             elif key in STR_PARAMS:
                 exec('self.%s = str(val)' % key)
+            elif key in FLOAT_PARAMS:
+                exec('self.%s = float(val)' % key)
             elif key in MODEL_PARAMS:  ## Need value to be a model from models class
                 assert hasattr(models, '%s' % val), 'Model class "%s" not in ' \
                                                     'models module' % val
@@ -120,13 +127,13 @@ class single_cell_FRET():
         """
         Set the stimulus vector, either from file or generated from a function.
         """
-
+        print("In set_stim, stim file is", self.stim_file)
         if self.stim_file is not None:
             self.import_stim_data()
             print('Stimulus data imported from %s.stim.' % self.stim_file)
         else:
             try:
-                self.generate_stim(self.stim_type)
+                self.generate_stim()
             except:
                 print('Stimulus type stim_type=%s unknown' % self.stim_type)
                 quit()
@@ -148,13 +155,14 @@ class single_cell_FRET():
         self.Tt = Tt_stim[:, 0]
         self.stim = Tt_stim[:, 1]
 
-    def generate_stim(self, stim_type, **kwargs):
+    def generate_stim(self):
         """
         Generate a stimulus of type stim_type.
         'random_switch': switch stimulus to new random level a set number of times at random points
 
         """
         ## Stochastic
+        stim_type = self.stim_type
         if stim_type == 'random_switch':
             assert self.stim_no_changes < self.nT, "Number of stimulus changes must be " \
                                                    "less than number of time points, but # changes = %s, # time " \
@@ -187,25 +195,23 @@ class single_cell_FRET():
             for i in range(1, dT):
                 self.stim[i] = np.random.choice(self.stim_vals, p=transition[self.stim[i - 1]])
 
-        elif stim_type == 'block':  ## TODO: Finish other stimulus inputs
+        elif stim_type == 'block':  ## TODO: Finish other stimulus inputs; clean this up too
             ## t_s, dl_1, dl_2 must be kwargs
             self.stim = np.zeros(self.nT)
             adapt_time = 30 ## time given for adaptation
             pre_stim = 10
-            for key in kwargs:
-                assert key in ['t_s', 'l1', 'l2'], 'Invalid input to stimulus generation.
-            t_s = float(kwargs['t_s'])
-            l1 = float(kwargs['l1'])
-            if 'l2' not in kwargs:
-                l2 = -l1
+            t_s, l1 = self.stim_params
+            if self.stim_l2 == None:
+                l2 = -self.stim_l1
             else:
-                l2 = float(kwargs['l2'])
+                l2 = self.stim_l2
             block = np.concatenate((np.ones(int(pre_stim/self.dt))*self.stim_bg,
                                     np.ones(int(t_s/self.dt))*(self.stim_bg+l1),
                                     np.ones(int(adapt_time/self.dt))*self.stim_bg))
             repeats = self.nT//len(block)
             for i in range(repeats):
                 self.stim[i*len(block):(i+1)*len(block)] = block
+            print(len(self.Tt), len(self.stim))
 
     def eval_stim(self, t):
         """
@@ -326,7 +332,7 @@ class single_cell_FRET():
         assert len(self.x0) == self.nD, "Initial state has dimension %s != " \
                                         "model dimension %s" % (len(self.x0), self.nD)
         self.true_states = odeint(self.df_data_generation, self.x0, self.Tt,
-                                  args=(self.model.params[self.params_set],))
+                                  args=(self.params_set,))
 
     #############################################
     #####		Kernel estimation			#####
