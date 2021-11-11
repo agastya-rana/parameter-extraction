@@ -44,7 +44,7 @@ N = np.random.lognormal(N_m, N_sig, trials)
 a_SS = np.random.normal(a_SS_m, a_SS_sig, trials)
 slope = np.random.normal(slope_m, slope_sig, trials)
 tss = np.linspace(1, 20, 5)
-l1s = np.linspace(0, 0.100, 5) ## Delta L in uM
+l1s = np.linspace(0, 0.100, 5) ## Delta L in mM
 avg_errors = np.zeros((len(tss)*len(l1s),3))
 print(N[0], a_SS[0], slope[0])
 j = 0
