@@ -1,418 +1,158 @@
 """
 MWC models and state bounds for FRET data assimilation.
 
-Created by Nirag Kadakia at 08:40 05-20-2018
-This work is licensed under the 
-Creative Commons Attribution-NonCommercial-ShareAlike 4.0 
-International License. 
-To view a copy of this license, visit 
-http://creativecommons.org/licenses/by-nc-sa/4.0/.
+Created by Nirag Kadakia and Agastya Rana, 10-21-2021.
 """
 
+import autograd.numpy as np
+## TODO: change the input arguments to explicitly input parameter and stimulus
+## TODO: need to write a kwargs part that allows users to define a model inherited from this class
+## outside of this code... and somehow that model should be callable from the specs file.
 
-import scipy as sp
-from collections import OrderedDict
+
+class Model():
+
+    def __init__(self, nD=2, nP=3, **kwargs):
+        # State and parameter dimensions
+        self.nD = nD
+        self.nP = nP
+
+        # List of state and parameter names
+        self.state_names = ['state_{}'.format(i) for i in range(nD)]
+        self.param_names = ['param_{}'.format(i) for i in range(nP)]
+
+        # Dictionary of true parameter sets. The values of each dictionary is a
+        # list of length nP, storing the parameter values. If true parameters are not known
+        # (i.e. twin data is not being generated), these can be omitted.
+        self.params = dict()
+        # self.params['init'] = [0.0, 0.0, 0.0]
+
+        # Dictionary holding dictionaries of parameter and state bounds.
+        # Within each subdictionary are lists of length nD and nP, corresponding
+        # to the keys of 'states' and 'parameters' respectively. Each list stores
+        # two-element lists of lower and upper bounds for each state/parameter.
+        # Parameters can be fixed by setting their lower and upper bounds equal to each other.
+        self.bounds = dict()
+
+    ## self.bounds['init'] = dict()
+    ## self.bounds['init']['states'] = [[0.,1.], [0., 100.]]
+    ## self.bounds['init']['parameters'] = [[0.001, 1.0], [0, 500], [10., 10.]]
+
+    def df(self, t, x, p, stim):
+        """
+        The dynamic model function, that returns the derivative of the state,
+        used to predict the state at the next timestep.
+
+        Args:
+            t: float; time at which to evaluate non-autonomous vector field.
+            x: numpy array of arbitrary shape, provided axis -1
+                        has length self.nD. This allows vectorized
+                        evaluation.
+            p: list of length self.nP giving float-values of model parameters.
+            stim: float; value of stimulus at time t.
+
+        Returns:
+            df_vec: numpy array of shape x; derivative df/dx.
+
+        Note: to allow easy gradient evaluation, all functions defined in df must not
+        assign elements to arrays individually.
+        """
+        ## Note that x can be 2-D, such that the first axis is time (needed if the update rule is non-Markovian)
+        x1 = x[..., 0]
+        x2 = x[..., 1]
+        p1, p2, p3 = p
+        df_vec = np.array([x1 * p1, x2]).T
+        return df_vec
 
 
-class generic_model_class():
-	
-	def __init__(self, **kwargs):
-
-		# State and parameter dimensions
-		self.nD = 3
-		self.nP = 2
-	
-		# List of state and parameter names
-		self.state_names = ['state_1', 'state_2', 'state_3']
-		self.param_names = ['param_1', 'param_2']
-		
-		# Dictionary of true parameter sets. The values of each dictionary is a 
-		# list of length self.nP. The values in these lists are the parameter
-		# values for the ith parameter. If true parameters are not known 
-		# (i.e. twin data is not being generated), these can be omitted.
-		self.params = dict()
-		
-		self.params['param_set_1'] = [0.02, 0.01]
-		self.params['param_set_2'] = [0.92, 2.13]
-		self.params['param_set_3'] = [3.03, 0.08]
-		
-		# Dictionary holding two dictionaries, one for parameter 
-		# bounds one for state bounds. The values of these two dictionaries 
-		# is a list of length self.nD and self.nP, respectively. Each element 
-		# of these lists is in turn a 2-element list for the lower and upper
-		# bounds of the ith state and ith parameter, respectively.
-		self.bounds = dict()
-		
-		self.bounds['bounds_set_1'] = dict()
-		self.bounds['bounds_set_1']['states'] = [[1.0, 5.0], [10, 100], [5, 17]]
-		self.bounds['bounds_set_1']['parameters'] = [[0.001, 1.0], [0, 500]]
-	
-		self.bounds['bounds_set_2'] = dict()
-		self.bounds['bounds_set_2']['states'] = [[1.0, 5.0], [2, 200], [0, 50]]
-		self.bounds['bounds_set_2']['parameters'] = [[0, 5.0], [0, 100]]
-	
-	def df(self, t, x, (p, stim)):
-		"""
-		The vector field function. 
-		
-		Args:
-			t: float; time at which to evaluate non-autonomous vector field.
-			x: numpy array of arbitrary shape, provided axis -1 
-						has length self.nD. This allows vectorized 
-						evaluation.
-			p: list of length self.nP giving float-values of model parameters.
-			stim: float; value of stimulus at time t.
-
-		Returns:
-			df_vec: numpy array of shape x; vector field.
-		"""
-
-		# Unpack states and parameters as shown below.
-		x1 = x[...,0]
-		x2 = x[...,1]
-		x3 = x[...,2]
-		
-		p1, p2, p3 = p
-		
-		df_vec = sp.empty_like(x)	
-
-		df_vec[..., 0]  = -x1**2.0 + 3*(p1 + p2)
-		df_vec[..., 1]  = -x1 + x3*p3**2.0
-		df_vec[..., 2]  = -x3/p2
-
-		return df_vec
-	
-	
-class MWC_Tar():
-	""" 
-	2-variable MWC FRET model class; FRET index is dynamic. 
-	Two dynamical variables are methylation state and FRET index, which 
-	relaxes to a scaled activity level.
+class MWC_MM(Model):
+    """
+	MWC model for activity; Michaelis-Menten model for methylation/demethylation.
+	Assume K_I, m_0, alpha_m, K_R, K_B are fixed; narrowly constrain these bounds.
+	Parameters here taken from Shimizu (2010), except for K_I from Clausnitzer 2014.
 	"""
-	
-	def __init__(self, **kwargs):
 
-		
-		self.nD = 2
-		self.nP = 9
-		self.state_names = ['methyl', 'FRET index']
-		self.param_names = ['K_off_a', 
-							'K_on_a', 
-							'Nn', 
-							'alpha_m', 
-							'm_0',
-							'a_0', 
-							'tau_m', 
-							'k_FR', 
-							'tau_FR']
-		
-		
-		# True parameter dictionaries
-		self.params = dict()
-		self.params['1'] =	 [0.02, 
-								0.5, 
-								5.0, 
-								2.0, 
-								1.5, 
-								0.33, 
-								35.0, 
-								40.0, 
-								0.5]
-		
-		# Bounds dictionaries
-		self.bounds = dict()
-		self.bounds['1a'] = dict()
-		self.bounds['1a']['states'] = 	[[1.0, 2.0], [0, 20]]
-		self.bounds['1a']['params'] = 	[[0.01, 0.05],
-											[0.2, 0.7],
-											[4, 6],
-											[0.1, 10],
-											[0.1, 10],
-											[1e-3, 1e0],
-											[1, 200],
-											[1, 200],
-											[0.01, 5]]
-			
-		self.bounds['1b'] = dict()
-		self.bounds['1b']['states'] = 	[[1.0, 2.0], [0, 20]]
-		self.bounds['1b']['params'] = 	[[0.018, 0.022],
-										[0.45, 0.55],
-										[4.5, 5.5],
-										[1.8, 2.1],
-										[1.4, 1.6],
-										[0.31, 0.35],
-										[30., 40.],
-										[35., 45.],
-										[0.45, 0.55]]
-		self.bounds['1c'] = dict()
-		self.bounds['1c']['states'] = 	[[1.0, 3.0], [0.1, 50.0]]
-		self.bounds['1c']['params'] = 	[[1.0, 100.0],			# K_off_a
-										[1.e3, 1.e3],			# K_on_a
-										[1.0, 50.],				# Nn
-										[2.0, 2.0],				# alpha_m
-										[0.5, 0.5],				# m_0
-										[0.1, 0.5],				# a_0
-										[1., 1.e3],				# tau_m
-										[1.,  50.],				# k_FR
-										[0.5, 0.5]]				# tau_FR
-											
-	def df(self, t, x, (p, stim)):
-		"""
-		Taken from Clausznitzer,...,Sourjik, Endres 2014 PLoS Comp Bio.
-		Only Tar receptor, Tsr not included.  
-		"""
+    def __init__(self, **kwargs):
+        self.nD = 2
+        self.nP = 10
+        self.state_names = ['methyl', 'FRET index']
+        self.param_names = ['K_I', 'K_A', 'm_0', 'alpha_m', 'K_R', 'K_B', 'Nn', 'V_R', 'V_B', 'FR_scale']
 
-		Mm = x[...,0]
-		FR = x[...,1]
-		K_off_a, K_on_a, Nn, \
-			alpha_m, m_0,  \
-			a_0, tau_m,  \
-			k_FR, tau_FR = p
+        # True parameter dictionaries;
+        self.params = dict()
+        self.params['default'] = [20., 3225., 0.5, 2.0, 0.32, 0.30, 6.0, 0.010, 0.013, 1]
 
-		df_vec = sp.empty_like(x)	
+        # Bounds dictionaries
+        self.bounds = dict()
+        self.bounds['default'] = dict()
+        self.bounds['default']['states'] = [[0.0, 4.0], [0, 1]]
+        self.bounds['default']['params'] = [[p,p] for p in self.params['default']]
+        self.bounds['default']['params'][-4] = [4, 8] ## N
+        self.bounds['default']['params'][-3] = [0.001, 0.1] ## V_R
+        self.bounds['default']['params'][-2] = [0.001, 0.1] ## V_B
 
-		f_c = sp.log((1. + stim/K_off_a)/(1. + stim/K_on_a))
-		f_m = alpha_m*(m_0 - Mm)
-		Ee = Nn*(f_m + f_c)
-		Aa = (1. + sp.exp(Ee))**-1.0
+    def df(self, t, x, inputs):
+        p, stim = inputs
+        Mm = x[..., 0]
+        FR_idx = x[..., 1]
+        K_I, K_A, m_0, alpha_m, K_R, K_B, Nn, V_R, V_B, FR_scale = p
 
-		df_vec[..., 0]  = (a_0 - Aa)/tau_m
-		df_vec[..., 1]  = (k_FR*Aa - FR)/tau_FR
+        f_c = np.log((1. + stim / K_I)/(1. + stim / K_A))
+        f_m = alpha_m * (m_0 - Mm)
+        Ee = Nn * (f_m + f_c)
+        Aa = 1. / (1. + np.exp(Ee))
+        df_vec = np.array([V_R*(1 - Aa)/(K_R + (1 - Aa)) - V_B*Aa/(K_B + Aa), (FR_scale * Aa - FR_idx) / 0.5]).T
+        ## TODO: implement explicit reliance on self.dt instead of 0.5
+        return df_vec
 
-		return df_vec
-		
-		
-class MWC_MM_2_var():
-	""" 
-	2-variable MWC with Michaelis Minton methylation dynamics. 
-	The dynamical variables are methylation state and FRET index. 
-	
-	In general, we assume K_I, m_0, alpha_m, K_R and K_B are fixed. So 
-	one may hold these parameter bounds as tight around some presumed value.
+class MWC_linear(Model):
+    """
+	MWC model for activity; Michaelis-Menten model for methylation/demethylation.
+	Assume K_I, m_0, alpha_m, K_R, K_B are fixed; narrowly constrain these bounds.
+	Parameters here taken from Shimizu (2010), except for K_I from Clausnitzer 2014.
 	"""
-	
-	def __init__(self, **kwargs):
 
-		self.nD = 2
-		self.nP = 9
-		self.state_names = ['methyl', 'FRET index']
-		self.param_names = ['K_I', 
-							'm_0', 
-							'alpha_m', 
-							'K_R', 
-							'K_B', 
-							'Nn', 
-							'V_R', 
-							'V_B',
-							'FR_scale']
-		
-		# True parameter dictionaries
-		self.params = dict()
-		self.params['1'] = [18., 	# K_I binding constant
-							0.5, 	# m_0 bkgrnd methyl level
-							2.0, 	# alpha_m 
-							0.32, 	# K_R
-							0.30,	# K_B 
-							5.0, 	# N cluster size
-							0.015, 	# V_R
-							0.012,	# V_B
-							50.0]	# a-->FRET scalar
-		
-		# Bounds dictionaries
-		self.bounds = dict()
-		self.bounds['VR_VB'] = dict()
-		self.bounds['VR_VB']['states'] = [[0.0, 10.0], [-100, 100]]
-		self.bounds['VR_VB']['params'] = [[18, 18],		# K_I binding constant
-										[0.5, 0.5],		# m_0 bkg methyl level
-										[2., 2.],		# alpha_m 
-										[0.32, 0.32],	# K_R
-										[0.30, 0.30],	# K_B 
-										[5., 5.],		# N cluster size
-										[1e-3, 1],		# V_R
-										[1e-3, 1], 		# V_B
-										[50., 50.]]		# a-->FRET scalar
-		self.bounds['1a'] = dict()
-		self.bounds['1a']['states'] = [[0.0, 10.0], [-100, 100]]
-		self.bounds['1a']['params'] = [[1, 50],			# K_I binding constant
-										[0, 10],		# m_0 bkg methyl level
-										[1, 10],		# alpha_m 
-										[0.32, 0.32],	# K_R
-										[0.30, 0.30],	# K_B 
-										[1, 10],		# N cluster size
-										[1e-3, 1],		# V_R
-										[1e-3, 1], 		# V_B
-										[0, 100]]		# a-->FRET scalar
-		self.bounds['1b'] = dict()
-		self.bounds['1b']['states'] = [[0.0, 10.0], [-100, 100]]
-		self.bounds['1b']['params'] = [[15, 25],		# K_I binding constant
-										[0.5, 0.5],		# m_0 bkg methyl level
-										[2.0, 2.0],		# alpha_m 
-										[0.32, 0.32],	# K_R
-										[0.30, 0.30],	# K_B 
-										[1, 10],		# N cluster size
-										[1e-3, 1],		# V_R
-										[1e-3, 1], 		# V_B
-										[50., 50.]]		# a-->FRET scalar
-		self.bounds['1c'] = dict()
-		self.bounds['1c']['states'] = [[0.0, 10.0], [-100, 100]]
-		self.bounds['1c']['params'] = [[18, 18],		# K_I binding constant
-										[0.5, 0.5],		# m_0 bkg methyl level
-										[2.0, 2.0],		# alpha_m 
-										[0.32, 0.32],	# K_R
-										[0.30, 0.30],	# K_B 
-										[1, 50],		# N cluster size
-										[1e-3, 1],		# V_R
-										[1e-3, 1], 		# V_B
-										[1, 100]]		# a-->FRET scalar
-		self.bounds['1d'] = dict()
-		self.bounds['1d']['states'] = [[0.0, 10.0], [-100, 100]]
-		self.bounds['1d']['params'] = [[1, 100],		# K_I binding constant
-										[0.5, 5.0],		# m_0 bkg methyl level
-										[1.0, 10.0],	# alpha_m 
-										[0.10, 1.0],	# K_R
-										[0.10, 1.0],	# K_B 
-										[1, 50],		# N cluster size
-										[1e-3, 1],		# V_R
-										[1e-3, 1], 		# V_B
-										[1, 100]]		# a-->FRET scalar
-		self.bounds['1e'] = dict()
-		self.bounds['1e']['states'] = [[0.0, 5.0], [0, 100]]
-		self.bounds['1e']['params'] = [[1, 100],		# K_I binding constant
-										[0.5, 0.5],		# m_0 bkg methyl level
-										[2.0, 2.0],		# alpha_m 
-										[0.0, 1.0],		# K_R
-										[0.0, 1.0],		# K_B 
-										[0, 200],		# N cluster size
-										[1e-3, 1],		# V_R
-										[1e-3, 1], 		# V_B
-										[0, 100]]		# a-->FRET scalar
-		
-	def df(self, t, x, (p, stim)):
-		
-		Mm = x[...,0]
-		FR_idx = x[...,1]
-		K_I, m_0, alpha_m, K_R, K_B, Nn, V_R, V_B, FR_scale = p
-		
-		df_vec = sp.empty_like(x)	
-		
-		f_c = sp.log(1. + stim/K_I)
-		f_m = alpha_m*(m_0 - Mm)
-		Ee = Nn*(f_m + f_c)
-		Aa = 1./(1. + sp.exp(Ee))
+    def __init__(self, **kwargs):
+        self.nD = 2
+        self.nP = 7
+        self.state_names = ['methyl', 'FRET index']
+        self.param_names = ['K_I',
+                            'K_A'
+                            'm_0',
+                            'alpha_m',
+                            'Nn',
+                            'a_ss',
+                            'slope']
 
-		df_vec[..., 0] = V_R*(1 - Aa)/(K_R + (1 - Aa)) \
-						- V_B*Aa**2/(K_B + Aa)
-		df_vec[..., 1]  = FR_scale*Aa - FR_idx/0.5
-		
-		return df_vec
-		
-class MWC_MM_2_var_shift():
-	""" 
-	2-variable MWC with Michaelis Minton methylation dynamics. 
-	The dynamical variables are methylation state and FRET index. 
-	
-	In general, we assume K_I, m_0, alpha_m, K_R and K_B are fixed. So 
-	one may hold these parameter bounds as tight around some presumed value.
-	"""
-	
-	def __init__(self, **kwargs):
+        # True parameter dictionaries;
+        self.params = dict()
+        self.params['default'] = [20., 3225., 0.5, 2.0, 6.0, 0.33, -0.01]
 
-		self.nD = 2
-		self.nP = 10
-		self.state_names = ['methyl', 'FRET index']
-		self.param_names = ['K_I', 
-							'm_0', 
-							'alpha_m', 
-							'K_R', 
-							'K_B', 
-							'Nn', 
-							'V_R', 
-							'V_B',
-							'FR_scale',
-							'FR_shift']
-		
-		# True parameter dictionaries
-		self.params = dict()
-		self.params['1'] = [18., 	# K_I binding constant
-							0.5, 	# m_0 bkgrnd methyl level
-							2.0, 	# alpha_m 
-							0.32, 	# K_R
-							0.30,	# K_B 
-							5.0, 	# N cluster size
-							0.015, 	# V_R
-							0.012,	# V_B
-							50.0,	# a-->FRET scalar
-							0.0]	# FRET signal background shift
-		
-		# Bounds dictionaries
-		self.bounds = dict()
-		self.bounds['1a'] = dict()
-		self.bounds['1a']['states'] = [[0.0, 5.0], [0, 100]]
-		self.bounds['1a']['params'] = [[1, 100],		# K_I binding constant
-										[0.5, 0.5],		# m_0 bkg methyl level
-										[2.0, 2.0],		# alpha_m 
-										[0.0, 1.0],		# K_R
-										[0.0, 1.0],		# K_B 
-										[0, 200],		# N cluster size
-										[1e-3, 1],		# V_R
-										[1e-3, 1], 		# V_B
-										[0, 100],		# a-->FRET scalar
-										[-50, 50]]		# FRET y-shift
-										
-		self.bounds['1b'] = dict()
-		self.bounds['1b']['states'] = [[0.0, 5.0], [0, 100]]
-		self.bounds['1b']['params'] = [[1, 100],		# K_I binding constant
-										[0.5, 0.5],		# m_0 bkg methyl level
-										[2.0, 2.0],		# alpha_m 
-										[0.0, 1.0],		# K_R
-										[0.0, 1.0],		# K_B 
-										[0, 200],		# N cluster size
-										[1e-3, 1],		# V_R
-										[1e-3, 1], 		# V_B
-										[25, 35],		# a-->FRET scalar
-										[-50, 50]]		# FRET y-shift
-		self.bounds['1c'] = dict()
-		self.bounds['1c']['states'] = [[0.0, 5.0], [0, 100]]
-		self.bounds['1c']['params'] = [[1, 100],		# K_I binding constant
-										[0.0, 3.0],		# m_0 bkg methyl level
-										[0.0, 5.0],		# alpha_m 
-										[0.0, 1.0],		# K_R
-										[0.0, 1.0],		# K_B 
-										[0, 200],		# N cluster size
-										[1e-3, 1],		# V_R
-										[1e-3, 1], 		# V_B
-										[10, 50],		# a-->FRET scalar
-										[-50, 50]]		# FRET y-shift
-		self.bounds['1d'] = dict()
-		self.bounds['1d']['states'] = [[0.0, 5.0], [0, 100]]
-		self.bounds['1d']['params'] = [[18., 18.],		# K_I binding constant
-										[0.5, 5.0],		# m_0 bkg methyl level
-										[2.0, 2.0],		# alpha_m 
-										[0.3, 0.3],		# K_R
-										[0.3, 0.3],		# K_B 
-										[0, 15],		# N cluster size
-										[1e-3, 1e-1],	# V_R
-										[1e-3, 1e-1], 	# V_B
-										[15, 60],		# a-->FRET scalar
-										[0, 0]]		# FRET y-shift
-										
-		
-	def df(self, t, x, (p, stim)):
-		
-		Mm = x[...,0]
-		FR_idx = x[...,1]
-		K_I, m_0, alpha_m, K_R, K_B, Nn, V_R, V_B, FR_scale, FR_shift = p
-		
-		df_vec = sp.empty_like(x)	
-		
-		f_c = sp.log(1. + stim/K_I)
-		f_m = alpha_m*(m_0 - Mm)
-		Ee = Nn*(f_m + f_c)
-		Aa = 1./(1. + sp.exp(Ee))
+        # Bounds dictionaries
+        self.bounds = dict()
+        self.bounds['default'] = dict()
+        self.bounds['default']['states'] = [[0.0, 4.0], [0, 1]]
+        self.bounds['default']['params'] = [[p,p] for p in self.params['default']]
+        self.bounds['default']['params'][-3] = [4, 15] ## N
+        self.bounds['default']['params'][-2] = [0., 1.] ## a_ss
+        self.bounds['default']['params'][-1] = [-0.5, 0.5] ## slope
 
-		df_vec[..., 0] = V_R*(1 - Aa)/(K_R + (1 - Aa)) \
-						- V_B*Aa**2/(K_B + Aa)
-		df_vec[..., 1]  = (FR_scale*Aa - FR_shift - FR_idx)/0.5
-		
-		return df_vec
-		
+    def df(self, t, x, inputs):
+        p, stim = inputs
+        Mm = x[..., 0]
+        FR_idx = x[..., 1]
+        K_I, K_A, m_0, alpha_m, Nn, a_ss, slope=  p
+
+        f_c = np.log((1. + stim / K_I)/(1. + stim / K_A))
+        f_m = alpha_m * (m_0 - Mm)
+        Ee = Nn * (f_m + f_c)
+        Aa = 1. / (1. + np.exp(Ee))
+        df_vec = np.array([slope*(Aa-a_ss), (Aa - FR_idx) / 0.5]).T
+        return df_vec
+
+## Clausnitzer (2014) model has MWC with dm/dt = g_R(1-A) - g_B(A^3); K_i = 0.02 mM; K_a = 0.5 mM; N(c) = 17.5 + 3.35*c where c in mM; g_R = 0.0069; g_B = 0.11; f_m = 1- 0.5m
+## They interpolated f_m from Endres RG, Oleksiuk O, Hansen CH, Meir Y, Sourjik V, et al. (2008)
+
+## Shimizu (2010) use dose-response and show good fit for N = 6, K_I/K_A = 0.0062; use this to get alpha = 2, m = 0.5 (out of 4),
+## To fit their kinked F(a), they use piecewise V_B(a); we instead will just focus on piece that corresponds to near a_0
+## They have V_R = 0.010; V_B = 0.013; K_R = 0.32; K_B = 0.30.
