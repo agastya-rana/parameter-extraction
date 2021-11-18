@@ -14,6 +14,8 @@ visit http://creativecommons.org/licenses/by-nc-sa/4.0/.
 import sys, os
 
 scripts_path = [i for i in sys.path if 'scripts' in i][0]
+## Append entire directory to system path here
+#sys.path.append()
 
 def def_data_dir():
 	"""
@@ -21,6 +23,6 @@ def def_data_dir():
 	scripts in this project
 	"""
 	
-	data_dir = os.path.join(os.path.dirname(scripts_path),'stim_select')
+	data_dir = os.path.join(os.path.dirname(scripts_path),'example_data_dir')
 	
 	return data_dir

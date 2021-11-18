@@ -1,12 +1,7 @@
 """
 Functions for generating plot formats for various types of plots.
 
-Created by Nirag Kadakia at 21:46 10-26-2017
-This work is licensed under the 
-Creative Commons Attribution-NonCommercial-ShareAlike 4.0 
-International License. 
-To view a copy of this license, 
-visit http://creativecommons.org/licenses/by-nc-sa/4.0/.
+NOT IN USE AS OF NOW?
 """
 
 import scipy as sp
@@ -16,7 +11,6 @@ rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
 rc('text', usetex=True)
 import matplotlib.pyplot as plt
 
-					
 DATA_DIR = def_data_dir()
 
 def opt_kernel_pred_fig(dt, kernel_length, Tt_PW):

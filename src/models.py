@@ -11,7 +11,6 @@ import autograd.numpy as np
 
 
 class Model():
-
     def __init__(self, nD=2, nP=3, **kwargs):
         # State and parameter dimensions
         self.nD = nD
@@ -141,7 +140,7 @@ class MWC_linear(Model):
         p, stim = inputs
         Mm = x[..., 0]
         FR_idx = x[..., 1]
-        K_I, K_A, m_0, alpha_m, Nn, a_ss, slope=  p
+        K_I, K_A, m_0, alpha_m, Nn, a_ss, slope = p
 
         f_c = np.log((1. + stim / K_I)/(1. + stim / K_A))
         f_m = alpha_m * (m_0 - Mm)
