@@ -1,12 +1,7 @@
 """
 Variational annealing of single cell FRET data. 
 
-Created by Nirag Kadakia at 08:00 10-16-2017
-This work is licensed under the 
-Creative Commons Attribution-NonCommercial-ShareAlike 4.0 
-International License. 
-To view a copy of this license, visit 
-http://creativecommons.org/licenses/by-nc-sa/4.0/.
+Created by Nirag Kadakia and Agastya Rana, 11/18/21.
 """
 import sys, time, os
 
@@ -17,25 +12,27 @@ sys.path.append(os.path.join(os.path.dirname(scripts_path),'src'))
 
 import scipy as sp
 from varanneal import va_ode
-from single_cell_FRET import single_cell_FRET
-from load_specs import read_specs_file, compile_all_run_vars
-from save_data import save_estimates
+from src.single_cell_FRET import single_cell_FRET
+from src.load_specs import read_specs_file, compile_all_run_vars
+from src.save_data import save_estimates
 
-def est_VA(data_flag, scF=None):
+def est_VA(spec_name, scF=None, init_seed=None):
     if scF == None:
         # Load specifications from file; pass to single_cell_FRET object
-        list_dict = read_specs_file(data_flag)
+        list_dict = read_specs_file(spec_name)
         vars_to_pass = compile_all_run_vars(list_dict)
         scF = single_cell_FRET(**vars_to_pass)
 
         # If stim and meas were not imported, then data was saved as data_flag
         if scF.stim_file is None:
-            scF.stim_file = data_flag
+            scF.stim_file = spec_name
         if scF.meas_file is None:
-            scF.meas_file = data_flag
+            scF.meas_file = spec_name
         scF.set_stim()
         scF.set_meas_data()
 
+    if init_seed != None:
+        scF.init_seed = init_seed
     # Initalize estimation; set the estimation and prediction windows
     scF.set_init_est()
     scF.set_est_pred_windows()
@@ -58,9 +55,5 @@ def est_VA(data_flag, scF=None):
                     bounds=scF.bounds, disc='trapezoid',
                     method='L-BFGS-B', opt_args=BFGS_options)
     print("\nVariational annealing completed in {} s.".format(time.time() - tstart))
-    param_set = save_estimates(scF, annealer, data_flag)
+    param_set = save_estimates(scF, annealer, spec_name)
     return param_set
-
-if __name__ == '__main__':
-	data_flag = str(sys.argv[1])
-	est_VA(data_flag)

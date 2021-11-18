@@ -9,14 +9,17 @@ import numpy as np
 from scipy.interpolate import interp1d
 from scipy.integrate import odeint
 import scipy.linalg as LA
-from load_data import load_stim_file, load_meas_file
-import models
+from src.load_data import load_stim_file, load_meas_file
+import src.models as models
 import collections
-from utils import smooth_vec
+from src.utils import smooth_vec
+from src.load_data import load_FRET_recording
+from src.save_data import save_stim, save_meas_data
 
 INT_PARAMS = ['nT', 'nD', 'nP', 'step_stim_density', 'step_stim_seed']
 LIST_PARAMS = ['L_idxs', 'x0', 'step_stim_vals', 'P_idxs', 'beta_array', 'meas_noise', 'params_set', 'stim_params']
 MODEL_PARAMS = ['model']
+MODEL_DEP_PARAMS = ['nD', 'nP']
 FLOAT_PARAMS = ['stim_l1', 'stim_ts']
 STR_PARAMS = ['stim_file', 'stim_type', 'stim_smooth_type', 'bounds_set', 'meas_file']
 
@@ -45,9 +48,9 @@ class single_cell_FRET():
         self.stim_vals = [0.085, 0.1, 0.115]  ## Stimulus values used
         self.stim_bg = self.stim_vals[1]
         self.stim_params = None
-        self.stim_l1 = 0 ## For block stimulus
+        self.stim_l1 = 0  ## For block stimulus
         self.stim_l2 = None
-        self.stim_ts = 10 ## For block stimulus
+        self.stim_ts = 10  ## For block stimulus
 
         # Variables for generating/loading measured data
         self.meas_data = None
@@ -58,14 +61,14 @@ class single_cell_FRET():
         # Variables for integrating model/twin data generation
         self.model = models.MWC_MM()  ## Default is MWC MM model
         self.params_set = []  ## Value of true parameter set used in the model (used for forward integration)
-        self.bounds_set = 'Default'  ## Name of the bounds set used in the model inference algorithm
+        self.bounds_set = 'default'  ## Name of the bounds set used in the model inference algorithm
         self.true_states = None  ## Stores state of integrated system over the complete timetrace
         self.x0 = [2.3, 7.0]  ## TODO: why?
 
         # Variables for estimation and prediction windows
         self.est_beg_T = None
         self.est_end_T = None
-        self.pred_end_T = None
+        self.pred_end_T = self.nT / self.dt
         self.est_wind_idxs = None
         self.pred_wind_idxs = None
 
@@ -107,6 +110,9 @@ class single_cell_FRET():
                 assert hasattr(models, '%s' % val), 'Model class "%s" not in ' \
                                                     'models module' % val
                 exec('self.%s = models.%s()' % (key, val))
+                for attr in MODEL_DEP_PARAMS:
+                    exec('self.%s = self.model.%s' % (attr, attr))
+
             elif key in LIST_PARAMS:
                 try:
                     exec('len(%s)' % val)
@@ -116,8 +122,6 @@ class single_cell_FRET():
                 exec('self.%s = %s' % (key, val))
             else:
                 exec('self.%s = float(val)' % key)
-
-
 
     #############################################
     ##### 		Stimulus functions			#####
@@ -198,19 +202,19 @@ class single_cell_FRET():
         elif stim_type == 'block':  ## TODO: Finish other stimulus inputs; clean this up too
             ## t_s, dl_1, dl_2 must be kwargs
             self.stim = np.zeros(self.nT)
-            adapt_time = 30 ## time given for adaptation
+            adapt_time = 30  ## time given for adaptation
             pre_stim = 10
             t_s, l1 = self.stim_params
             if self.stim_l2 == None:
                 l2 = -self.stim_l1
             else:
                 l2 = self.stim_l2
-            block = np.concatenate((np.ones(int(pre_stim/self.dt))*self.stim_bg,
-                                    np.ones(int(t_s/self.dt))*(self.stim_bg+l1),
-                                    np.ones(int(adapt_time/self.dt))*self.stim_bg))
-            repeats = self.nT//len(block)
+            block = np.concatenate((np.ones(int(pre_stim / self.dt)) * self.stim_bg,
+                                    np.ones(int(t_s / self.dt)) * (self.stim_bg + l1),
+                                    np.ones(int(adapt_time / self.dt)) * self.stim_bg))
+            repeats = self.nT // len(block)
             for i in range(repeats):
-                self.stim[i*len(block):(i+1)*len(block)] = block
+                self.stim[i * len(block):(i + 1) * len(block)] = block
             print(len(self.Tt), len(self.stim))
 
     def eval_stim(self, t):
@@ -297,12 +301,14 @@ class single_cell_FRET():
 
     def set_est_pred_windows(self):
 
-        assert self.est_beg_T is not None, "Before setting estimation and " \
-                                           "prediction windows, set est_beg_T"
-        assert self.est_end_T is not None, "Before setting estimation and " \
-                                           "prediction windows, set est_end_T"
-        assert self.pred_end_T is not None, "Before setting estimation and " \
-                                            "prediction windows, set pred_end_T"
+        if self.est_beg_T == None:
+            print("Assuming estimation begins at first timepoint.")
+            self.est_beg_T = 0
+        if self.est_end_T == None:
+            print("Assuming estimation ends at last timepoint.")
+            self.est_end_T = int(self.nT * self.dt)
+        if self.pred_end_T == None:
+            print("Assuming prediction ends at last timepoint.")
 
         est_beg_idx = int(self.est_beg_T / self.dt)
         est_end_idx = min(int(self.est_end_T / self.dt), self.nT - 1)
@@ -310,10 +316,8 @@ class single_cell_FRET():
         self.est_wind_idxs = sp.arange(est_beg_idx, est_end_idx)
         self.pred_wind_idxs = sp.arange(est_end_idx, pred_end_idx)
 
-        assert len(self.est_wind_idxs) > 0, \
-            'Estimation window has len 0; change est_beg_T and/or est_end_T'
-        assert len(self.pred_wind_idxs) > 0, \
-            'Prediction window has len 0; change est_end_T and/or pred_end_T'
+        # assert len(self.est_wind_idxs) > 0, 'Estimation window has len 0; change est_beg_T and/or est_end_T'
+        # assert len(self.pred_wind_idxs) > 0, 'Prediction window has len 0; change est_end_T and/or pred_end_T'
 
     #############################################
     #####	Numerical Integration of Model	#####
@@ -413,3 +417,14 @@ class single_cell_FRET():
                     sp.sum(mean_subtracted_stimulus[:iT] * kernel[self.kernel_length - iT:])
 
         return mean_subtracted_response_vector
+
+def create_cell_from_mat(dir, mat_file, cell):
+    """Save stimulus and measurement files from FRET recording"""
+    data = load_FRET_recording(dir, mat_file, cell)
+    a = single_cell_FRET()
+    a.stim = data['stim']
+    a.Tt = data['Tt']
+    a.meas_data = data['FRET_idx']
+    spec_name = '%s_cell_%s' % (dir.replace('/', '_'), cell)
+    save_stim(a, spec_name)
+    save_meas_data(a, spec_name)
