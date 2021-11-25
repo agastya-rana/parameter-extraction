@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 from local_methods import def_data_dir
 data_dir = def_data_dir()
 
+# TODO: check plotting, predictions
 
 def pred_plot(spec_name):
     """
@@ -62,27 +63,28 @@ def pred_plot(spec_name):
 
     num_plots = len(scF.L_idxs) + 1
 
+    fig, axs = plt.subplots(len(scF.L_idxs)+1, 1, sharex=True)
     # Plot the stimulus
-    plt.subplot(num_plots, 1, 1)
-    plt.plot(full_Tt, scF.stim[full_range], color='r', lw=2)
-    plt.xlim(full_Tt[0], full_Tt[-1])
-    plt.ylim(80, 160)
+    axs[0].plot(full_Tt, scF.stim[full_range], color='r', lw=2)
+    axs[0].set_xlim(full_Tt[0], full_Tt[-1])
+    axs[0].set_ylim(80, 160)
+    axs[0].set_xlabel("Time (s)")
+    axs[0].set_ylabel("Stimulus ($\mu$M)")
 
     # Plotting only observed variables
-    for idx in scF.L_idxs:
-        plt.subplot(num_plots, 1, iD + 1)
-        plt.xlim(full_Tt[0], full_Tt[-1])
+    for num, idx in enumerate(scF.L_idxs):
         ## Plot Measured Data; could also do this in one line
-        plt.plot(est_Tt, scF.meas_data[scF.est_wind_idxs, idx], color='g')
-        plt.plot(pred_Tt, scF.meas_data[scF.pred_wind_idxs, idx], color='g')
+        axs[num+1].set_ylabel(scF.model.state_names[idx])
+        axs[num+1].plot(est_Tt, scF.meas_data[scF.est_wind_idxs, num], color='g')
+        axs[num+1].plot(pred_Tt, scF.meas_data[scF.pred_wind_idxs, num], color='g')
 
         ## Plot estimation and prediction (basically inferred data)
-        plt.plot(est_Tt, est_path[:, iD], color='r', lw=3)
-        plt.plot(pred_Tt, opt_pred_path[:, iD], color='r', lw=3)
+        axs[num+1].plot(est_Tt, est_path[:, idx], color='r', lw=3)
+        axs[num+1].plot(pred_Tt, opt_pred_path[:, idx], color='r', lw=3)
 
         ## Plot true states if this uses fake data
         if true_states is not None:
-            plt.plot(scF.Tt, true_states[:, iD], color='k')
+            axs[num+1].plot(scF.Tt, true_states[:, idx], color='k')
     plt.show()
 
     data = {'full_Tt': full_Tt, 'est_Tt': est_Tt, 'pred_Tt': pred_Tt, 'stim': scF.stim[full_range],

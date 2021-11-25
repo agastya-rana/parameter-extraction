@@ -35,9 +35,9 @@ def gen_pred_data(specs_name, seed_range=[0]):
     for seed in seed_range:
         try:
             data_dict = load_est_data_VA(specs_name, seed)
-            print('seed =%s' % seed)
+            print('seed=%s' % seed)
         except:
-            print('%s_seed=%s.npy not found; skipping...' % (specs_name, seed))
+            print('Seed %s files not found; skipping...' % seed)
             continue
         sys.stdout.flush()
         # Grab obj at final beta; some attributes will be overwritten

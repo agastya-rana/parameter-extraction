@@ -23,11 +23,11 @@ def est_VA(spec_name, scF=None, init_seed=None):
         vars_to_pass = compile_all_run_vars(list_dict)
         scF = single_cell_FRET(**vars_to_pass)
 
-        # If stim and meas were not imported, then data was saved as data_flag
         if scF.stim_file is None:
             scF.stim_file = spec_name
         if scF.meas_file is None:
             scF.meas_file = spec_name
+
         scF.set_stim()
         scF.set_meas_data()
 

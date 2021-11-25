@@ -1,5 +1,5 @@
 """
-Functions for saving i/o data and analysis data.
+Functions for saving i/o data and analysis data and plots.
 
 Created by Nirag Kadakia at 13:40 10-20-2017
 This work is licensed under the 
@@ -81,13 +81,11 @@ def save_estimates(scF, annealer, data_flag):
     return param_set
 
 def save_data_plots(scF, spec_name, stim_change=False):
-    out_dir = '%s/estimates/%s' % (DATA_DIR, spec_name)
+    out_dir = '%s/plots/%s' % (DATA_DIR, spec_name)
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
     fig = plt.figure(figsize=(10, 10))
-    gs = gridspec.GridSpec(2, 1, height_ratios=[1, 3], hspace=0.05)
-    stimax = plt.subplot(gs[0])
-    fretax = plt.subplot(gs[1])
+    fig, (stimax, fretax) = plt.subplots(2, 1, sharex=True)
     stimax.plot(scF.Tt, scF.stim)
     stimax.set_ylim(0.08, 0.2)
     fretax.plot(scF.Tt, scF.meas_data)
@@ -101,21 +99,8 @@ def save_data_plots(scF, spec_name, stim_change=False):
     plt.savefig('%s/%s.png' % (out_dir, spec_name))
     plt.close()
 
-
-def save_meas_plots(scF, data_flag, simulated=False):
-    fig = plt.figure()
-    num_plots = scF.meas_data.shape[1]
-
-    # Plot measured data (and true states if they exist)
-    for iL in range(num_plots):
-        plt.subplot(num_plots, 1, iL + 1)
-        plt.scatter(scF.Tt, scF.meas_data[:, iL], s=2, color='red')
-    out_dir = '%s/meas_data' % DATA_DIR
-    plt.savefig('%s/%s.png' % (out_dir, data_flag))
-    plt.close()
-
 def save_opt_pred_plots(spec_name, data_dict):
-    out_dir = '%s/estimates/%s' % (DATA_DIR, spec_name)
+    out_dir = '%s/plots/%s' % (DATA_DIR, spec_name)
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
     plt.savefig('%s/pred_plots.png' % out_dir)
