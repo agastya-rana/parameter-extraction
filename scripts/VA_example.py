@@ -6,7 +6,8 @@ import json
 from src.single_cell_FRET import create_cell_from_mat
 from src.local_methods import def_data_dir
 from src.est_VA import est_VA
-
+from src.plot_data import plot_raw_data, pred_plot
+from src.simulate_data import gen_pred_data
 data_dir = def_data_dir()
 
 # Since the MATLAB data file is stored in example_data_dir/recordings/trial_data/'
@@ -24,7 +25,7 @@ create_cell_from_mat(dirname, fname, cell=cellno)
 data_vars = {'nD': 2, 'nT': 767, 'nP': 7, 'dt': 0.5, 'stim_type': 'block', 'stim_params': [0.01],
              'meas_noise': [0.01], 'L_idxs': [1]}
 est_vars = {'model': 'MWC_linear', 'params_set': [20., 3225., 0.5, 2.0, 6.0, 0.33, -0.01], 'bounds_set': 'default',
-            'est_beg_T': 0, 'est_end_T': 500, 'pred_end_T': 500}
+            'est_beg_T': 0, 'est_end_T': 200, 'pred_end_T': 500}
 est_specs = {'est_type': 'VA'}
 specifications = {'data_vars': data_vars, 'est_vars': est_vars, 'est_specs': est_specs}
 spec_name = '%s_cell_%s' % (dirname, cellno)
@@ -34,6 +35,9 @@ with open('%s/specs/%s.txt' % (data_dir, spec_name), 'w') as outfile:
 ## Now, we can run the annealing algorithm with an arbitrary seed; this returns the set of optimal parameters
 ## according to the model.
 param_set = est_VA(spec_name, init_seed=0)
+gen_pred_data(spec_name)
+plot_raw_data()
+pred_plot(spec_name)
 
 # If either the specifications file, measurement file, or stimulus file is missing, it will return an error. The
 # data, which is a pickled object, (.pklz) will be saved in ```data_dir/objects```, within a subfolder whose name is

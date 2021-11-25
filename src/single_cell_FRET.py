@@ -73,7 +73,7 @@ class single_cell_FRET():
         self.pred_wind_idxs = None
 
         # Variables for optimization of single annealing step
-        self.nP = 9  ## TODO: why shouldn't this just be the model values?
+        self.nP = self.model.nP
         self.param_bounds = None
         self.state_bounds = None
         self.bounds = None
@@ -424,7 +424,7 @@ def create_cell_from_mat(dir, mat_file, cell):
     a = single_cell_FRET()
     a.stim = data['stim']
     a.Tt = data['Tt']
-    a.meas_data = data['FRET_idx']
+    a.meas_data = data['FRET']
     spec_name = '%s_cell_%s' % (dir.replace('/', '_'), cell)
     save_stim(a, spec_name)
     save_meas_data(a, spec_name)
