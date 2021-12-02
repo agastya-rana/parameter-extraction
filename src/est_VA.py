@@ -3,12 +3,7 @@ Variational annealing of single cell FRET data.
 
 Created by Nirag Kadakia and Agastya Rana, 11/18/21.
 """
-import sys, time, os
-
-## TODO: FIND A BETTER WAY TO DO THIS
-## Problem is that just using current path location will only work if __name__ == __main__
-scripts_path = [i for i in sys.path if 'scripts' in i][0]
-sys.path.append(os.path.join(os.path.dirname(scripts_path),'src'))
+import time
 
 import scipy as sp
 from varanneal import va_ode

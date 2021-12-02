@@ -14,9 +14,8 @@ import matplotlib.pyplot as plt
 from local_methods import def_data_dir
 data_dir = def_data_dir()
 
-# TODO: check plotting, predictions
 
-def pred_plot(spec_name):
+def pred_plot(spec_name, plot_true=False):
     """
     Plots the prediction based on the most accurate parameter estimation run (out of many trials with different random
     seeds).
@@ -75,18 +74,17 @@ def pred_plot(spec_name):
     for num, idx in enumerate(scF.L_idxs):
         ## Plot Measured Data; could also do this in one line
         axs[num+1].set_ylabel(scF.model.state_names[idx])
-        axs[num+1].plot(est_Tt, scF.meas_data[scF.est_wind_idxs, num], color='g')
+        axs[num+1].plot(est_Tt, scF.meas_data[scF.est_wind_idxs, num], color='g', label='Measured')
         axs[num+1].plot(pred_Tt, scF.meas_data[scF.pred_wind_idxs, num], color='g')
 
         ## Plot estimation and prediction (basically inferred data)
-        axs[num+1].plot(est_Tt, est_path[:, idx], color='r', lw=3)
-        axs[num+1].plot(pred_Tt, opt_pred_path[:, idx], color='r', lw=3)
+        axs[num+1].plot(est_Tt, est_path[:, idx], color='r', lw=1, label='Estimated')
+        axs[num+1].plot(pred_Tt, opt_pred_path[:, idx], color='k', lw=1, label='Predicted')
 
         ## Plot true states if this uses fake data
-        if true_states is not None:
-            axs[num+1].plot(scF.Tt, true_states[:, idx], color='k')
-    plt.show()
-
+        if true_states is not None and plot_true:
+            axs[num+1].plot(scF.Tt, true_states[:, idx], color='k', label='True')
+    plt.legend()
     data = {'full_Tt': full_Tt, 'est_Tt': est_Tt, 'pred_Tt': pred_Tt, 'stim': scF.stim[full_range],
             'meas_data': scF.meas_data[full_range], 'est_path': est_path, 'pred_path': opt_pred_path,
             'params': opt_params}

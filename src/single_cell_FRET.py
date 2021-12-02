@@ -19,7 +19,7 @@ from src.save_data import save_stim, save_meas_data
 INT_PARAMS = ['nT', 'nD', 'nP', 'step_stim_density', 'step_stim_seed']
 LIST_PARAMS = ['L_idxs', 'x0', 'step_stim_vals', 'P_idxs', 'beta_array', 'meas_noise', 'params_set', 'stim_params']
 MODEL_PARAMS = ['model']
-MODEL_DEP_PARAMS = ['nD', 'nP']
+MODEL_DEP_PARAMS = ['nD', 'nP', 'L_idxs', 'x0']
 FLOAT_PARAMS = ['stim_l1', 'stim_ts']
 STR_PARAMS = ['stim_file', 'stim_type', 'stim_smooth_type', 'bounds_set', 'meas_file']
 
@@ -63,7 +63,7 @@ class single_cell_FRET():
         self.params_set = []  ## Value of true parameter set used in the model (used for forward integration)
         self.bounds_set = 'default'  ## Name of the bounds set used in the model inference algorithm
         self.true_states = None  ## Stores state of integrated system over the complete timetrace
-        self.x0 = [2.3, 7.0]  ## TODO: why?
+        self.x0 = self.model.x0
 
         # Variables for estimation and prediction windows
         self.est_beg_T = None
@@ -242,8 +242,8 @@ class single_cell_FRET():
                                                  "set_meas_data(), you must first generate true data with " \
                                                  "gen_true_states."
 
-            self.meas_data = sp.zeros((self.nT, len(self.L_idxs)))
-            sp.random.seed(self.meas_data_seed)
+            self.meas_data = np.zeros((self.nT, len(self.L_idxs)))
+            np.random.seed(self.meas_data_seed)
 
             assert len(self.meas_noise) == len(self.L_idxs), "meas_noise must " \
                                                              "be a list of length L_idxs = %s" % len(self.L_idxs)
@@ -252,7 +252,7 @@ class single_cell_FRET():
 
             for iL_idx, iL in enumerate(self.L_idxs):
                 self.meas_data[:, iL_idx] = self.true_states[:, iL] + \
-                                            sp.random.normal(0, self.meas_noise[iL_idx], self.nT)
+                                            np.random.normal(0, self.meas_noise[iL_idx], self.nT)
 
     def import_meas_data(self):
         """
@@ -313,8 +313,8 @@ class single_cell_FRET():
         est_beg_idx = int(self.est_beg_T / self.dt)
         est_end_idx = min(int(self.est_end_T / self.dt), self.nT - 1)
         pred_end_idx = min(int(self.pred_end_T / self.dt), self.nT - 1)
-        self.est_wind_idxs = sp.arange(est_beg_idx, est_end_idx)
-        self.pred_wind_idxs = sp.arange(est_end_idx, pred_end_idx)
+        self.est_wind_idxs = np.arange(est_beg_idx, est_end_idx)
+        self.pred_wind_idxs = np.arange(est_end_idx, pred_end_idx)
 
         # assert len(self.est_wind_idxs) > 0, 'Estimation window has len 0; change est_beg_T and/or est_end_T'
         # assert len(self.pred_wind_idxs) > 0, 'Prediction window has len 0; change est_end_T and/or pred_end_T'
@@ -337,7 +337,6 @@ class single_cell_FRET():
                                         "model dimension %s" % (len(self.x0), self.nD)
         self.true_states = odeint(self.df_data_generation, self.x0, self.Tt,
                                   args=(self.params_set,))
-
     #############################################
     #####		Kernel estimation			#####
     #############################################

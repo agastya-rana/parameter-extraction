@@ -44,7 +44,7 @@ def gen_pred_data(specs_name, seed_range=[0]):
         scF = data_dict['obj']
         est_params = data_dict['params'][-1, :]
 
-        # To hold all predicted and estimated paths for all ICs
+        # To hold all predicted and estimated paths for all seeds
         if pred_path is None:
             pred_path = np.zeros((len(scF.pred_wind_idxs), scF.nD, len(seed_range)))
         if est_path is None:
@@ -56,19 +56,24 @@ def gen_pred_data(specs_name, seed_range=[0]):
         if pred_params is None:
             pred_params = np.zeros((len(est_params), len(seed_range)))
 
-        # Set the prediction stimuli and grab the meas data in the pred window
-        scF.Tt = scF.Tt[scF.pred_wind_idxs]
-        scF.stim = scF.stim[scF.pred_wind_idxs]
-        scF.meas_data = scF.meas_data[scF.pred_wind_idxs]
+        ## If there's something to predict
 
-        # Generate the forward prediction using estimated parameter dictionary
-        scF.x0 = est_path[-1, :, seed]
-        scF.gen_true_states()
+        if len(scF.pred_wind_idxs) > 0:
 
-        pred_errors[seed] = np.sum((scF.true_states[:, scF.L_idxs]
-                                  - scF.meas_data) ** 2.0)/len(scF.Tt)
-        pred_path[:, :, seed] = scF.true_states
-        pred_params[:, seed] = est_params
+            # Set the prediction stimuli and grab the meas data in the pred window
+            scF.Tt = scF.Tt[scF.pred_wind_idxs]
+            scF.stim = scF.stim[scF.pred_wind_idxs]
+            scF.meas_data = scF.meas_data[scF.pred_wind_idxs]
+
+            # Generate the forward prediction using estimated parameter dictionary
+            scF.x0 = est_path[-1, :, seed]
+            scF.gen_true_states()
+
+            pred_errors[seed] = np.sum((scF.true_states[:, scF.L_idxs]
+                                      - scF.meas_data) ** 2.0)/len(scF.Tt)
+            pred_path[:, :, seed] = scF.true_states
+            pred_params[:, seed] = est_params
+
         num_valids += 1
 
     if num_valids > 0:
@@ -93,7 +98,7 @@ def simulate_data(spec_name, save_data=False, param_infer=False):
     scF = single_cell_FRET(**vars_to_pass)
     scF.set_stim()
     scF.gen_true_states()
-    scF.set_meas_data() ## Need to set noise  to 0 in specs file; note when adding noise, MWC_MM is scaled, MWC_linear not
+    scF.set_meas_data() ## Need to set noise to 0 in specs file; note when adding noise, MWC_MM is scaled, MWC_linear not
     if save_data:
         if scF.stim_file is None:
             save_stim(scF, spec_name)
