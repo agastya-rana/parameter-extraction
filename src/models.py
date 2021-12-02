@@ -15,6 +15,8 @@ class Model():
         # State and parameter dimensions
         self.nD = nD
         self.nP = nP
+        self.x0 = [0,0] ## initial, equilibrium state of the system
+        self.L_idxs = [1] ## only a (not m) is observable in the [m,a] tuple
 
         # List of state and parameter names
         self.state_names = ['state_{}'.format(i) for i in range(nD)]
@@ -73,34 +75,37 @@ class MWC_MM(Model):
 
     def __init__(self, **kwargs):
         self.nD = 2
-        self.nP = 10
+        self.nP = 9
+        self.L_idxs = [1]
         self.state_names = ['methyl', 'FRET index']
         self.param_names = ['K_I', 'K_A', 'm_0', 'alpha_m', 'K_R', 'K_B', 'Nn', 'V_R', 'V_B', 'FR_scale']
 
         # True parameter dictionaries;
         self.params = dict()
-        self.params['default'] = [20., 3225., 0.5, 2.0, 0.32, 0.30, 6.0, 0.010, 0.013, 1]
+        self.params['default'] = [20., 3225., 0.5, 2.0, 0.32, 0.30, 6.0, 0.010, 0.013]
+        a0 = 0 ## TODO: fill in equation for a where dm/dt=0
+        self.x0 = [self.params['default'][2], a0]
 
         # Bounds dictionaries
         self.bounds = dict()
         self.bounds['default'] = dict()
         self.bounds['default']['states'] = [[0.0, 4.0], [0, 1]]
         self.bounds['default']['params'] = [[p,p] for p in self.params['default']]
-        self.bounds['default']['params'][-4] = [4, 8] ## N
-        self.bounds['default']['params'][-3] = [0.001, 0.1] ## V_R
-        self.bounds['default']['params'][-2] = [0.001, 0.1] ## V_B
+        self.bounds['default']['params'][-3] = [4, 8] ## N
+        self.bounds['default']['params'][-2] = [0.001, 0.1] ## V_R
+        self.bounds['default']['params'][-1] = [0.001, 0.1] ## V_B
 
     def df(self, t, x, inputs):
         p, stim = inputs
         Mm = x[..., 0]
         FR_idx = x[..., 1]
-        K_I, K_A, m_0, alpha_m, K_R, K_B, Nn, V_R, V_B, FR_scale = p
+        K_I, K_A, m_0, alpha_m, K_R, K_B, Nn, V_R, V_B = p
 
         f_c = np.log((1. + stim / K_I)/(1. + stim / K_A))
         f_m = alpha_m * (m_0 - Mm)
         Ee = Nn * (f_m + f_c)
         Aa = 1. / (1. + np.exp(Ee))
-        df_vec = np.array([V_R*(1 - Aa)/(K_R + (1 - Aa)) - V_B*Aa/(K_B + Aa), (FR_scale * Aa - FR_idx) / 0.5]).T
+        df_vec = np.array([V_R*(1 - Aa)/(K_R + (1 - Aa)) - V_B*Aa/(K_B + Aa), (Aa - FR_idx) / 0.5]).T
         ## TODO: implement explicit reliance on self.dt instead of 0.5
         return df_vec
 
@@ -114,6 +119,7 @@ class MWC_linear(Model):
     def __init__(self, **kwargs):
         self.nD = 2
         self.nP = 7
+        self.L_idxs = [1]
         self.state_names = ['methyl', 'FRET index']
         self.param_names = ['K_I',
                             'K_A'
@@ -122,10 +128,10 @@ class MWC_linear(Model):
                             'Nn',
                             'a_ss',
                             'slope']
-
         # True parameter dictionaries;
         self.params = dict()
         self.params['default'] = [20., 3225., 0.5, 2.0, 6.0, 0.33, -0.01]
+        self.x0 = [self.params['default'][2]+0.83, self.params['default'][-2]] ## 0.83 correction needed for 100 uM bg
 
         # Bounds dictionaries
         self.bounds = dict()

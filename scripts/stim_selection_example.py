@@ -4,17 +4,9 @@ Example of selecting an optimal stimulus by generating simulated data and reinfe
 Created by Agastya Rana, 11/18/21.
 """
 
-import sys, os
-sys.path.append('D:\Yale\Emonet Lab\Fall 2021\FRET-data-assimilation\src')
-path = os.path.dirname(os.path.abspath(__file__))
-sys.path.append(path)
-
-
-## TODO: FIND A BETTER WAY TO DO THIS
-## Problem is that just using current path location will only work if __name__ == __main__
-#scripts_path = [i for i in sys.path if 'scripts' in i][0]
-#sys.path.append(os.path.join(os.path.dirname(scripts_path),'src'))
-
+import sys
+sys.path.append('..')
+sys.path.append('../src')
 import numpy as np
 import json
 from src.local_methods import def_data_dir

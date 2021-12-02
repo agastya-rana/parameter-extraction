@@ -10,6 +10,7 @@ visit http://creativecommons.org/licenses/by-nc-sa/4.0/.
 """
 
 import scipy as sp
+import numpy as np
 import os
 import matplotlib
 matplotlib.use('agg')
@@ -27,8 +28,8 @@ def save_stim(obj, data_flag):
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
 
-    data_to_save = sp.vstack((obj.Tt, obj.stim)).T
-    sp.savetxt('%s/%s.stim' % (out_dir, data_flag), data_to_save,
+    data_to_save = np.vstack((obj.Tt, obj.stim)).T
+    np.savetxt('%s/%s.stim' % (out_dir, data_flag), data_to_save,
                fmt='%.6f', delimiter='\t')
 
 
@@ -37,8 +38,8 @@ def save_true_states(obj, data_flag):
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
 
-    data_to_save = sp.vstack((obj.Tt, obj.true_states.T)).T
-    sp.savetxt('%s/%s.true' % (out_dir, data_flag), data_to_save,
+    data_to_save = np.vstack((obj.Tt, obj.true_states.T)).T
+    np.savetxt('%s/%s.true' % (out_dir, data_flag), data_to_save,
                fmt='%.6f', delimiter='\t')
 
 
@@ -49,7 +50,9 @@ def save_meas_data(obj, spec_name, simulated=False):
 
     data_to_save = sp.vstack((obj.Tt, obj.meas_data.T)).T
     if simulated:
-        filename = spec_name+"_simulated"
+        filename = spec_name
+        #filename = spec_name+"_simulated"
+        pass
     else:
         filename = spec_name
     sp.savetxt('%s/%s.meas' % (out_dir, filename), data_to_save,
@@ -87,8 +90,10 @@ def save_data_plots(scF, spec_name, stim_change=False):
     fig = plt.figure(figsize=(10, 10))
     fig, (stimax, fretax) = plt.subplots(2, 1, sharex=True)
     stimax.plot(scF.Tt, scF.stim)
-    stimax.set_ylim(0.08, 0.2)
+    stimax.set_ylim(80, 200)
+    stimax.set_ylabel('Stimulus (uM)')
     fretax.plot(scF.Tt, scF.meas_data)
+    fretax.set_ylabel('FRET Index')
     if stim_change:
         changes = [True if scF.stim[x] != scF.stim[x + 1] else False for x in range(len(scF.stim) - 1)]
         change_vals = [scF.Tt[x] for x in range(len(scF.stim) - 1) if changes[x]]
