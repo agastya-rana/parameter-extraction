@@ -83,8 +83,8 @@ class MWC_MM(Model):
         # True parameter dictionaries;
         self.params = dict()
         self.params['default'] = [20., 3225., 0.5, 2.0, 0.32, 0.30, 6.0, 0.010, 0.013]
-        a0 = 0 ## TODO: fill in equation for a where dm/dt=0
-        self.x0 = [self.params['default'][2], a0]
+        a0 = 0.33 ## TODO: fill in equation for a where dm/dt=0
+        self.x0 = [self.params['default'][2]+0.83, a0]
 
         # Bounds dictionaries
         self.bounds = dict()
