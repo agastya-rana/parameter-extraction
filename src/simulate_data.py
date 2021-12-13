@@ -83,7 +83,7 @@ def gen_pred_data(specs_name, seed_range=[0]):
     else:
         print("No valid files. Nothing saved")
 
-def simulate_data(spec_name, save_data=False, param_infer=False):
+def simulate_data(spec_name, save_data=False, param_infer=False, init_seed=0):
     """
     Generates simulated data given prescribed parameter set and one of stimulus or stimulus generation protocol.
     If save_data, data is saved; if param_infer, then parameters are reinferred and returned by applying VA to data.
@@ -105,7 +105,7 @@ def simulate_data(spec_name, save_data=False, param_infer=False):
         save_meas_data(scF, spec_name, simulated=True)
         save_true_states(scF, spec_name)
     if param_infer:
-        param_set = est_VA(spec_name, scF=scF)
+        param_set = est_VA(spec_name, scF=scF, init_seed=init_seed)
         return param_set
 
 
