@@ -21,8 +21,8 @@ LIST_PARAMS = ['L_idxs', 'x0', 'step_stim_vals', 'P_idxs', 'beta_array', 'meas_n
 MODEL_PARAMS = ['model']
 MODEL_DEP_PARAMS = ['nD', 'nP', 'L_idxs', 'x0']
 FLOAT_PARAMS = ['stim_l1', 'stim_ts']
-STR_PARAMS = ['stim_file', 'stim_type', 'stim_smooth_type', 'bounds_set', 'meas_file']
-
+STR_PARAMS = ['stim_file', 'stim_type', 'stim_smooth_type', 'meas_file']
+BOUNDS_PARAMS = ['state_bounds', 'param_bounds', 'bounds_set']
 
 class single_cell_FRET():
     """
@@ -61,7 +61,6 @@ class single_cell_FRET():
         # Variables for integrating model/twin data generation
         self.model = models.MWC_MM()  ## Default is MWC MM model
         self.params_set = []  ## Value of true parameter set used in the model (used for forward integration)
-        self.bounds_set = 'default'  ## Name of the bounds set used in the model inference algorithm
         self.true_states = None  ## Stores state of integrated system over the complete timetrace
         self.x0 = self.model.x0
 
@@ -74,8 +73,9 @@ class single_cell_FRET():
 
         # Variables for optimization of single annealing step
         self.nP = self.model.nP
-        self.param_bounds = None
-        self.state_bounds = None
+        self.bounds_set = 'default'  ## Name of the bounds set used in the model inference algorithm
+        self.state_bounds = self.model.bounds[self.bounds_set]['states']
+        self.param_bounds = self.model.bounds[self.bounds_set]['params']
         self.bounds = None
         self.init_seed = 0
         self.x_init = None
@@ -120,6 +120,18 @@ class single_cell_FRET():
                     print('The value of %s (%s) is not a list' % (key, val))
                     quit()
                 exec('self.%s = %s' % (key, val))
+            elif key in BOUNDS_PARAMS:
+                ## check if list otherwise string
+                try:
+                    if type(val) == type([]):
+                        exec('self.%s = %s' % (key,val))
+                    elif type(val) == type(""): ## only true for 'bounds_set'
+                        exec('self.%s = %s' % (key,val))
+                        self.state_bounds = self.model.bounds[self.bounds_set]['states']
+                        self.param_bounds = self.model.bounds[self.bounds_set]['params']
+                except:
+                    print('The value of %s (%s) is not a string or list' % (key, val))
+                    quit()
             else:
                 exec('self.%s = float(val)' % key)
 
@@ -276,8 +288,6 @@ class single_cell_FRET():
         print('Initializing estimate with seed %s' % self.init_seed)
         assert (self.nD == self.model.nD), 'self.nD != %s' % self.model.nD
         assert (self.nP == self.model.nP), 'self.nP != %s' % self.model.nP
-        self.state_bounds = self.model.bounds[self.bounds_set]['states']
-        self.param_bounds = self.model.bounds[self.bounds_set]['params']
         self.bounds = np.vstack((self.state_bounds, self.param_bounds))
         self.x_init = np.zeros((self.nT, self.nD))
         self.p_init = np.zeros(self.nP)
