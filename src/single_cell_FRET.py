@@ -23,12 +23,12 @@ MODEL_DEP_PARAMS = ['nD', 'nP', 'L_idxs', 'x0']
 FLOAT_PARAMS = ['stim_l1', 'stim_ts']
 STR_PARAMS = ['stim_file', 'stim_type', 'stim_smooth_type', 'meas_file']
 BOUNDS_PARAMS = ['state_bounds', 'param_bounds', 'bounds_set']
+ANNEAL_PARAMS = ['beta_array']
 
 class single_cell_FRET():
     """
     Class to hold single cell FRET functions and modules.
     """
-
     def __init__(self, **kwargs):
         ## Timetrace Variables
         self.nD = 2  ## Number of dimensions
@@ -84,6 +84,7 @@ class single_cell_FRET():
         # Variables for annealing run
         self.alpha = 2.0
         self.beta_array = range(0, 61)
+        self.beta_increment = 1
         self.Rf0 = 1e-6
 
         # Variables for linear kernel estimation
@@ -126,12 +127,15 @@ class single_cell_FRET():
                     if type(val) == type([]):
                         exec('self.%s = %s' % (key,val))
                     elif type(val) == type(""): ## only true for 'bounds_set'
-                        exec('self.%s = %s' % (key,val))
+                        exec('self.%s = str(val)' % key)
+                        print("OK")
                         self.state_bounds = self.model.bounds[self.bounds_set]['states']
                         self.param_bounds = self.model.bounds[self.bounds_set]['params']
                 except:
                     print('The value of %s (%s) is not a string or list' % (key, val))
                     quit()
+            elif key in ANNEAL_PARAMS:
+                exec('self.%s = %s' % (key,val))
             else:
                 exec('self.%s = float(val)' % key)
 

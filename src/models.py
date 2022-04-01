@@ -152,9 +152,12 @@ class MWC_linear(Model):
         f_m = alpha_m * (m_0 - Mm)
         Ee = Nn * (f_m + f_c)
         Aa = 1. / (1. + np.exp(Ee))
-        df_vec = np.array([slope*(Aa-a_ss), (Aa - FR_idx) / 0.5]).T
+        dm = slope*(Aa-a_ss)
+        df_vec = np.array([dm, (Aa - FR_idx) / 0.5]).T
         return df_vec
 
+
+## TODO: add model class using sdeint - check why diff from odeint without noise, this way using both process and measurement noise
 ## Clausnitzer (2014) model has MWC with dm/dt = g_R(1-A) - g_B(A^3); K_i = 0.02 mM; K_a = 0.5 mM; N(c) = 17.5 + 3.35*c where c in mM; g_R = 0.0069; g_B = 0.11; f_m = 1- 0.5m
 ## They interpolated f_m from Endres RG, Oleksiuk O, Hansen CH, Meir Y, Sourjik V, et al. (2008)
 
