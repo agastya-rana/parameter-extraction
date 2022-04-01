@@ -100,7 +100,7 @@ def load_true_file(true_file):
     true_states = sp.loadtxt(filename)
     return true_states
 
-def load_est_data_VA(data_flag, seed):
+def load_est_data_VA(data_flag, seed=0):
     in_dir = '%s/objects/%s' % (DATA_DIR, data_flag)
     with gzip.open('%s/obj_seed=%s.pklz' % (in_dir, seed), 'rb') as f:
         obj = pickle.load(f)
@@ -121,5 +121,4 @@ def load_pred_data(data_flag):
     filename = '%s/preds.pkl' % out_dir
     with open(filename, 'rb') as f:
         data_dict = pickle.load(f)
-
     return data_dict

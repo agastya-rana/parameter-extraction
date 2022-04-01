@@ -62,7 +62,6 @@ def save_pred_data(data_dict, data_flag):
     out_dir = '%s/objects/%s' % (DATA_DIR, data_flag)
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
-
     filename = '%s/preds.pkl' % out_dir
     with open(filename, 'wb') as f:
         pickle.dump(data_dict, f, pickle.HIGHEST_PROTOCOL)
@@ -74,6 +73,7 @@ def save_estimates(scF, annealer, data_flag):
         os.makedirs(out_dir)
 
     param_set = annealer.save_params('%s/params_seed=%s.npy' % (out_dir, scF.init_seed))
+    param_err = annealer.save_params_err('%s/params_err_seed=%s.npy' % (out_dir, scF.init_seed))
     annealer.save_paths('%s/paths_seed=%s.npy' % (out_dir, scF.init_seed))
     annealer.save_action_errors('%s/action_errors_seed=%s.npy'
                                 % (out_dir, scF.init_seed))
@@ -81,35 +81,4 @@ def save_estimates(scF, annealer, data_flag):
     with gzip.open(obj_file, 'wb') as f:
         pickle.dump(scF, f, protocol=2)
     print('\n%s-%s data saved to %s.' % (data_flag, scF.init_seed, out_dir))
-    return param_set
-
-def save_data_plots(scF, spec_name, stim_change=False):
-    out_dir = '%s/plots/%s' % (DATA_DIR, spec_name)
-    if not os.path.exists(out_dir):
-        os.makedirs(out_dir)
-    fig = plt.figure(figsize=(10, 10))
-    fig, (stimax, fretax) = plt.subplots(2, 1, sharex=True)
-    stimax.plot(scF.Tt, scF.stim)
-    stimax.set_ylim(80, 200)
-    stimax.set_ylabel('Stimulus (uM)')
-    fretax.plot(scF.Tt, scF.meas_data)
-    fretax.set_ylabel('FRET Index')
-    if stim_change:
-        changes = [True if scF.stim[x] != scF.stim[x + 1] else False for x in range(len(scF.stim) - 1)]
-        change_vals = [scF.Tt[x] for x in range(len(scF.stim) - 1) if changes[x]]
-        for i in range(len(change_vals)):
-            stimax.axvline(x=change_vals[i], color='black', linestyle='--', lw=1, alpha=1.0)
-            fretax.axvline(x=change_vals[i], color='black', linestyle='--', lw=1, alpha=1.0)
-    plt.show()
-    plt.savefig('%s/%s.png' % (out_dir, spec_name))
-    plt.close()
-
-def save_opt_pred_plots(spec_name, data_dict):
-    out_dir = '%s/plots/%s' % (DATA_DIR, spec_name)
-    if not os.path.exists(out_dir):
-        os.makedirs(out_dir)
-    plt.savefig('%s/pred_plots.png' % out_dir)
-    filename = '%s/preds.pkl' % out_dir
-    with open(filename, 'wb') as f:
-        pickle.dump(data_dict, f, pickle.HIGHEST_PROTOCOL)
-    plt.close()
+    return param_set, param_err

@@ -7,6 +7,9 @@ from src.local_methods import def_data_dir
 from src.single_cell_FRET import create_cell_from_mat
 from src.simulate_data import simulate_data, gen_pred_data
 from src.plot_data import plot_raw_data, pred_plot
+from src.load_data import load_pred_data
+import matplotlib.pyplot as plt
+import os
 main_dir = def_data_dir()
 
 dirname = 'trial_data'
@@ -26,10 +29,20 @@ specifications = {'data_vars': data_vars, 'est_vars': est_vars, 'est_specs': est
 with open(filename, 'w') as outfile:
     json.dump(specifications, outfile, indent=4)
 
-params = simulate_data(sp_name, param_infer=True, save_data=True)
-print("Inferred params are: ", params)
+#params = simulate_data(sp_name, param_infer=True, save_data=True)
+#print("Inferred params are: ", params)
 gen_pred_data(sp_name)
 pred_plot(sp_name)
 plot_raw_data()
+
+out_dir = '%s/plots/%s' % (main_dir, sp_name)
+if not os.path.exists(out_dir):
+    os.makedirs(out_dir)
+print(out_dir)
+pred_dict = load_pred_data(sp_name)
+t = pred_dict['traj_err']
+plt.scatter([i for i in range(len(t))], t)
+plt.savefig('%s/pred_plots_err.png' % out_dir)
+plt.close()
 
 

@@ -7,62 +7,22 @@ Created by Nirag Kadakia and Agastya Rana, 11/18/21.
 import os
 import scipy as sp
 from single_cell_FRET import single_cell_FRET
-from load_specs import read_specs_file, compile_all_run_vars
-from load_data import load_pred_data, load_true_file, load_stim_file, load_meas_file
-from save_data import save_opt_pred_plots, save_data_plots
+from load_data import load_stim_file, load_meas_file
+import matplotlib
+matplotlib.use('agg')
 import matplotlib.pyplot as plt
+import pickle
 from local_methods import def_data_dir
 data_dir = def_data_dir()
 
-
-def pred_plot(spec_name, plot_true=False):
-    """
-    Plots the prediction based on the most accurate parameter estimation run (out of many trials with different random
-    seeds).
-    Args:
-        spec_name: name of the specs file; the same specs file can be used as the inference specs file
-    Returns:
-        plot of stimulus, measured data, and prediction
-    """
-
-    # Load data from specs file
-    list_dict = read_specs_file(spec_name)
-    vars_to_pass = compile_all_run_vars(list_dict)
-    scF = single_cell_FRET(**vars_to_pass)
-
-    # Load the stimulus and measured file into the scF object
-    if scF.stim_file is None:
-        scF.stim_file = spec_name
-    if scF.meas_file is None:
-        scF.meas_file = spec_name
-    scF.set_stim()
-    scF.set_meas_data()
-
-    # Set the estimation and prediction windows used in plotting
-    scF.set_est_pred_windows()
-
+def plot_trajectories(spec_name, scF, est_path=None, pred_path=None, plot_observed=False):
     # Load all of the prediction data and estimation object and dicts
-    pred_dict = load_pred_data(spec_name)
-    opt_seed = sp.nanargmin(pred_dict['errors'])
-    opt_pred_path = pred_dict['pred_path'][:, :, opt_seed]
-    est_path = pred_dict['est_path'][:, :, opt_seed]
-    opt_params = pred_dict['params'][:, opt_seed]
-    est_range = scF.est_wind_idxs
-    pred_range = scF.pred_wind_idxs
     full_range = sp.arange(scF.est_wind_idxs[0], scF.pred_wind_idxs[-1])
-    est_Tt = scF.Tt[est_range]
-    pred_Tt = scF.Tt[pred_range]
+    est_Tt = scF.Tt[scF.est_wind_idxs]
+    pred_Tt = scF.Tt[scF.pred_wind_idxs]
     full_Tt = scF.Tt[full_range]
 
-    # Load true state values if using simulated data
-    try:
-        true_states = load_true_file(spec_name)[:, 1:]
-    except:
-        true_states = None
-
-    num_plots = len(scF.L_idxs) + 1
-
-    fig, axs = plt.subplots(len(scF.L_idxs)+1, 1, sharex=True)
+    fig, axs = plt.subplots(scF.nD + 1, 1, sharex=True)
     # Plot the stimulus
     axs[0].plot(full_Tt, scF.stim[full_range], color='r', lw=2)
     axs[0].set_xlim(full_Tt[0], full_Tt[-1])
@@ -70,29 +30,36 @@ def pred_plot(spec_name, plot_true=False):
     axs[0].set_xlabel("Time (s)")
     axs[0].set_ylabel("Stimulus ($\mu$M)")
 
-    # Plotting only observed variables
-    for num, idx in enumerate(scF.L_idxs):
-        ## Plot Measured Data; could also do this in one line
-        axs[num+1].set_ylabel(scF.model.state_names[idx])
-        axs[num+1].plot(est_Tt, scF.meas_data[scF.est_wind_idxs, num], color='g', label='Measured')
-        axs[num+1].plot(pred_Tt, scF.meas_data[scF.pred_wind_idxs, num], color='g')
-
-        ## Plot estimation and prediction (basically inferred data)
-        axs[num+1].plot(est_Tt, est_path[:, idx], color='r', lw=1, label='Estimated')
-        axs[num+1].plot(pred_Tt, opt_pred_path[:, idx], color='k', lw=1, label='Predicted')
-
-        ## Plot true states if this uses fake data
-        if true_states is not None and plot_true:
-            axs[num+1].plot(scF.Tt, true_states[:, idx], color='k', label='True')
+    plot_no = 1
+    for num in range(scF.nD):
+        if plot_observed and num not in scF.L_idxs:
+            continue
+        axs[plot_no].set_ylabel(scF.model.state_names[num])
+        if num in scF.L_idxs:
+            ## Plot Measured Data
+            axs[num + 1].plot(full_Tt, scF.meas_data[full_range, num], color='g', label='Measured')
+        ## Plot Inferred Data
+        if est_path != None:
+            axs[plot_no].plot(est_Tt, est_path[:, num], color='r', lw=1, label='Estimated')
+        if pred_path != None:
+            axs[plot_no].plot(pred_Tt, pred_path[:, num], color='k', lw=1, label='Predicted')
+        plot_no += 1
     plt.legend()
-    data = {'full_Tt': full_Tt, 'est_Tt': est_Tt, 'pred_Tt': pred_Tt, 'stim': scF.stim[full_range],
-            'meas_data': scF.meas_data[full_range], 'est_path': est_path, 'pred_path': opt_pred_path,
-            'params': opt_params}
 
-    save_opt_pred_plots(spec_name, data)
+    data = {'full_Tt': full_Tt, 'est_Tt': est_Tt, 'pred_Tt': pred_Tt, 'stim': scF.stim[full_range],
+            'meas_data': scF.meas_data[full_range], 'est_path': est_path, 'pred_path': pred_path}
+    out_dir = '%s/plots/%s' % (data_dir, spec_name)
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
+    plt.savefig('%s/trajectory.png' % out_dir)
+    filename = '%s/trajectory.pkl' % out_dir
+    with open(filename, 'wb') as f:
+        pickle.dump(data, f, pickle.HIGHEST_PROTOCOL)
+    plt.close()
+
+
 
 def plot_raw_data(spec_names=None):
-
     if spec_names == None:
         specs = []
         stim_path = '%s/stim' % data_dir
@@ -114,5 +81,26 @@ def plot_raw_data(spec_names=None):
         scF.Tt = stim_Tt[:, 0]
         scF.stim = stim_Tt[:, 1:]
         scF.meas_data = meas_Tt[:, 1:]
-        save_data_plots(scF, spec)
+        plot_exp(scF, spec)
+
+def plot_exp(scF, spec_name, stim_change=False):
+    out_dir = '%s/plots/%s' % (DATA_DIR, spec_name)
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
+    fig = plt.figure(figsize=(10, 10))
+    fig, (stimax, fretax) = plt.subplots(2, 1, sharex=True)
+    stimax.plot(scF.Tt, scF.stim)
+    stimax.set_ylim(80, 200)
+    stimax.set_ylabel('Stimulus (uM)')
+    fretax.plot(scF.Tt, scF.meas_data)
+    fretax.set_ylabel('FRET Index')
+    if stim_change:
+        changes = [True if scF.stim[x] != scF.stim[x + 1] else False for x in range(len(scF.stim) - 1)]
+        change_vals = [scF.Tt[x] for x in range(len(scF.stim) - 1) if changes[x]]
+        for i in range(len(change_vals)):
+            stimax.axvline(x=change_vals[i], color='black', linestyle='--', lw=1, alpha=1.0)
+            fretax.axvline(x=change_vals[i], color='black', linestyle='--', lw=1, alpha=1.0)
+    plt.show()
+    plt.savefig('%s/%s.png' % (out_dir, spec_name))
+    plt.close()
 
