@@ -288,7 +288,6 @@ class single_cell_FRET():
     #############################################
 
     def set_init_est(self):
-
         print('Initializing estimate with seed %s' % self.init_seed)
         assert (self.nD == self.model.nD), 'self.nD != %s' % self.model.nD
         assert (self.nP == self.model.nP), 'self.nP != %s' % self.model.nP

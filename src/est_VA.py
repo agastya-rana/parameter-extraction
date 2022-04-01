@@ -8,7 +8,7 @@ import scipy as sp
 import numpy as np
 import sys
 from src.load_data import load_est_data_VA, load_pred_data
-from varanneal import va_ode
+from src.varanneal import *
 from src.single_cell_FRET import single_cell_FRET
 from src.load_specs import read_specs_file, compile_all_run_vars
 from src.save_data import save_pred_data, save_stim, save_true_states, save_meas_data, save_estimates
@@ -48,13 +48,13 @@ def est_VA(spec_name, scF=None, init_seed=None, save_data=True, beta_inc=1, beta
     scF.set_est_pred_windows()
 
     # Initalize annealer class
-    annealer = va_ode.Annealer()
+    annealer = Annealer()
     annealer.set_model(scF.df_estimation, scF.nD)
     annealer.set_data(scF.meas_data[scF.est_wind_idxs, :], stim=scF.stim[scF.est_wind_idxs], t=scF.Tt[scF.est_wind_idxs])
 
     # Set Rm as inverse covariance; all parameters measured for now
     Rm = 1.0/sp.asarray(scF.meas_noise)**2.0
-    P_idxs = sp.arange(scF.nP)
+    P_idxs = scF.model.P_idxs
     scF.beta_increment = beta_inc
     scF.beta_array = range(beta_mid - beta_inc*beta_width, beta_mid + beta_inc*beta_width, beta_inc)
 
@@ -67,7 +67,7 @@ def est_VA(spec_name, scF=None, init_seed=None, save_data=True, beta_inc=1, beta
                     bounds=scF.bounds, disc='trapezoid',
                     method='L-BFGS-B', opt_args=BFGS_options)
     print("\nVariational annealing completed in {} s.".format(time.time() - tstart))
-    param_set, param_err = save_estimates(scF, annealer, spec_name)
+    save_estimates(scF, annealer, spec_name)
     return scF
 
 def var_anneal(spec_name, seed_range=[0], plot=True):
@@ -90,6 +90,8 @@ def var_anneal(spec_name, seed_range=[0], plot=True):
 
     if plot:
         plot_trajectories(spec_name, scF, est_path, pred_path)
+
+    ## TODO: make dictionary to store all relevant output
 
 def generate_predictions(specs_name):
     """
@@ -167,7 +169,9 @@ def minimize_pred_error(specs_name, seed_range=[0], store_data=False):
         data_dict = load_est_data_VA(specs_name, best_seed)
         opt_traj = data_dict['paths'][opt_beta_idx, :, :]
         params = data_dict['params'][opt_beta_idx, :]
-        out_dict = {'errors': traj_errors, 'opt_traj': opt_traj, 'params': params, 'beta': opt_beta}
+        params_err = data_dict['params_err'][opt_beta_idx, :, :]
+        out_dict = {'errors': traj_errors, 'opt_traj': opt_traj, 'params': params, 'params_err': params_err,
+                    'beta': opt_beta}
         if store_data:
             save_pred_data(out_dict, specs_name)
         return out_dict
