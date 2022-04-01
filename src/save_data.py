@@ -72,8 +72,8 @@ def save_estimates(scF, annealer, data_flag):
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
 
-    param_set = annealer.save_params('%s/params_seed=%s.npy' % (out_dir, scF.init_seed))
-    param_err = annealer.save_params_err('%s/params_err_seed=%s.npy' % (out_dir, scF.init_seed))
+    annealer.save_params('%s/params_seed=%s.npy' % (out_dir, scF.init_seed))
+    annealer.save_params_err('%s/params_err_seed=%s.npy' % (out_dir, scF.init_seed))
     annealer.save_paths('%s/paths_seed=%s.npy' % (out_dir, scF.init_seed))
     annealer.save_action_errors('%s/action_errors_seed=%s.npy'
                                 % (out_dir, scF.init_seed))
@@ -81,4 +81,3 @@ def save_estimates(scF, annealer, data_flag):
     with gzip.open(obj_file, 'wb') as f:
         pickle.dump(scF, f, protocol=2)
     print('\n%s-%s data saved to %s.' % (data_flag, scF.init_seed, out_dir))
-    return param_set, param_err

@@ -77,8 +77,9 @@ class MWC_MM(Model):
         self.nD = 2
         self.nP = 9
         self.L_idxs = [1]
+        self.P_idxs = [-3, -2, -1]
         self.state_names = ['methyl', 'FRET index']
-        self.param_names = ['K_I', 'K_A', 'm_0', 'alpha_m', 'K_R', 'K_B', 'Nn', 'V_R', 'V_B', 'FR_scale']
+        self.param_names = ['K_I', 'K_A', 'm_0', 'alpha_m', 'K_R', 'K_B', 'Nn', 'V_R', 'V_B']
 
         # True parameter dictionaries;
         self.params = dict()

@@ -105,6 +105,7 @@ def load_est_data_VA(data_flag, seed=0):
     with gzip.open('%s/obj_seed=%s.pklz' % (in_dir, seed), 'rb') as f:
         obj = pickle.load(f)
     params = sp.load('%s/params_seed=%s.npy' % (in_dir, seed))
+    params_err = sp.load('%s/params_err_seed=%s.npy' % (in_dir, seed))
     paths = sp.load('%s/paths_seed=%s.npy' % (in_dir, seed))
     errors = sp.load('%s/action_errors_seed=%s.npy' % (in_dir, seed))
 
@@ -113,6 +114,7 @@ def load_est_data_VA(data_flag, seed=0):
     est_dict['params'] = params
     est_dict['paths'] = paths
     est_dict['errors'] = errors
+    est_dict['params_err'] = params_err
 
     return est_dict
 
