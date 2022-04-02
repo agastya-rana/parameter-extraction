@@ -29,9 +29,6 @@ import time
 import sys
 import scipy.optimize as opt
 
-## TODO: should be possible to use only P_idxs in all the estimation, so getting rid of the other param bounds
-## Ask why this wasn't done before + whether there is any use in not hardcoding the values in the model file itself
-
 class Annealer(object):
     """
     Annealer is the main object type for performing variational data
@@ -641,7 +638,7 @@ class Annealer(object):
             XPmin, exitflag, Amin = res.x, res.status, res.fun  ## Res.fun is function value at xmin
             hes = hessian(self.A)
             cov = np.linalg.inv(hes(XPmin))
-            covariance = cov[self.freepars, self.freepars] ## TODO: change this to NPest, and make sure that all input models have last few params only as non-fixed params
+            covariance = cov[self.freepars, self.freepars]
             w,v = np.linalg.eig(covariance)
             err = np.array([np.sqrt(covariance[i,i]) for i in range(len(covariance))])
             print(w, err)
@@ -783,7 +780,6 @@ class Annealer(object):
                     est_param_array = np.reshape(self.minpaths[:, self.N_model*self.D:],
                                                  (self.Nbeta, self.N_model, self.NPest))
                     savearray[:, :, self.Pidx] = est_param_array
-        ## TODO: figure out how to input only estimated parameters and not have to put bounds on fixed ones
         if filename.endswith('.npy'):
             np.save(filename, savearray.astype(dtype))
         else:

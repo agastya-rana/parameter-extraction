@@ -14,39 +14,35 @@ from src.load_specs import read_specs_file, compile_all_run_vars
 from src.save_data import save_pred_data, save_stim, save_true_states, save_meas_data, save_estimates
 from src.plot_data import plot_trajectories
 
-def simulate_data(spec_name, save_data=False):
+def create_cell(spec_name, save_data=False):
+    list_dict = read_specs_file(spec_name)
+    scF = single_cell_FRET(**list_dict)
+    if save_data:
+        save_stim(scF, spec_name)
+        save_meas_data(scF, save_data)
+        if scF.true_states != None:
+            save_true_states(scF, save_data)
+    return scF
+
+def simulate_data(scF, save_data=None):
     """
     Generates simulated data given prescribed parameter set and one of stimulus or stimulus generation protocol.
-    If save_data, data is saved.
+    If save_data is a spec_name string, data is saved.
     Args:
         spec_name: name of specs file
     Returns:
         Inferred parameter set
     """
     # Load specifications from file; to be passed to single_cell_FRET object
-    list_dict = read_specs_file(spec_name)
-    vars_to_pass = compile_all_run_vars(list_dict)
-    scF = single_cell_FRET(**vars_to_pass)
-    scF.set_stim()
-    scF.gen_true_states()
-    scF.set_meas_data()
-    if save_data:
-        if scF.stim_file is None:
-            save_stim(scF, spec_name)
-        save_meas_data(scF, spec_name, simulated=True)
-        save_true_states(scF, spec_name)
+
     return scF
 
-def est_VA(spec_name, scF=None, init_seed=None, save_data=True, beta_inc=1, beta_mid=31, beta_width=30):
-    if scF == None:
-        scF = simulate_data(spec_name, save_data=save_data)
+def est_VA(spec_name, scF, init_seed=None, save_data=True, beta_inc=1, beta_mid=31, beta_width=30):
 
     if init_seed != None:
         scF.init_seed = init_seed ## influences x and p init
-    # Initalize estimation; set the estimation and prediction windows
+    # Initalize estimation
     scF.set_init_est()
-    scF.set_est_pred_windows()
-
     # Initalize annealer class
     annealer = Annealer()
     annealer.set_model(scF.df_estimation, scF.nD)
@@ -70,7 +66,7 @@ def est_VA(spec_name, scF=None, init_seed=None, save_data=True, beta_inc=1, beta
     save_estimates(scF, annealer, spec_name)
     return scF
 
-def var_anneal(spec_name, seed_range=[0], plot=True):
+def var_anneal(spec_name, scF=None, seed_range=[0], plot=True, beta_precision=0.1, save_data=True):
     """
     Run varanneal on the specs file by iteratively choosing better betas, also run over many seeds.
     Store output (optimal beta, optimal trajectory, predicted trajectory, trajectory error) in dictionary
@@ -78,20 +74,28 @@ def var_anneal(spec_name, seed_range=[0], plot=True):
     b_inc = 1
     b_mid = 40
     b_width = 10
-    while b_inc > 0.1:
+
+    ## Make simulated cell if cell doesn't already exist
+    if scF == None:
+        scF = create_cell(spec_name)
+
+    while b_inc > beta_precision:
         for seed in seed_range:
-            est_VA(spec_name, init_seed=seed, beta_inc=b_inc, beta_mid=b_mid, beta_width=b_width)
+            est_VA(spec_name, scF, init_seed=seed, beta_inc=b_inc, beta_mid=b_mid, beta_width=b_width)
         b_mid = minimize_pred_error(spec_name, seed_range)['beta']
         b_inc = b_inc/4
-    scF = est_VA(spec_name, init_seed=seed, beta_inc=1, beta_mid=b_mid, beta_width=1)
+    scF = est_VA(spec_name, scF, init_seed=seed, beta_inc=1, beta_mid=b_mid, beta_width=1)
     trajectory_data = minimize_pred_error(spec_name, seed_range, store_data=True)
     est_path = trajectory_data['opt_traj']
     pred_path = generate_predictions(spec_name)
 
+    ## Need to pull parameter estimate and parameter error from scF and saved errors to return later
+
     if plot:
         plot_trajectories(spec_name, scF, est_path, pred_path)
 
-    ## TODO: make dictionary to store all relevant output
+    out_dict = {'cell': scF, 'traj': trajectory_data, 'pred': pred_path}
+    return out_dict
 
 def generate_predictions(specs_name):
     """
@@ -108,7 +112,7 @@ def generate_predictions(specs_name):
     scF.meas_data = scF.meas_data[scF.pred_wind_idxs]
     scF.x0 = data['opt_traj'][-1, :]
     scF.params_set = data['params']
-    scF.gen_true_states()
+    scF.forward_integrate()
     prediction = scF.true_states
     return prediction
 
@@ -151,7 +155,7 @@ def minimize_pred_error(specs_name, seed_range=[0], store_data=False):
         for beta_idx in range(len(scF.beta_array)):
             scF.x0 = data_dict['paths'][beta_idx, -1, :]
             scF.params_set = data_dict['params'][beta_idx, :]
-            scF.gen_true_states()
+            scF.forward_integrate()
             traj_err = np.sum((scF.true_states[:, scF.L_idxs] - scF.meas_data) ** 2.0) / len(scF.Tt)
             traj_arr[beta_idx, seed_idx] = traj_err
             if min_err == None or traj_err < min_err:

@@ -16,6 +16,7 @@ class Model():
         self.nD = nD
         self.nP = nP
         self.x0 = [0,0] ## initial, equilibrium state of the system
+        self.P_idxs = [-1] ## parameters that very
         self.L_idxs = [1] ## only a (not m) is observable in the [m,a] tuple
 
         # List of state and parameter names
@@ -25,7 +26,7 @@ class Model():
         # Dictionary of true parameter sets. The values of each dictionary is a
         # list of length nP, storing the parameter values. If true parameters are not known
         # (i.e. twin data is not being generated), these can be omitted.
-        self.params = dict()
+        self.params_set = []
         # self.params['init'] = [0.0, 0.0, 0.0]
 
         # Dictionary holding dictionaries of parameter and state bounds.
@@ -33,7 +34,8 @@ class Model():
         # to the keys of 'states' and 'parameters' respectively. Each list stores
         # two-element lists of lower and upper bounds for each state/parameter.
         # Parameters can be fixed by setting their lower and upper bounds equal to each other.
-        self.bounds = dict()
+        self.state_bounds = [[0.0, 4.0], [0, 1]]
+        self.param_bounds = []
 
     ## self.bounds['init'] = dict()
     ## self.bounds['init']['states'] = [[0.,1.], [0., 100.]]
@@ -82,19 +84,13 @@ class MWC_MM(Model):
         self.param_names = ['K_I', 'K_A', 'm_0', 'alpha_m', 'K_R', 'K_B', 'Nn', 'V_R', 'V_B']
 
         # True parameter dictionaries;
-        self.params = dict()
-        self.params['default'] = [20., 3225., 0.5, 2.0, 0.32, 0.30, 6.0, 0.010, 0.013]
+        self.params_set = [20., 3225., 0.5, 2.0, 0.32, 0.30, 6.0, 0.010, 0.013]
         a0 = 0.33 ## TODO: fill in equation for a where dm/dt=0
         self.x0 = [self.params['default'][2]+0.83, a0]
 
         # Bounds dictionaries
-        self.bounds = dict()
-        self.bounds['default'] = dict()
-        self.bounds['default']['states'] = [[0.0, 4.0], [0, 1]]
-        self.bounds['default']['params'] = [[p,p] for p in self.params['default']]
-        self.bounds['default']['params'][-3] = [4, 8] ## N
-        self.bounds['default']['params'][-2] = [0.001, 0.1] ## V_R
-        self.bounds['default']['params'][-1] = [0.001, 0.1] ## V_B
+        self.state_bounds = [[0.0, 4.0], [0, 1]]
+        self.param_bounds = [[4, 8], [0.001, 0.1], [0.001, 0.1]] ## N, V_R, V_B
 
     def df(self, t, x, inputs):
         p, stim = inputs
@@ -130,18 +126,12 @@ class MWC_linear(Model):
                             'a_ss',
                             'slope']
         # True parameter dictionaries;
-        self.params = dict()
-        self.params['default'] = [20., 3225., 0.5, 2.0, 6.0, 0.33, -0.01]
-        self.x0 = [self.params['default'][2]+0.83, self.params['default'][-2]] ## 0.83 correction needed for 100 uM bg
+        self.params_set = [20., 3225., 0.5, 2.0, 6.0, 0.33, -0.01]
+        self.x0 = [self.params_set[2]+0.83, self.params_set[-2]] ## 0.83 correction needed for 100 uM bg
 
         # Bounds dictionaries
-        self.bounds = dict()
-        self.bounds['default'] = dict()
-        self.bounds['default']['states'] = [[0.0, 4.0], [0, 1]]
-        self.bounds['default']['params'] = [[p,p] for p in self.params['default']]
-        self.bounds['default']['params'][-3] = [4, 15] ## N
-        self.bounds['default']['params'][-2] = [0., 1.] ## a_ss
-        self.bounds['default']['params'][-1] = [-0.5, 0.5] ## slope
+        self.state_bounds = [[0.0, 4.0], [0, 1]]
+        self.param_bounds = [[4, 15], [0., 1.], [-0.5, 0.5]] ## N, a_ss, slope
 
     def df(self, t, x, inputs):
         p, stim = inputs

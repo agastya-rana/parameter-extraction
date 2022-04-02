@@ -4,13 +4,14 @@ Example of selecting an optimal stimulus by generating simulated data and reinfe
 Created by Agastya Rana, 11/18/21.
 """
 
+## TODO: need to update this
+
 import sys
 sys.path.append('..')
 sys.path.append('../src')
 import numpy as np
 import json
 from src.local_methods import def_data_dir
-from src.simulate_data import simulate_data
 main_dir = def_data_dir()
 
 ## Defining model parameters for different cells
