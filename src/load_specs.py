@@ -16,8 +16,8 @@ def read_specs_file(spec_name, data_dir=data_dir):
 
     Module to gather information from specifications file about how a
     particular VA run is to be performed.
-    Specs files should be JSON-readable, and should contain three dictionaries with keys of
-    'data_vars', 'est_vars' and 'est_specs' (see README.md)
+    Specs files should be JSON-readable, and should contain two dictionaries with keys of
+    'data_vars', 'est_vars' (see README.md)
 
     At this point, there is no functional distinction between est_var
     and data_var, they are only tags for personal reference, and are
@@ -28,8 +28,7 @@ def read_specs_file(spec_name, data_dir=data_dir):
         data_dir (object): Data folder, if different than in local_methods.
 
     Returns:
-        list_dict: Dictionary of 4 items keyed by 'data_vars',
-                    'est_vars', and 'est_specs', as should be specified in the specs file.
+        list_dict: Dictionary of 2 items keyed by 'data_vars', 'est_vars', as should be specified in the specs file.
     """
 
     filename = '%s/specs/%s.txt' % (data_dir, spec_name)
