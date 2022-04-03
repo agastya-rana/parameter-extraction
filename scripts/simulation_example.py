@@ -19,17 +19,3 @@ with open(filename, 'w') as outfile:
 
 ## Does everything you need
 output = var_anneal(sp_name, plot=True)
-
-
-from src.load_data import load_pred_data
-import matplotlib.pyplot as plt
-import os
-out_dir = '%s/plots/%s' % (main_dir, sp_name)
-if not os.path.exists(out_dir):
-    os.makedirs(out_dir)
-print(out_dir)
-pred_dict = load_pred_data(sp_name)
-t = pred_dict['traj_err']
-plt.scatter([i for i in range(len(t))], t)
-plt.savefig('%s/pred_plots_err.png' % out_dir)
-plt.close()

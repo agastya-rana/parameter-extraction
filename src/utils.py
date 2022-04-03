@@ -5,10 +5,10 @@ Nirag Kadakia & Agastya Rana, 11/12/21.
 """
 
 import scipy as sp
-from scipy.ndimage.filters import gaussian_filter
+import scipy.stats
+import numpy as np
 import json
 from src.local_methods import def_data_dir
-
 
 def noisify(Ss, params=[0, 1]):
     """
@@ -18,6 +18,21 @@ def noisify(Ss, params=[0, 1]):
     size = Ss.shape
     Ss += sp.random.normal(mu, sigma, size)
     return Ss
+
+def gauss(mu, sigma):
+    n = 1000
+    xstd = np.sqrt(sigma[0,0])
+    ystd = np.sqrt(sigma[1,1])
+    xmean = mu[0]
+    ymean = mu[1]
+    x = np.linspace(xmean - 3 * xstd, xmean + 3 * xstd, n)
+    y = np.linspace(ymean - 3 * ystd, ymean + 3 * ystd, n)
+    xmesh, ymesh = np.meshgrid(x, y)
+    pos = np.dstack((xmesh, ymesh))
+    rv = scipy.stats.multivariate_normal(mu, sigma)
+    z = rv.pdf(pos)
+    return xmesh, ymesh, z
+
 
 def create_sample_json(filename):
     data_dir = def_data_dir()

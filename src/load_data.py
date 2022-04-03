@@ -124,3 +124,9 @@ def load_pred_data(data_flag):
     with open(filename, 'rb') as f:
         data_dict = pickle.load(f)
     return data_dict
+
+def load_va_data(sp_name):
+    filename = '%s/objects/%s/annealing_results.pkl' % (DATA_DIR, sp_name)
+    with open(filename, 'rb') as f:
+        output = pickle.load(f)
+    return output

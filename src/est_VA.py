@@ -12,7 +12,7 @@ from src.varanneal import *
 from src.single_cell_FRET import single_cell_FRET
 from src.load_specs import read_specs_file
 from src.save_data import save_pred_data, save_stim, save_true_states, save_meas_data, save_estimates, save_annealing
-from src.plot_data import plot_trajectories
+from src.plot_data import plot_trajectories, plot_params
 
 def create_cell(spec_name, save_data=False):
     list_dict = read_specs_file(spec_name)
@@ -101,6 +101,8 @@ def var_anneal(spec_name, scF=None, seed_range=[0], plot=True, beta_precision=0.
 
     if plot:
         plot_trajectories(spec_name, scF, est_path, pred_path, plot_observed=True)
+        pnames = [scF.model.param_names[scF.model.P_idxs[i]] for i in range(len(params))]
+        plot_params(params, params_err, pnames, spec_name)
 
     out_dict = {'cell': scF, 'traj': trajectory_data, 'pred': pred_path, 'params': params, 'params_err': params_err}
     if save_data:
