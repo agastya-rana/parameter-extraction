@@ -6,6 +6,8 @@ Created by Nirag Kadakia and Agastya Rana, 11/18/21.
 
 import os
 import scipy as sp
+import numpy as np
+from src.utils import gauss
 from single_cell_FRET import single_cell_FRET
 from load_data import load_stim_file, load_meas_file
 import matplotlib
@@ -22,7 +24,10 @@ def plot_trajectories(spec_name, scF, est_path=None, pred_path=None, plot_observ
     pred_Tt = scF.Tt[scF.pred_wind_idxs]
     full_Tt = scF.Tt[full_range]
 
-    fig, axs = plt.subplots(scF.nD + 1, 1, sharex=True)
+    if plot_observed:
+        fig, axs = plt.subplots(len(scF.L_idxs) + 1, 1, sharex=True)
+    else:
+        fig, axs = plt.subplots(scF.nD + 1, 1, sharex=True)
     # Plot the stimulus
     axs[0].plot(full_Tt, scF.stim[full_range], color='r', lw=2)
     axs[0].set_xlim(full_Tt[0], full_Tt[-1])
@@ -86,7 +91,7 @@ def plot_raw_data(spec_names=None):
         plot_exp(scF, spec)
 
 def plot_exp(scF, spec_name, stim_change=False):
-    out_dir = '%s/plots/%s' % (DATA_DIR, spec_name)
+    out_dir = '%s/plots/%s' % (data_dir, spec_name)
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
     fig = plt.figure(figsize=(10, 10))
@@ -106,3 +111,22 @@ def plot_exp(scF, spec_name, stim_change=False):
     plt.savefig('%s/%s.png' % (out_dir, spec_name))
     plt.close()
 
+
+def plot_params(params, params_err, pnames, spec_name):
+    fig, axs = plt.subplots(len(params), len(params), figsize=(15, 15))
+    for i in range(len(params)):
+        for j in range(len(params)):
+            mu = np.asarray([params[i], params[j]])
+            if i != j:
+                sigma = np.asarray([[params_err[i, i], params_err[i, j]], [params_err[j, i], params_err[j, j]]])
+            else:
+                sigma = np.asarray([[params_err[i, i], 0], [0, params_err[j, j]]])
+            x, y, z = gauss(mu, sigma)
+            axs[i, j].contour(x, y, z)
+            axs[i, j].set_xlabel(pnames[i])
+            axs[i, j].set_ylabel(pnames[j])
+    out_dir = '%s/plots/%s' % (data_dir, spec_name)
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
+    plt.savefig('%s/parameters.png' % out_dir)
+    plt.close()

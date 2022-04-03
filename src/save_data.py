@@ -80,7 +80,6 @@ def save_estimates(scF, annealer, data_flag):
     out_dir = '%s/objects/%s' % (DATA_DIR, data_flag)
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
-
     annealer.save_params('%s/params_seed=%s.npy' % (out_dir, scF.init_seed))
     annealer.save_params_err('%s/params_err_seed=%s.npy' % (out_dir, scF.init_seed))
     annealer.save_paths('%s/paths_seed=%s.npy' % (out_dir, scF.init_seed))
