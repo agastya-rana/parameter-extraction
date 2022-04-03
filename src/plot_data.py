@@ -31,17 +31,19 @@ def plot_trajectories(spec_name, scF, est_path=None, pred_path=None, plot_observ
     axs[0].set_ylabel("Stimulus ($\mu$M)")
 
     plot_no = 1
+    Lidx = 0
     for num in range(scF.nD):
         if plot_observed and num not in scF.L_idxs:
             continue
         axs[plot_no].set_ylabel(scF.model.state_names[num])
         if num in scF.L_idxs:
             ## Plot Measured Data
-            axs[num + 1].plot(full_Tt, scF.meas_data[full_range, num], color='g', label='Measured')
+            axs[plot_no].plot(full_Tt, scF.meas_data[full_range, Lidx], color='g', label='Measured')
+            Lidx += 1
         ## Plot Inferred Data
-        if est_path != None:
+        if est_path is not None:
             axs[plot_no].plot(est_Tt, est_path[:, num], color='r', lw=1, label='Estimated')
-        if pred_path != None:
+        if pred_path is not None:
             axs[plot_no].plot(pred_Tt, pred_path[:, num], color='k', lw=1, label='Predicted')
         plot_no += 1
     plt.legend()

@@ -86,7 +86,7 @@ class MWC_MM(Model):
         # True parameter dictionaries;
         self.params_set = [20., 3225., 0.5, 2.0, 0.32, 0.30, 6.0, 0.010, 0.013]
         a0 = 0.33 ## TODO: fill in equation for a where dm/dt=0
-        self.x0 = [self.params['default'][2]+0.83, a0]
+        self.x0 = [self.params_set[2]+0.83, a0]
 
         # Bounds dictionaries
         self.state_bounds = [[0.0, 4.0], [0, 1]]
@@ -96,7 +96,8 @@ class MWC_MM(Model):
         p, stim = inputs
         Mm = x[..., 0]
         FR_idx = x[..., 1]
-        K_I, K_A, m_0, alpha_m, K_R, K_B, Nn, V_R, V_B = p
+        K_I, K_A, m_0, alpha_m, K_R, K_B = self.params_set[:6]
+        Nn, V_R, V_B = p
 
         f_c = np.log((1. + stim / K_I)/(1. + stim / K_A))
         f_m = alpha_m * (m_0 - Mm)
@@ -117,6 +118,7 @@ class MWC_linear(Model):
         self.nD = 2
         self.nP = 7
         self.L_idxs = [1]
+        self.P_idxs = [-3, -2, -1]
         self.state_names = ['methyl', 'FRET index']
         self.param_names = ['K_I',
                             'K_A'
@@ -137,7 +139,8 @@ class MWC_linear(Model):
         p, stim = inputs
         Mm = x[..., 0]
         FR_idx = x[..., 1]
-        K_I, K_A, m_0, alpha_m, Nn, a_ss, slope = p
+        K_I, K_A, m_0, alpha_m = self.params_set[:4]
+        Nn, a_ss, slope = p
 
         f_c = np.log((1. + stim / K_I)/(1. + stim / K_A))
         f_m = alpha_m * (m_0 - Mm)
