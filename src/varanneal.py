@@ -456,9 +456,9 @@ class Annealer(object):
             self.NP = P0.shape[1]
 
         # get indices of parameters to be estimated by annealing
-        self.Pidx = Pidx ## check what happens when these are actually limited to the last three
+        self.Pidx = Pidx
         self.NPest = len(Pidx)
-        self.freepars = [self.N_model * self.D + i for i in self.Pidx]
+        self.freepars = np.array([self.N_model * self.D + i for i in range(len(self.Pidx))])
 
         # get indices of measured components of f
         self.Lidx = Lidx
@@ -474,7 +474,7 @@ class Annealer(object):
             for n in range(self.N_model):
                 for i in range(self.D):
                     self.bounds.append(state_b[i])
-            # set bounds on parameters
+            # set bounds on estimated parameters
             if self.P.ndim == 1:
                 # parameters are static
                 for i in range(self.NPest):
@@ -638,7 +638,7 @@ class Annealer(object):
             XPmin, exitflag, Amin = res.x, res.status, res.fun  ## Res.fun is function value at xmin
             hes = hessian(self.A)
             cov = np.linalg.inv(hes(XPmin))
-            covariance = cov[self.freepars, self.freepars]
+            covariance = cov[self.freepars, :][:, self.freepars]
             w,v = np.linalg.eig(covariance)
             err = np.array([np.sqrt(covariance[i,i]) for i in range(len(covariance))])
             print(w, err)
@@ -760,26 +760,11 @@ class Annealer(object):
                   + "parameter values to file anyway.")
 
         # write fixed parameters to array
-        if self.P.ndim == 1:
-            savearray = np.zeros((self.Nbeta, self.NPest, self.NPest),dtype=np.float64)
+        if self.P.ndim == 1 and self.NPest > 0:
+            savearray = self.params_cov
         else:
-            if self.disc.__func__.__name__ in ["disc_euler", "disc_forwardmap"]:
-                savearray = np.resize(self.P, (self.Nbeta, self.N_model - 1, self.NP))
-            else:
-                savearray = np.resize(self.P, (self.Nbeta, self.N_model, self.NP))
-        # write estimated parameters to array
-        if self.NPest > 0:
-            if self.P.ndim == 1:
-                savearray[:, -3:, -3:] = self.params_cov
-            else:
-                if self.disc.__func__.__name__ in ["disc_euler", "disc_forwardmap"]:
-                    est_param_array = np.reshape(self.minpaths[:, self.N_model*self.D:],
-                                                 (self.Nbeta, self.N_model - 1, self.NPest))
-                    savearray[:, :, self.Pidx] = est_param_array
-                else:
-                    est_param_array = np.reshape(self.minpaths[:, self.N_model*self.D:],
-                                                 (self.Nbeta, self.N_model, self.NPest))
-                    savearray[:, :, self.Pidx] = est_param_array
+            print("Use case for parameter covariance not implemented yet.")
+
         if filename.endswith('.npy'):
             np.save(filename, savearray.astype(dtype))
         else:

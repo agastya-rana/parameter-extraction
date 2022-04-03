@@ -53,7 +53,7 @@ class single_cell_FRET():
         self.stim_ts = 10  ## For block stimulus
 
         # Variables for generating/loading measured data
-        self.meas_data = None ## measured data of size (len(L_idxs), nT); can include NaN (if data measured sparsely)
+        self.meas_data = None ## measured data of size (nT, len(L_idxs)); can include NaN (if data measured sparsely)
         self.meas_file = None ## measured data file; default: forward integrating the model with the stimulus file
         self.meas_data_seed = 0 ## seed for measurement noise generation
         self.meas_noise = [0.01] ## Measurement noise for each observable component of state
@@ -61,7 +61,8 @@ class single_cell_FRET():
         # Variables for integrating model
         self.model = models.MWC_MM()  ## Dynamical model proposed to explain data
         self.nP = self.model.nP ## Number of parameters (both fixed and fitted) that the model involves
-        self.params_set = self.model.params['default']  ## Parameter set used for forward integration of the model
+        self.P_idxs = self.model.P_idxs
+        self.params_set = self.model.params_set  ## Parameter set used for forward integration of the model
         self.true_states = None  ## Stores state of integrated system over the complete timetrace TODO: better name?
         self.x0 = self.model.x0 ## Initialized value of state for model to be integrated
 
@@ -92,6 +93,9 @@ class single_cell_FRET():
             model_name = kwargs['model']
             assert hasattr(models, '%s' % model_name), 'Model class "%s" not in models module' % model_name
             exec('self.model = models.%s()' % model_name)
+            for param in MODEL_DEP_PARAMS:
+                if param in kwargs:
+                    exec('self.model.%s = %s' % (param, kwargs[param]))
             for attr in MODEL_DEP_PARAMS:
                 exec('self.%s = self.model.%s' % (attr, attr))
 
@@ -105,8 +109,10 @@ class single_cell_FRET():
                 exec('self.%s = float(val)' % key)
             elif key in LIST_PARAMS:
                 exec('self.%s = %s' % (key, val))
+            elif key == 'model':
+                pass
             else:
-                print("Parameter not recognized.")
+                print("Parameter %s not recognized." % key)
                 sys.exit(1)
 
         self.set_stim()
@@ -245,17 +251,15 @@ class single_cell_FRET():
         assert (self.nP == self.model.nP), 'self.nP != %s' % self.model.nP
         self.bounds = np.vstack((self.state_bounds, self.param_bounds))
         self.x_init = np.zeros((self.nT, self.nD))
-        self.p_init = np.zeros(self.nP)
+        self.p_init = np.zeros(len(self.P_idxs))
 
         ## Generate random initial states within state bounds over timetrace
         np.random.seed(self.init_seed)
         for iD in range(self.nD):
-            self.x_init[:, iD] = np.random.uniform(self.state_bounds[iD][0],
-                                                   self.state_bounds[iD][1], self.nT)
+            self.x_init[:, iD] = np.random.uniform(self.state_bounds[iD][0], self.state_bounds[iD][1], self.nT)
         ## Generate random initial parameters in parameter bounds
-        for iP in range(self.nP):
-            self.p_init[iP] = np.random.uniform(self.param_bounds[iP][0],
-                                                self.param_bounds[iP][1])
+        for iP in range(len(self.P_idxs)):
+            self.p_init[iP] = np.random.uniform(self.param_bounds[iP][0], self.param_bounds[iP][1])
 
     def df_estimation(self, t, x, inputs):
         """
@@ -305,8 +309,9 @@ class single_cell_FRET():
         """
         assert len(self.x0) == self.nD, "Initial state has dimension %s != " \
                                         "model dimension %s" % (len(self.x0), self.nD)
+        est_params = [self.params_set[i] for i in self.P_idxs]
         self.true_states = odeint(self.df_data_generation, self.x0, self.Tt,
-                                  args=(self.params_set,))
+                                  args=(est_params,))
 
 def create_cell_from_mat(dir, mat_file, cell):
     """Save stimulus and measurement files from FRET recording"""

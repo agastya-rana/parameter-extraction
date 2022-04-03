@@ -67,6 +67,15 @@ def save_pred_data(data_dict, data_flag):
         pickle.dump(data_dict, f, pickle.HIGHEST_PROTOCOL)
     print('Prediction data saved to %s.' % (data_flag))
 
+def save_annealing(data_dict, data_flag):
+    out_dir = '%s/objects/%s' % (DATA_DIR, data_flag)
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
+    filename = '%s/annealing_results.pkl' % out_dir
+    with open(filename, 'wb') as f:
+        pickle.dump(data_dict, f, pickle.HIGHEST_PROTOCOL)
+    print('Varanneal data saved to %s.' % (data_flag))
+
 def save_estimates(scF, annealer, data_flag):
     out_dir = '%s/objects/%s' % (DATA_DIR, data_flag)
     if not os.path.exists(out_dir):

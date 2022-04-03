@@ -5,7 +5,7 @@ Agastya Rana, 11/12/2021.
 """
 
 import os
-from local_methods import def_data_dir
+from src.local_methods import def_data_dir
 import json
 
 data_dir = def_data_dir()
@@ -40,27 +40,8 @@ def read_specs_file(spec_name, data_dir=data_dir):
     with open(filename, 'r') as specs_file:
         data = json.load(specs_file)
     print('\n -- Input vars and params loaded from %s.txt\n' % spec_name)
-    return data
 
-
-def compile_all_run_vars(list_dict):
-    """
-    Grab all the run variables from the specifications file, and aggregate
-    as a complete dictionary of variables to be specified and/or overriden
-    in the single_cell_FRET_VA object.
-
-    Args:
-        list_dict: dictionary containing at least 2 keys; data_vars and
-            est_vars. These are read through read_specs_file()
-            function in this module. Only these two keys are read
-            in this module; other keys may exist, but will be ignored.
-
-    Returns:
-        vars_to_pass: dictionary whose keys are all variables to be overriden
-        in the single_cell_FRET class when initialized.
-    """
-
-    vars_to_pass = dict()
-    vars_to_pass.update(list_dict['data_vars'])
-    vars_to_pass.update(list_dict['est_vars'])
-    return vars_to_pass
+    out_dict = dict()
+    out_dict.update(data['data_vars'])
+    out_dict.update(data['est_vars'])
+    return out_dict

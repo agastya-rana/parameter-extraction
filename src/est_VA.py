@@ -10,13 +10,14 @@ import sys
 from src.load_data import load_est_data_VA, load_pred_data
 from src.varanneal import *
 from src.single_cell_FRET import single_cell_FRET
-from src.load_specs import read_specs_file, compile_all_run_vars
-from src.save_data import save_pred_data, save_stim, save_true_states, save_meas_data, save_estimates
+from src.load_specs import read_specs_file
+from src.save_data import save_pred_data, save_stim, save_true_states, save_meas_data, save_estimates, save_annealing
 from src.plot_data import plot_trajectories
 
 def create_cell(spec_name, save_data=False):
     list_dict = read_specs_file(spec_name)
     scF = single_cell_FRET(**list_dict)
+    scF.set_meas_data()
     if save_data:
         save_stim(scF, spec_name)
         save_meas_data(scF, save_data)
@@ -52,7 +53,7 @@ def est_VA(spec_name, scF, init_seed=None, save_data=True, beta_inc=1, beta_mid=
     Rm = 1.0/sp.asarray(scF.meas_noise)**2.0
     P_idxs = scF.model.P_idxs
     scF.beta_increment = beta_inc
-    scF.beta_array = range(beta_mid - beta_inc*beta_width, beta_mid + beta_inc*beta_width, beta_inc)
+    scF.beta_array = np.arange(beta_mid - beta_inc*beta_width, beta_mid + beta_inc*beta_width, beta_inc)
 
     # Estimate
     BFGS_options = {'gtol':1.0e-8, 'ftol':1.0e-8, 'maxfun':1000000, 'maxiter':1000000}
@@ -72,45 +73,54 @@ def var_anneal(spec_name, scF=None, seed_range=[0], plot=True, beta_precision=0.
     Store output (optimal beta, optimal trajectory, predicted trajectory, trajectory error) in dictionary
     """
     b_inc = 1
-    b_mid = 40
-    b_width = 10
-
+    b_mid = 31
+    b_width = 15
+    first = True
     ## Make simulated cell if cell doesn't already exist
     if scF == None:
         scF = create_cell(spec_name)
 
     while b_inc > beta_precision:
-        for seed in seed_range:
-            est_VA(spec_name, scF, init_seed=seed, beta_inc=b_inc, beta_mid=b_mid, beta_width=b_width)
+        if first:
+            for seed in seed_range:
+                est_VA(spec_name, scF, init_seed=seed, beta_inc=b_inc, beta_mid=31, beta_width=30)
+            first = False
+        else:
+            for seed in seed_range:
+                est_VA(spec_name, scF, init_seed=seed, beta_inc=b_inc, beta_mid=b_mid, beta_width=b_width)
         b_mid = minimize_pred_error(spec_name, seed_range)['beta']
         b_inc = b_inc/4
-    scF = est_VA(spec_name, scF, init_seed=seed, beta_inc=1, beta_mid=b_mid, beta_width=1)
+    scF = est_VA(spec_name, scF, init_seed=0, beta_inc=0.00001, beta_mid=b_mid, beta_width=0.000001)
     trajectory_data = minimize_pred_error(spec_name, seed_range, store_data=True)
     est_path = trajectory_data['opt_traj']
     pred_path = generate_predictions(spec_name)
 
-    ## Need to pull parameter estimate and parameter error from scF and saved errors to return later
+    d = load_est_data_VA(spec_name) ## template scF which has the important variables to be used later
+    params = d['params'][-1]
+    params_err = d['params_err'][-1, :, :]
 
     if plot:
-        plot_trajectories(spec_name, scF, est_path, pred_path)
+        plot_trajectories(spec_name, scF, est_path, pred_path, plot_observed=True)
 
-    out_dict = {'cell': scF, 'traj': trajectory_data, 'pred': pred_path}
+    out_dict = {'cell': scF, 'traj': trajectory_data, 'pred': pred_path, 'params': params, 'params_err': params_err}
+    if save_data:
+        save_annealing(out_dict, spec_name)
     return out_dict
 
-def generate_predictions(specs_name):
+def generate_predictions(spec_name):
     """
     Generate predictions for prediction time windows using estimated parameter sets from variational annealing estimations.
     Args:
-        specs_name: name of specs object from which VA data will be loaded
+        spec_name: name of specs object from which VA data will be loaded
         seed_range: list of seed values that VA was run on - default is just 0 (stored as [0])
     """
 
-    data = load_pred_data(specs_name)
-    scF = load_est_data_VA(specs_name) ## template scF which has the important variables to be used later
+    data = load_pred_data(spec_name)
+    scF = load_est_data_VA(spec_name)['obj'] ## template scF which has the important variables to be used later
     scF.Tt = scF.Tt[scF.pred_wind_idxs]
     scF.stim = scF.stim[scF.pred_wind_idxs]
     scF.meas_data = scF.meas_data[scF.pred_wind_idxs]
-    scF.x0 = data['opt_traj'][-1, :]
+    scF.x0 = data['opt_traj'][-1, 1:]
     scF.params_set = data['params']
     scF.forward_integrate()
     prediction = scF.true_states
@@ -153,7 +163,7 @@ def minimize_pred_error(specs_name, seed_range=[0], store_data=False):
         opt_beta_idx = -1
         min_err = None
         for beta_idx in range(len(scF.beta_array)):
-            scF.x0 = data_dict['paths'][beta_idx, -1, :]
+            scF.x0 = data_dict['paths'][beta_idx, -1, 1:] ## -1 for last time point, 1 for removing time from path
             scF.params_set = data_dict['params'][beta_idx, :]
             scF.forward_integrate()
             traj_err = np.sum((scF.true_states[:, scF.L_idxs] - scF.meas_data) ** 2.0) / len(scF.Tt)
