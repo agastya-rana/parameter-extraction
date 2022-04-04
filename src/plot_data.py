@@ -47,9 +47,9 @@ def plot_trajectories(spec_name, scF, est_path=None, pred_path=None, plot_observ
             Lidx += 1
         ## Plot Inferred Data
         if est_path is not None:
-            axs[plot_no].plot(est_Tt, est_path[:, num], color='r', lw=1, label='Estimated')
+            axs[plot_no].plot(est_Tt, est_path[:, num+1], color='r', lw=1, label='Estimated')
         if pred_path is not None:
-            axs[plot_no].plot(pred_Tt, pred_path[:, num], color='k', lw=1, label='Predicted')
+            axs[plot_no].plot(pred_Tt, pred_path[:, num+1], color='k', lw=1, label='Predicted')
         plot_no += 1
     plt.legend()
 
