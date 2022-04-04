@@ -11,9 +11,6 @@ import matplotlib.pyplot as plt
 from src.plot_data import plot_params
 main_dir = def_data_dir()
 
-## Proof of concept steps
-
-
 ## Make specs file
 sp_name = 'simulation_example'
 filename = '%s/specs/%s.txt' % (main_dir, sp_name)
