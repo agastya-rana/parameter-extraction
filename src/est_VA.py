@@ -25,19 +25,6 @@ def create_cell(spec_name, save_data=False):
             save_true_states(scF, save_data)
     return scF
 
-def simulate_data(scF, save_data=None):
-    """
-    Generates simulated data given prescribed parameter set and one of stimulus or stimulus generation protocol.
-    If save_data is a spec_name string, data is saved.
-    Args:
-        spec_name: name of specs file
-    Returns:
-        Inferred parameter set
-    """
-    # Load specifications from file; to be passed to single_cell_FRET object
-
-    return scF
-
 def est_VA(spec_name, scF, init_seed=None, save_data=True, beta_inc=1, beta_mid=31, beta_width=30):
 
     if init_seed != None:
@@ -125,7 +112,7 @@ def generate_predictions(spec_name):
     scF.x0 = data['opt_traj'][-1, 1:]
     scF.params_set = data['params']
     scF.forward_integrate()
-    prediction = scF.true_states
+    prediction = np.hstack((np.reshape(scF.Tt, (-1, 1)), scF.true_states))
     return prediction
 
 def minimize_pred_error(specs_name, seed_range=[0], store_data=False):
