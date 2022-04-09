@@ -18,12 +18,11 @@ import collections
 from src.load_data import load_FRET_recording
 from src.save_data import save_stim, save_meas_data
 
-MODEL_DEP_PARAMS = ['nD', 'nP', 'L_idxs', 'P_idxs', 'state_bounds', 'param_bounds', 'x0']
-INT_PARAMS = ['nT', 'est_beg_T', 'est_end_T', 'pred_end_T', 'step_stim_density', 'step_stim_seed']
-LIST_PARAMS = ['x0', 'beta_array', 'meas_noise', 'params_set', 'state_bounds', 'param_bounds', 'stim_params', 'step_stim_vals']
-FLOAT_PARAMS = ['stim_l1', 'stim_ts']
-STR_PARAMS = ['stim_file', 'stim_type', 'stim_smooth_type', 'meas_file']
-DICT_PARAMS = ['stim_protocol']
+MODEL_DEP_PARAMS = ['nD', 'nP', 'L_idxs', 'P_idxs', 'state_bounds', 'param_bounds', 'x0', 'dt']
+INT_PARAMS = ['nT', 'est_beg_T', 'est_end_T', 'pred_end_T', 'data_skip']
+FLOAT_PARAMS = ['dt']
+LIST_PARAMS = ['x0', 'beta_array', 'meas_noise', 'params_set', 'state_bounds', 'param_bounds', 'stim_protocol']
+STR_PARAMS = ['stim_file', 'meas_file']
 
 class single_cell_FRET():
     """
@@ -33,24 +32,24 @@ class single_cell_FRET():
         ## Timetrace Variables
         self.nD = 2  ## Number of data dimensions
         self.dt = 0.1  ## Model timestep
+        self.dt_data = 0.1 ## Timestep of data
+        self.data_skip = 1 ## Integer denoting after every x model timepoints the data is checked
         self.nT = 0  ## Number of model timepoints
         self.Tt = np.arange(0, self.dt * self.nT, self.dt)  ## List of timepoints (timetrace)
         self.L_idxs = [1]  ## Indices of the observable (non-hidden) components of the state vector
 
-        # Stimulus Variables - TODO: make this into a dictionary
+        # Stimulus Variables
         self.stim = None  ## List of stimulus values at times given by Tt
         self.stim_file = None  ## Filename of stimulus file within the /stim/ directory
-        self.stim_type = 'step'  ## Type of stimulus to be generated
-        self.stim_smooth_dt = None  ## TODO: ??
-        self.stim_smooth_type = 'gaussian'  ## TODO: ??
-        self.stim_random_seed = 1  ## Seed for random generation of stimulus
-        self.stim_no_changes = 30  ## Number of stim changes in timetrace
-        self.stim_vals = [0.085, 0.1, 0.115]  ## Stimulus values used
-        self.stim_bg = self.stim_vals[1]
-        self.stim_params = None
-        self.stim_l1 = 0  ## For block stimulus
-        self.stim_l2 = None
-        self.stim_ts = 10  ## For block stimulus
+
+        ## Stimulus generation variables
+        self.stim_protocol = {
+            'type' : 'step',  ## Type of stimulus to be generated
+            'random_seed' : 1,  ## Seed for random generation of stimulus
+            'no_changes' : 30,  ## Number of stim changes in timetrace
+            'vals' : [0.085, 0.1, 0.115],  ## Stimulus values used
+            'bg' : [0.1],
+        }
 
         # Variables for generating/loading measured data
         self.meas_data = None ## measured data of size (nT, len(L_idxs)); can include NaN (if data measured sparsely)
@@ -63,7 +62,7 @@ class single_cell_FRET():
         self.nP = self.model.nP ## Number of parameters (both fixed and fitted) that the model involves
         self.P_idxs = self.model.P_idxs
         self.params_set = self.model.params_set  ## Parameter set used for forward integration of the model
-        self.true_states = None  ## Stores state of integrated system over the complete timetrace TODO: better name?
+        self.true_states = None  ## Stores state of integrated system over the complete timetrace
         self.x0 = self.model.x0 ## Initialized value of state for model to be integrated
 
         # Variables for estimation and prediction windows
@@ -142,60 +141,97 @@ class single_cell_FRET():
         self.nT = len(self.Tt)
         self.stim = Tt_stim[:, 1]
 
-    def generate_stim(self): ## TODO: check this
+    def generate_stim(self):
         """
-        Generate a stimulus of type stim_type.
+        Generate a stimulus of type stim_protocol[stim_type].
         'random_switch': switch stimulus to new random level a set number of times at random points
+        'stochastic': switch stimulus stochastically at each time point such that approx stim_no_changes happen
+        'block': blocks starting at bg, going up to bg+l1, down to bg+l2, where l1,l2 can vary for each block
         """
-        ## Stochastic
-        stim_type = self.stim_type
-        if stim_type == 'random_switch':
-            assert self.stim_no_changes < self.nT, "Number of stimulus changes must be " \
+        try:
+            type = self.stim_protocol['stim_type']
+        except:
+            print("Stimulus type not specified in stim dictionary")
+            sys.exit(1)
+
+        if type == 'random_switch':
+            try:
+                no_changes = self.stim_protocol['no_changes']
+                vals = self.stim_protocol['vals']
+                bg = self.stim_protocol['bg']
+                seed = self.stim_protocol['seed']
+            except:
+                print("Stimulus parameters not correctly supplied for stim type %s" % type)
+                sys.exit(1)
+
+            assert no_changes < self.nT, "Number of stimulus changes must be " \
                                                    "less than number of time points, but # changes = %s, # time " \
                                                    "points = %s" \
-                                                   % (self.nT, self.stim_no_changes)
+                                                   % (self.nT, no_changes)
             self.stim = np.zeros(self.nT)
             # Get points at which to switch the step stimulus
-            np.random.seed(self.stim_random_seed)
-            switch_pts = np.sort(np.random.choice(self.nT, self.stim_no_changes))
+            np.random.seed(seed)
+            switch_pts = np.sort(np.random.choice(self.nT, no_changes))
             # Set values in each inter-switch interval from step_stim_vals array
-            for i in range(self.stim_no_changes - 1):
-                stim_val = np.random.choice(self.stim_vals)
+            for i in range(no_changes - 1):
+                stim_val = np.random.choice(vals)
                 self.stim[switch_pts[i]: switch_pts[i + 1]] = stim_val
             # Fill in ends with background
-            self.stim[:switch_pts[0]] = self.stim_bg
-            self.stim[switch_pts[-1]:] = self.stim_bg
+            self.stim[:switch_pts[0]] = bg
+            self.stim[switch_pts[-1]:] = bg
 
-        elif stim_type == 'stochastic':
+        elif type == 'stochastic':
+            try:
+                no_changes = self.stim_protocol['no_changes']
+                vals = self.stim_protocol['vals']
+                bg = self.stim_protocol['bg']
+            except:
+                print("Stimulus parameters not correctly supplied for stim type %s" % type)
+                sys.exit(1)
             ## Create transition matrix
-            levels = len(self.stim_vals)
+            levels = len(vals)
             transtemp = np.zeros((levels, levels))
-            p = self.stim_no_changes / self.nT
+            p = no_changes / self.nT
             sensible = collections.deque([1 - p] + [p / (levels - 1)] * (levels - 1))
             transition = np.copy(transtemp)
             for i in range(levels):
                 transition[i] = list(sensible)
                 sensible.rotate(1)
             self.stim = np.zeros(self.nT)
-            self.stim[0] = self.stim_bg
+            self.stim[0] = bg
             for i in range(1, self.nT):
-                self.stim[i] = np.random.choice(self.stim_vals, p=transition[self.stim[i - 1]])
+                self.stim[i] = np.random.choice(vals, p=transition[self.stim[i - 1]])
 
-        elif stim_type == 'block':  ## TODO: Finish other stimulus inputs; clean this up too
+        elif type == 'block':
+            try:
+                bg = self.stim_protocol['stim_bg']
+            except:
+                print("Stimulus parameters not correctly supplied for stim type %s" % type)
+                sys.exit(1)
             ## t_s, dl_1, dl_2 must be kwargs
             self.stim = np.zeros(self.nT)
-            adapt_time = 30  ## time given for adaptation
-            pre_stim = 10
-            t_s, l1 = self.stim_params
-            if self.stim_l2 == None:
-                l2 = -self.stim_l1
-            else:
-                l2 = self.stim_l2
-            block = np.concatenate((np.ones(int(pre_stim / self.dt)) * self.stim_bg,
-                                    np.ones(int(t_s / self.dt)) * (self.stim_bg + l1),
-                                    np.ones(int(adapt_time / self.dt)) * self.stim_bg))
-            repeats = self.nT // len(block)
-            for i in range(repeats):
+            try:
+                adapt_time = self.stim_protocol['adapt_time']
+                pre_stim = self.stim_protocol['pre_stim']
+                t_s = self.stim_protocol['t_s']
+            except:
+                adapt_time = 20  ## time given for adaptation
+                pre_stim = 20
+                t_s = 5
+            block_time = adapt_time+pre_stim+t_s
+            blocks = self.nT // (block_time/self.dt)
+            try:
+                l1 = self.stim_protocol['l1']
+                l2 = self.stim_protocol['l2']
+            except:
+                assert self.stim_protocol['vals'], 'Stimulus values to generate blocks do not exist'
+                vals = self.stim_protocol['vals']
+                l1 = np.random.choice(vals, blocks) - bg
+                l2 = np.random.choice(vals, blocks) - bg
+            for i in range(blocks):
+                block = np.concatenate((np.ones(int(pre_stim / self.dt)) * bg,
+                                        np.ones(int(t_s / self.dt)) * (bg + l1[i]),
+                                        np.ones(int(adapt_time / self.dt)) * (bg + l2[i])))
                 self.stim[i * len(block):(i + 1) * len(block)] = block
             print(len(self.Tt), len(self.stim))
 
@@ -220,13 +256,11 @@ class single_cell_FRET():
         else:
             assert self.stim is not None, "No stimulus file specified to forward integrate model with."
             self.forward_integrate()
-            self.meas_data = np.zeros((self.nT, len(self.L_idxs)))
+            self.meas_data = np.zeros((self.nT/self.data_skip, len(self.L_idxs)))
             np.random.seed(self.meas_data_seed)
-            assert len(self.meas_noise) == len(self.L_idxs), "meas_noise must " \
-                                                             "be a list of length L_idxs = %s" % len(self.L_idxs)
-            ## TODO: allow measurement noise to vary over time
             for iL_idx, iL in enumerate(self.L_idxs):
-                self.meas_data[:, iL_idx] = self.true_states[:, iL] + np.random.normal(0, self.meas_noise[iL_idx], self.nT)
+                self.meas_data[:, iL_idx] = self.true_states[::self.data_skip, iL] + \
+                                            np.random.normal(0, self.meas_noise[iL_idx], self.nT/self.data_skip)
 
     def import_meas_data(self):
         """
@@ -234,9 +268,12 @@ class single_cell_FRET():
 		"""
         Tt_meas_data = load_meas_file(self.meas_file)
         self.meas_data = Tt_meas_data[:, 1:] ## to remove time column
-        ## TODO: allow the observed timetrace to be different from the input stimulus timetrace.
-        assert (np.all(Tt_meas_data[:, 0] == self.Tt)), "Tt vector in " \
-                                                        "measured data file must be same as Tt"
+        self.dt_data = Tt_meas_data[1, 0] - Tt_meas_data[1, 0]
+        self.data_skip = int(self.dt_data/self.dt)
+        if not np.all(Tt_meas_data[:, 0] == self.Tt):
+            print("Usecase: sparse data")
+            ## TODO: implement validation for this
+            print("Make sure that dt_data is a multiple of dt_model and that ends on a data timepoint")
         assert self.meas_data.shape[1] == len(self.L_idxs), "Dimension of " \
                                                             "imported measurement vectors must be same as length of " \
                                                             "L_idxs "

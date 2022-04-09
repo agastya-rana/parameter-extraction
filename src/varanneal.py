@@ -54,41 +54,15 @@ class Annealer(object):
         self.f = f ## Dynamical model f(t, x, (p, stim))
         self.D = D ## Dimension of the dynamical model
 
-    def set_data_from_file(self, data_file, stim_file=None, nstart=0, N=None):
-        """
-        Load data & stimulus time series from file.
-        If data is a text file, must be in multi-column format with L+1 columns:
-            t  y_1  y_2  ...  y_L
-        If a .npy archive, should contain an N X (L+1) array with times in the
-        zeroth element of each entry.
-        Column/array formats should also be in the form t  s_1  s_2 ...
-        """
-        if data_file.endswith('npy'):
-            data = np.load(data_file)
-        else:
-            data = np.loadtxt(data_file)
-
-        self.t_data = data[:, 0]
-        self.dt_data = self.t_data[1] - self.t_data[0]
-        self.Y = data[:, 1:]
-
-        if stim_file is not None:
-            if stim_file.endswith('npy'):
-                s = np.load(stim_file)
-            else:
-                s = np.loadtxt(stim_file)
-            self.stim = s[:, 1:]
-        else:
-            self.stim = None
-
-        self.dt_data = self.t_data[1] - self.t_data[0]
-
-    def set_data(self, data, stim=None, t=None, nstart=0, N=None):
+    def set_data(self, data, stim=None, t=None, nstart=0, N=None, dt_model=None):
         """
         Directly pass in data and stim arrays
         If you pass in t, it's assumed y/stim does not contain time.  Otherwise,
         it has to contain time in the zeroth element of each sample.
         """
+
+        ## TODO: finish this to make sure that t_stim is t_model (no point establishing this difference since
+        ## stimulus can (and should be discretized to the model point)
         if N is None:
             self.N_data = data.shape[0]
         else:
@@ -111,6 +85,22 @@ class Annealer(object):
             else:
                 self.stim = None
 
+        # Separate dt_data and dt_model not supported yet if there is an external stimulus.
+        if dt_model is not None and dt_model != self.dt_data and self.stim is not None:
+            print("Error! Separate dt_data and dt_model currently not supported with an " +\
+                  "external stimulus. Exiting.") ## TODO: try to improve on this - can dt_model not be less than dt_data
+            sys.exit(1)
+        else:
+            if dt_model is None: ## normal use case with non-sparse data
+                self.dt_model = self.dt_data
+                self.N_model = self.N_data
+                self.merr_nskip = 1
+                self.t_model = np.copy(self.t_data)
+            else: ## allows for sparsity in data, but need to figure out how stimulus is coded (make sure it's coded on dt_model)
+                self.dt_model = dt_model
+                self.merr_nskip = int(self.dt_data / self.dt_model)
+                self.N_model = (self.N_data - 1) * self.merr_nskip + 1
+                self.t_model = np.linspace(self.t_data[0], self.t_data[-1], self.N_model)
 
     ############################################################################
     # Gaussian action
@@ -263,7 +253,6 @@ class Annealer(object):
 
         fn = self.f(self.t_model[:-1], x[:-1], pn)
         fnp1 = self.f(self.t_model[1:], x[1:], pnp1)
-        ## WHY IS THIS THROWING AN ERROR NOW - CHECK VARANNEAL ON PYTHON 2
         return self.dt_model * (fn + fnp1) / 2.0
 
     #Don't use RK4 yet, still trying to decide how to implement with a stimulus.
@@ -415,7 +404,7 @@ class Annealer(object):
                 self.save_action_errors(track_action_errors['filename'], cmpt, dtype, fmt)
             
 
-    def anneal_init(self, X0, P0, alpha, beta_array, RM, RF0, Lidx, Pidx, dt_model=None,
+    def anneal_init(self, X0, P0, alpha, beta_array, RM, RF0, Lidx, Pidx,
                     init_to_data=True, action='A_gaussian', disc='trapezoid',
                     method='L-BFGS-B', bounds=None, opt_args=None):
         """
@@ -426,23 +415,6 @@ class Annealer(object):
             return None
         else:
             self.method = method
-
-        # Separate dt_data and dt_model not supported yet if there is an external stimulus.
-        if dt_model is not None and dt_model != self.dt_data and self.stim is not None:
-            print("Error! Separate dt_data and dt_model currently not supported with an " +\
-                  "external stimulus. Exiting.") ## TODO: try to improve on this - can dt_model not be less than dt_data
-            sys.exit(1)
-        else:
-            if dt_model is None: ## normal use case
-                self.dt_model = self.dt_data
-                self.N_model = self.N_data
-                self.merr_nskip = 1
-                self.t_model = np.copy(self.t_data)
-            else:
-                self.dt_model = dt_model
-                self.merr_nskip = int(self.dt_data / self.dt_model)
-                self.N_model = (self.N_data - 1) * self.merr_nskip + 1
-                self.t_model = np.linspace(self.t_data[0], self.t_data[-1], self.N_model)
 
         # get optimization extra arguments
         self.opt_args = opt_args
@@ -647,7 +619,7 @@ class Annealer(object):
             for e in w:
                 if e < 0:
                     pass
-                    #flag = False - TODO: switching off for now to see all eigenvalues but switch on later
+                    flag = False
             print(flag)
 
             print("Optimization complete!")
