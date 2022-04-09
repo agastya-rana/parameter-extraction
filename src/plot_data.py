@@ -7,7 +7,7 @@ Created by Nirag Kadakia and Agastya Rana, 11/18/21.
 import os
 import scipy as sp
 import numpy as np
-from src.utils import gauss
+from src.utils import gauss, circle
 from single_cell_FRET import single_cell_FRET
 from load_data import load_stim_file, load_meas_file
 import matplotlib
@@ -119,10 +119,13 @@ def plot_params(params, params_err, pnames, spec_name):
             mu = np.asarray([params[i], params[j]])
             if i != j:
                 sigma = np.asarray([[params_err[i, i], params_err[i, j]], [params_err[j, i], params_err[j, j]]])
+                x, y, z = gauss(mu, sigma)
+                axs[i, j].contour(x, y, z)
             else:
-                sigma = np.asarray([[params_err[i, i], 0], [0, params_err[j, j]]])
-            x, y, z = gauss(mu, sigma)
-            axs[i, j].contour(x, y, z)
+                mu = mu[0]
+                std = np.sqrt(params_err[i, i])
+                x, y, z = circle(mu, std)
+                axs[i, j].contour(x, y, z, [1.0, 2.0, 3.0], colors=['green', 'orange', 'red'])
             axs[i, j].set_xlabel(pnames[i])
             axs[i, j].set_ylabel(pnames[j])
     out_dir = '%s/plots/%s' % (data_dir, spec_name)

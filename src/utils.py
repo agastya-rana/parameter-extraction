@@ -34,6 +34,15 @@ def gauss(mu, sigma):
     return xmesh, ymesh, z
 
 
+
+def circle(mu, std):
+    n = 1000
+    x = np.linspace(mu - 4 * std, mu + 3 * std, n)
+    xmesh, ymesh = np.meshgrid(x, x)
+    pos = np.dstack((xmesh, ymesh))
+    z = np.sqrt(np.square(xmesh-mu)+np.square(ymesh-mu))/std
+    return xmesh, ymesh, z
+
 def create_sample_json(filename):
     data_dir = def_data_dir()
     data_vars = {'nD': 2, 'nT': 500, 'nP': 7, 'dt': 0.5, 'stim_type': 'block', 'stim_params': [0.01],

@@ -7,16 +7,14 @@ from src.local_methods import def_data_dir
 from src.est_VA import create_cell, est_VA, var_anneal, minimize_pred_error
 from src.load_data import load_est_data_VA
 import numpy as np
-import matplotlib.pyplot as plt
-from src.plot_data import plot_params
 main_dir = def_data_dir()
 
-## Make specs file
-sp_name = 'simulation_example'
+sp_name = 'sim_0.05_lin'
 filename = '%s/specs/%s.txt' % (main_dir, sp_name)
-data_vars = {'stim_file': 'decent_stimulus', 'meas_noise': [0.01]}
-## Set the model, parameters, and estimation, prediction windows
-est_vars = {'model': 'MWC_linear', 'params_set': [20., 3225., 0.5, 2.0, 6.0, 0.33, -0.05], 'est_beg_T': 30, 'est_end_T': 280, 'pred_end_T': 380}
+data_vars = {'stim_file': 'decent_stimulus', 'meas_noise': [0.05]}
+est_vars = {'model': 'MWC_linear',
+            'params_set': [20., 3225., 0.5, 2.0, 6.0, 0.33, -0.05],
+            'est_beg_T': 30, 'est_end_T': 280, 'pred_end_T': 380}
 specifications = {'data_vars': data_vars, 'est_vars': est_vars}
 with open(filename, 'w') as outfile:
     json.dump(specifications, outfile, indent=4)
@@ -24,6 +22,13 @@ with open(filename, 'w') as outfile:
 ## Run est_va on normal beta range (so default params)
 cell = create_cell(sp_name, save_data=False)
 cell = est_VA(sp_name, cell)
+
+import matplotlib.pyplot as plt
+import os
+out_dir = '%s/plots/%s' % (main_dir, sp_name)
+if not os.path.exists(out_dir):
+    os.makedirs(out_dir)
+print(out_dir)
 
 ## Manually extract covariance file from storage, for each beta, calculate eigenvalues of matrix and plot
 est_dict = load_est_data_VA(sp_name)
@@ -37,18 +42,15 @@ for beta_idx in range(len(cell.beta_array)):
     print(w, err)
 for i in range(3):
     plt.scatter(cell.beta_array[20:], np.log(eigenvalues[:, i][20:]))
-plt.savefig('eigenvalues.png')
+plt.savefig('%s/%s_eigenvalues.png' % (out_dir, sp_name))
 plt.close()
 
-import matplotlib.pyplot as plt
-import os
-out_dir = '%s/plots/%s' % (main_dir, sp_name)
-if not os.path.exists(out_dir):
-    os.makedirs(out_dir)
-print(out_dir)
+
 traj_dict = minimize_pred_error(sp_name)
 t = traj_dict['errors']
-plt.scatter([i for i in range(len(t))], t)
+plt.scatter([i for i in range(len(t))[30:]], np.log(t[30:]))
+plt.xlabel("Beta")
+plt.ylabel("Trajectory Errors")
 plt.savefig('%s/traj_err.png' % out_dir)
 plt.close()
 
