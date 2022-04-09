@@ -1,25 +1,23 @@
 """
 Dynamical models and state bounds for FRET data assimilation.
+
 Created by Nirag Kadakia and Agastya Rana, 10-21-2021.
 """
 
 import autograd.numpy as np
 
-class CellModel():
-    nD = 2 ## dimensions of the model
-    L_idxs = [1] ## state csomponent indices that are observable
-    state_names = ['methyl', 'FRET index']
-    dt = 0.5
+class Model():
     def __init__(self):
+        self.nD = 2
         self.nP = 0
         self.x0 = [0, 0]  ## initial, equilibrium state of the system
-        self.constant_names = [] ## names of fixed constants
-        self.param_names = [] ## names of variable parameters
+        self.state_names = ['methyl', 'FRET index']
+        self.param_names = [] ## names of parameters
         self.P_idxs = [-1]  ## parameter indices that very
-        self.constant_set = [] ## True fixed parameters
-        self.params_set = [] ## True variable parameter values
+        self.L_idxs = [1]  ## state component indices that are observable
+        self.params_set = [] ## True parameter dictionaries
         self.state_bounds = [[0.0, 4.0], [0, 1]] ## bounds of state components
-        self.param_bounds = [[4, 8], [0.001, 0.1], [0.001, 0.1]] ## [lower, upper] only for variable parameters
+        self.param_bounds = [[4, 8], [0.001, 0.1], [0.001, 0.1]] ## [lower, upper] only for P_idxs parameters
 
     def df(self, t, x, p, stim):
         """
@@ -42,7 +40,8 @@ class CellModel():
         df_vec = np.array([x1 * p1, x2]).T
         return df_vec
 
-class MWC_MM(CellModel):
+
+class MWC_MM(Model):
     """
 	MWC model for activity; Michaelis-Menten model for methylation/demethylation.
 	Assume K_I, m_0, alpha_m, K_R, K_B are fixed; narrowly constrain these bounds.
@@ -50,21 +49,24 @@ class MWC_MM(CellModel):
 	"""
 
     def __init__(self):
-        super().__init__()
+        self.nD = 2
         self.nP = 9
+        self.L_idxs = [1]
         self.P_idxs = [-3, -2, -1]
-        self.constant_names = ['K_I', 'K_A', 'm_0', 'alpha_m', 'K_R', 'K_B']
-        self.param_names = ['Nn', 'V_R', 'V_B']
-        self.constant_set = [20., 3225., 0.5, 2.0, 0.32, 0.30]
-        self.params_set = [6.0, 0.010, 0.013]
-        self.x0 = [self.constant_set[2]+0.83, 0.33]
+        self.state_names = ['methyl', 'FRET index']
+        self.param_names = ['K_I', 'K_A', 'm_0', 'alpha_m', 'K_R', 'K_B', 'Nn', 'V_R', 'V_B']
+        self.params_set = [20., 3225., 0.5, 2.0, 0.32, 0.30, 6.0, 0.010, 0.013]
+        a0 = 0.33
+        self.x0 = [self.params_set[2]+0.83, a0]
+        self.state_bounds = [[0.0, 4.0], [0, 1]]
         self.param_bounds = [[4, 8], [0.001, 0.1], [0.001, 0.1]] ## N, V_R, V_B
+        self.dt = 0.5 ## dt of the dynamical model
 
     def df(self, t, x, inputs):
         p, stim = inputs
         Mm = x[..., 0]
         FR_idx = x[..., 1]
-        K_I, K_A, m_0, alpha_m, K_R, K_B = self.constant_set
+        K_I, K_A, m_0, alpha_m, K_R, K_B = self.params_set[:6]
         Nn, V_R, V_B = p
         f_c = np.log((1. + stim / K_I)/(1. + stim / K_A))
         f_m = alpha_m * (m_0 - Mm)
@@ -73,7 +75,7 @@ class MWC_MM(CellModel):
         df_vec = np.array([V_R*(1 - Aa)/(K_R + (1 - Aa)) - V_B*Aa/(K_B + Aa), (Aa - FR_idx) / self.dt]).T
         return df_vec
 
-class MWC_linear(CellModel):
+class MWC_linear(Model):
     """
 	MWC model for activity; linear model for methylation/demethylation.
 	Assume K_I, m_0, alpha_m, K_R, K_B are fixed; narrowly constrain these bounds.
@@ -81,21 +83,23 @@ class MWC_linear(CellModel):
 	"""
 
     def __init__(self):
-        super().__init__()
+        self.nD = 2
         self.nP = 7
+        self.L_idxs = [1]
         self.P_idxs = [-3, -2, -1]
-        self.constant_names = ['K_I', 'K_A', 'm_0', 'alpha_m']
-        self.param_names = ['Nn', 'a_ss', 'slope']
-        self.constant_set = [20., 3225., 0.5, 2.0]
-        self.params_set = [6.0, 0.33, -0.01]
-        self.x0 = [self.constant_set[2]+0.83, self.params_set[1]] ## 0.83 correction needed for 100 uM bg
+        self.state_names = ['methyl', 'FRET index']
+        self.param_names = ['K_I', 'K_A', 'm_0', 'alpha_m', 'Nn', 'a_ss', 'slope']
+        self.params_set = [20., 3225., 0.5, 2.0, 6.0, 0.33, -0.01]
+        self.x0 = [self.params_set[2]+0.83, self.params_set[-2]] ## 0.83 correction needed for 100 uM bg
+        self.state_bounds = [[0.0, 4.0], [0, 1]]
         self.param_bounds = [[4, 15], [0., 1.], [-0.5, 0.5]] ## N, a_ss, slope
+        self.dt = 0.5
 
     def df(self, t, x, inputs):
         p, stim = inputs
         Mm = x[..., 0]
         FR_idx = x[..., 1]
-        K_I, K_A, m_0, alpha_m = self.constant_set
+        K_I, K_A, m_0, alpha_m = self.params_set[:4]
         Nn, a_ss, slope = p
         f_c = np.log((1. + stim / K_I)/(1. + stim / K_A))
         f_m = alpha_m * (m_0 - Mm)
@@ -104,6 +108,7 @@ class MWC_linear(CellModel):
         dm = slope*(Aa-a_ss)
         df_vec = np.array([dm, (Aa - FR_idx) / self.dt]).T
         return df_vec
+
 
 ## TODO: add model class using sdeint - check why diff from odeint without noise, this way using both process and measurement noise
 ## Clausnitzer (2014) model has MWC with dm/dt = g_R(1-A) - g_B(A^3); K_i = 0.02 mM; K_a = 0.5 mM; N(c) = 17.5 + 3.35*c where c in mM; g_R = 0.0069; g_B = 0.11; f_m = 1- 0.5m
