@@ -9,9 +9,10 @@ from src.load_data import load_est_data_VA
 import numpy as np
 main_dir = def_data_dir()
 
+meas_noise = 0.05
 sp_name = 'sim_0.05_lin'
 filename = '%s/specs/%s.txt' % (main_dir, sp_name)
-data_vars = {'stim_file': 'decent_stimulus', 'meas_noise': [0.05]}
+data_vars = {'stim_file': 'decent_stimulus', 'meas_noise': meas_noise*np.ones((1, 1))}
 est_vars = {'model': 'MWC_linear',
             'params_set': [20., 3225., 0.5, 2.0, 6.0, 0.33, -0.05],
             'est_beg_T': 30, 'est_end_T': 280, 'pred_end_T': 380}

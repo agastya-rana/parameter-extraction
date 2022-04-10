@@ -21,21 +21,23 @@ from src.save_data import save_stim, save_meas_data
 MODEL_DEP_PARAMS = ['nD', 'nP', 'L_idxs', 'P_idxs', 'state_bounds', 'param_bounds', 'x0', 'dt']
 INT_PARAMS = ['nT', 'est_beg_T', 'est_end_T', 'pred_end_T', 'data_skip']
 FLOAT_PARAMS = ['dt']
-LIST_PARAMS = ['x0', 'beta_array', 'meas_noise', 'params_set', 'state_bounds', 'param_bounds', 'stim_protocol']
+LIST_PARAMS = ['x0', 'beta_array', 'meas_noise', 'params_set', 'state_bounds', 'param_bounds',
+               'Tt_data', 'stim_protocol']
 STR_PARAMS = ['stim_file', 'meas_file']
+
 
 class single_cell_FRET():
     """
     Class to hold single cell FRET functions and modules.
     """
+
     def __init__(self, **kwargs):
         ## Timetrace Variables
         self.nD = 2  ## Number of data dimensions
         self.dt = 0.1  ## Model timestep
-        self.dt_data = 0.1 ## Timestep of data
-        self.data_skip = 1 ## Integer denoting after every x model timepoints the data is checked
         self.nT = 0  ## Number of model timepoints
         self.Tt = np.arange(0, self.dt * self.nT, self.dt)  ## List of timepoints (timetrace)
+        self.Tt_data = self.Tt
         self.L_idxs = [1]  ## Indices of the observable (non-hidden) components of the state vector
 
         # Stimulus Variables
@@ -44,48 +46,51 @@ class single_cell_FRET():
 
         ## Stimulus generation variables
         self.stim_protocol = {
-            'type' : 'step',  ## Type of stimulus to be generated
-            'random_seed' : 1,  ## Seed for random generation of stimulus
-            'no_changes' : 30,  ## Number of stim changes in timetrace
-            'vals' : [0.085, 0.1, 0.115],  ## Stimulus values used
-            'bg' : [0.1],
+            'type': 'step',  ## Type of stimulus to be generated
+            'random_seed': 1,  ## Seed for random generation of stimulus
+            'no_changes': 30,  ## Number of stim changes in timetrace
+            'vals': [0.085, 0.1, 0.115],  ## Stimulus values used
+            'bg': [0.1],
         }
 
         # Variables for generating/loading measured data
-        self.meas_data = None ## measured data of size (nT, len(L_idxs)); can include NaN (if data measured sparsely)
-        self.meas_file = None ## measured data file; default: forward integrating the model with the stimulus file
-        self.meas_data_seed = 0 ## seed for measurement noise generation
-        self.meas_noise = [0.01] ## Measurement noise for each observable component of state
+        self.meas_data = None  ## measured data of size (nT, len(L_idxs)); can include NaN (if data measured sparsely)
+        self.meas_file = None  ## measured data file; default: forward integrating the model with the stimulus file
+        self.meas_data_seed = 0  ## seed for measurement noise generation
+        self.meas_noise = 0.01 * np.ones(
+            (1, len(self.L_idxs)))  ## Measurement noise for each observable component of state
 
         # Variables for integrating model
         self.model = models.MWC_MM()  ## Dynamical model proposed to explain data
-        self.nP = self.model.nP ## Number of parameters (both fixed and fitted) that the model involves
+        self.nP = self.model.nP  ## Number of parameters (both fixed and fitted) that the model involves
         self.P_idxs = self.model.P_idxs
         self.params_set = self.model.params_set  ## Parameter set used for forward integration of the model
         self.true_states = None  ## Stores state of integrated system over the complete timetrace
-        self.x0 = self.model.x0 ## Initialized value of state for model to be integrated
+        self.x0 = self.model.x0  ## Initialized value of state for model to be integrated
 
         # Variables for estimation and prediction windows
-        self.est_beg_T = None ## Time when estimation begins (default: 0)
-        self.est_end_T = None ## Time when estimation ends (default: end of time series)
-        self.pred_beg_T = None ## Time when prediction begins (default: when estimation ends)
-        self.pred_end_T = None ## Time when prediction ends (default: end of time series)
-        self.est_wind_idxs = None ## Indices of data that correspond to the estimation window
-        self.pred_wind_idxs = None ## Indices of data that correspond to the prediction window
+        self.est_beg_T = None  ## Time when estimation begins (default: 0)
+        self.est_end_T = None  ## Time when estimation ends (default: end of time series)
+        self.pred_beg_T = None  ## Time when prediction begins (default: when estimation ends)
+        self.pred_end_T = None  ## Time when prediction ends (default: end of time series)
+        self.est_wind_idxs = None  ## Indices of stimulus that correspond to the estimation window
+        self.pred_wind_idxs = None  ## Indices of stimulus that correspond to the prediction window
+        self.est_data_wind_idxs = None  ## Indices of data that correspond to the estimation window
+        self.pred_data_wind_idxs = None  ## Indices of data that correspond to the prediction window
 
         # Variables for optimization of single annealing step
-        self.state_bounds = self.model.state_bounds ## Bounds on the states of model, list of [lower bound, upper bound] elements
-        self.param_bounds = self.model.param_bounds ## Bounds on the parameters of model, list of [lower bound, upper bound] elements
-        self.bounds = None ## List with all bounds combined; used for input to annealing
-        self.init_seed = 0 ## Seed to randomly initialize true states and parameters that are optimized in VA
-        self.x_init = None ## True state initialization for optimization
-        self.p_init = None ## Parameter initialization for optimization
+        self.state_bounds = self.model.state_bounds  ## Bounds on the states of model, list of [lower bound, upper bound] elements
+        self.param_bounds = self.model.param_bounds  ## Bounds on the parameters of model, list of [lower bound, upper bound] elements
+        self.bounds = None  ## List with all bounds combined; used for input to annealing
+        self.init_seed = 0  ## Seed to randomly initialize true states and parameters that are optimized in VA
+        self.x_init = None  ## True state initialization for optimization
+        self.p_init = None  ## Parameter initialization for optimization
 
         # Variables for annealing run
-        self.alpha = 2.0 ## Multiplier by which Rf is increased in each annealing step
-        self.beta_increment = 1 ## Rf increases by a factor of alpha to this value at each step
-        self.beta_array = range(0, 61, self.beta_increment) ## Exponents used to calculate Rf
-        self.Rf0 = 1e-6 ## Initial Rf
+        self.alpha = 2.0  ## Multiplier by which Rf is increased in each annealing step
+        self.beta_increment = 1  ## Rf increases by a factor of alpha to this value at each step
+        self.beta_array = range(0, 61, self.beta_increment)  ## Exponents used to calculate Rf
+        self.Rf0 = 1e-6  ## Initial Rf
 
         # Overwrite variables with passed arguments
         if 'model' in kwargs:
@@ -117,6 +122,7 @@ class single_cell_FRET():
         self.set_stim()
         self.set_meas_data()
         self.set_est_pred_windows()
+
     #############################################
     ##### 		Stimulus functions			#####
     #############################################
@@ -165,9 +171,9 @@ class single_cell_FRET():
                 sys.exit(1)
 
             assert no_changes < self.nT, "Number of stimulus changes must be " \
-                                                   "less than number of time points, but # changes = %s, # time " \
-                                                   "points = %s" \
-                                                   % (self.nT, no_changes)
+                                         "less than number of time points, but # changes = %s, # time " \
+                                         "points = %s" \
+                                         % (self.nT, no_changes)
             self.stim = np.zeros(self.nT)
             # Get points at which to switch the step stimulus
             np.random.seed(seed)
@@ -218,8 +224,8 @@ class single_cell_FRET():
                 adapt_time = 20  ## time given for adaptation
                 pre_stim = 20
                 t_s = 5
-            block_time = adapt_time+pre_stim+t_s
-            blocks = self.nT // (block_time/self.dt)
+            block_time = adapt_time + pre_stim + t_s
+            blocks = self.nT // (block_time / self.dt)
             try:
                 l1 = self.stim_protocol['l1']
                 l2 = self.stim_protocol['l2']
@@ -256,27 +262,26 @@ class single_cell_FRET():
         else:
             assert self.stim is not None, "No stimulus file specified to forward integrate model with."
             self.forward_integrate()
-            self.meas_data = np.zeros((self.nT/self.data_skip, len(self.L_idxs)))
+            assert self.Tt_data[-1] == self.Tt[-1], "Last element of timetrace should have a measurable value"
+            self.meas_data = np.zeros((len(self.Tt_data), len(self.L_idxs)))
+            self.data_idxs = np.searchsorted(self.Tt, self.Tt_data)
+            assert np.all(self.Tt[self.data_idxs] == self.Tt_data), "Tt_data not compatible with Tt"
             np.random.seed(self.meas_data_seed)
             for iL_idx, iL in enumerate(self.L_idxs):
-                self.meas_data[:, iL_idx] = self.true_states[::self.data_skip, iL] + \
-                                            np.random.normal(0, self.meas_noise[iL_idx], self.nT/self.data_skip)
+                self.meas_data[:, iL_idx] = self.true_states[self.data_idxs, iL] + \
+                                            np.random.normal(0, self.meas_noise[:, iL_idx], len(self.Tt_data))
 
     def import_meas_data(self):
         """
-		Import measured data from file.
-		"""
+        Import measured data from file.
+        """
         Tt_meas_data = load_meas_file(self.meas_file)
-        self.meas_data = Tt_meas_data[:, 1:] ## to remove time column
-        self.dt_data = Tt_meas_data[1, 0] - Tt_meas_data[1, 0]
-        self.data_skip = int(self.dt_data/self.dt)
+        self.Tt_data = Tt_meas_data[:, 0]
+        self.data_idxs = np.searchsorted(self.Tt, self.Tt_data)
+        self.meas_data = Tt_meas_data[:, 1:]  ## to remove time column
         if not np.all(Tt_meas_data[:, 0] == self.Tt):
             print("Usecase: sparse data")
-            ## TODO: implement validation for this
-            print("Make sure that dt_data is a multiple of dt_model and that ends on a data timepoint")
-        assert self.meas_data.shape[1] == len(self.L_idxs), "Dimension of " \
-                                                            "imported measurement vectors must be same as length of " \
-                                                            "L_idxs "
+        assert self.meas_data.shape[1] == len(self.L_idxs), "Measured data imported not of sufficient dimension."
 
     #############################################
     #####			VA parameters			#####
@@ -311,12 +316,12 @@ class single_cell_FRET():
             self.est_beg_T = 0
         if self.est_end_T == None:
             print("Assuming estimation ends at last timepoint.")
-            self.est_end_T = (self.nT-1) * self.dt
+            self.est_end_T = (self.nT - 1) * self.dt
         if self.pred_beg_T == None:
             self.pred_beg_T = self.est_end_T
         if self.pred_end_T == None:
             print("Assuming prediction ends at last timepoint.")
-            self.pred_end_T = (self.nT-1) * self.dt
+            self.pred_end_T = (self.nT - 1) * self.dt
 
         est_beg_idx = int(self.est_beg_T / self.dt)
         est_end_idx = int(self.est_end_T / self.dt)
@@ -324,6 +329,13 @@ class single_cell_FRET():
         pred_end_idx = int(self.pred_end_T / self.dt)
         self.est_wind_idxs = np.arange(est_beg_idx, est_end_idx)
         self.pred_wind_idxs = np.arange(pred_beg_idx, pred_end_idx)
+
+        est_data_beg_idx = np.where(self.Tt_data==self.est_beg_T)[0][0]
+        est_data_end_idx = np.where(self.Tt_data==self.est_end_T)[0][0]
+        pred_data_beg_idx = np.where(self.Tt_data==self.pred_beg_T)[0][0]
+        pred_data_end_idx = np.where(self.Tt_data==self.pred_end_T)[0][0]
+        self.est_data_wind_idxs = np.arange(est_data_beg_idx, est_data_end_idx)
+        self.pred_data_wind_idxs = np.arange(pred_data_beg_idx, pred_data_end_idx)
 
         if len(self.est_wind_idxs) == 0:
             print('WARNING: Estimation window has len 0; change est_beg_T and/or est_end_T')
@@ -349,6 +361,7 @@ class single_cell_FRET():
         est_params = [self.params_set[i] for i in self.P_idxs]
         self.true_states = odeint(self.df_data_generation, self.x0, self.Tt,
                                   args=(est_params,))
+
 
 def create_cell_from_mat(dir, mat_file, cell):
     """Save stimulus and measurement files from FRET recording"""

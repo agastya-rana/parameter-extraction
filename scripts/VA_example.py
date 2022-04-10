@@ -5,7 +5,7 @@ sys.path.append('../src')
 import json
 from src.single_cell_FRET import create_cell_from_mat
 from src.local_methods import def_data_dir
-from src.est_VA import est_VA
+import numpy as np
 from src.plot_data import plot_raw_data
 from src.est_VA import var_anneal
 data_dir = def_data_dir()
@@ -22,7 +22,7 @@ create_cell_from_mat(dirname, fname, cell=cellno)
 # Then, we run the variational annealing algorithm by first generating a specs file, which contains
 # variables about the data (data_vars), variables about the estimation being done (est_vars).
 data_vars = {'stim_file': "trial_data_cell_%s" % cellno, 'meas_file': "trial_data_cell_%s" % cellno,
-             'meas_noise': [0.01]} ## should be inputted depending experimental uncertainty
+             'meas_noise': 0.01*np.ones((1, 1))} ## should be inputted depending experimental uncertainty
 est_vars = {'model': 'MWC_linear', 'est_beg_T': 0, 'est_end_T': 200, 'pred_end_T': 500}
 specifications = {'data_vars': data_vars, 'est_vars': est_vars}
 spec_name = '%s_cell_%s' % (dirname, cellno)
