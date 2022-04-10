@@ -1,9 +1,10 @@
 # FRET-data-assimilation
 
-![](.stim.png) ![](.FRET.png)
+![](trajectory.png)
+
 
 This repository estimates parameters and hidden states of dynamical models from single-cell FRET data using *variational annealing* (Ye et al, *Phys. Rev. E* **92**, 052901, 2015), a technique of nonlinear data assimilation for pinpointing global minima among highly non-convex cost functions.
-This code utilizes an updated version of Paul Rozdeba's VarAnneal package that is written in Python 3, and utilizes an up-to-date automatic differentiation package (```autograd```).
+This code adopts Paul Rozdeba's VarAnneal package, rewritten using the automatic differentiation package ```autograd```.
 
 ## Getting Started
 ### Dependencies
@@ -11,8 +12,6 @@ FRET-data-assimilation requires the following software:
 1. Python 3 (tested on version 3.8.11)
 2. SciPy (tested on version 1.7.1)
 3. NumPy (tested on version 1.20.3 )
-4. [VarAnneal](https://github.com/agastya-rana/varanneal), a Python implementation of variational annealing that utilizes automatic differentiation.
-   To install, follow the instructions in the VarAnneal repository readme.
 
 ## Usage
 ### Define the local data directory
