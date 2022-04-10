@@ -54,53 +54,21 @@ class Annealer(object):
         self.f = f ## Dynamical model f(t, x, (p, stim))
         self.D = D ## Dimension of the dynamical model
 
-    def set_data(self, data, stim=None, t=None, nstart=0, N=None, dt_model=None):
+    def set_data(self, t_data, data, t_model, stim):
         """
         Directly pass in data and stim arrays
         If you pass in t, it's assumed y/stim does not contain time.  Otherwise,
         it has to contain time in the zeroth element of each sample.
         """
-
-        ## TODO: finish this to make sure that t_stim is t_model (no point establishing this difference since
-        ## stimulus can (and should be discretized to the model point)
-        if N is None:
-            self.N_data = data.shape[0]
-        else:
-            self.N_data = N
-
-        if t is None:
-            self.t_data = data[nstart:(nstart + self.N_data), 0] ## t_data is the time points of data
-            self.dt_data = self.t_data[1] - self.t_data[0] ## dt_data is dt between the data points...
-            self.Y = data[nstart:(nstart + self.N_data), 1:]
-            if stim is not None:
-                self.stim = stim[nstart:(nstart + self.N_data), 1:]
-            else:
-                self.stim = None
-        else:
-            self.t_data = t[nstart:(nstart + self.N_data)]
-            self.dt_data = self.t_data[1] - self.t_data[0]
-            self.Y = data[nstart:(nstart + self.N_data)]
-            if stim is not None:
-                self.stim = stim[nstart:(nstart + self.N_data)]
-            else:
-                self.stim = None
-
-        # Separate dt_data and dt_model not supported yet if there is an external stimulus.
-        if dt_model is not None and dt_model != self.dt_data and self.stim is not None:
-            print("Error! Separate dt_data and dt_model currently not supported with an " +\
-                  "external stimulus. Exiting.") ## TODO: try to improve on this - can dt_model not be less than dt_data
-            sys.exit(1)
-        else:
-            if dt_model is None: ## normal use case with non-sparse data
-                self.dt_model = self.dt_data
-                self.N_model = self.N_data
-                self.merr_nskip = 1
-                self.t_model = np.copy(self.t_data)
-            else: ## allows for sparsity in data, but need to figure out how stimulus is coded (make sure it's coded on dt_model)
-                self.dt_model = dt_model
-                self.merr_nskip = int(self.dt_data / self.dt_model)
-                self.N_model = (self.N_data - 1) * self.merr_nskip + 1
-                self.t_model = np.linspace(self.t_data[0], self.t_data[-1], self.N_model)
+        self.t_data = t_data
+        self.t_model = t_model
+        self.dt_model = t_model[1] - t_model[0]
+        self.N_data = len(t_data)
+        self.N_model = len(t_model)
+        self.Y = data
+        self.stim = stim
+        self.data_idxs = np.searchsorted(self.Tt, self.Tt_data)
+        assert len(stim) == self.N_model, "Stimulus needs to be supplied for each timepoint in Tt_model"
 
     ############################################################################
     # Gaussian action
@@ -115,11 +83,10 @@ class Annealer(object):
 
     def me_gaussian(self, X):
         """
-        Gaussian measurement error.
+                Gaussian measurement error.-
         """
         x = np.reshape(X, (self.N_model, self.D))
-        diff = x[::self.merr_nskip, self.Lidx] - self.Y
-
+        diff = x[self.data_idxs, self.Lidx] - self.Y
         if type(self.RM) == np.ndarray:
             # Contract RM with error
             if self.RM.shape == (self.N_data, self.L):
@@ -132,7 +99,6 @@ class Annealer(object):
                 print("ERROR: RM is in an invalid shape.")
         else:
             merr = self.RM * np.sum(diff * diff)
-
         return merr / (self.L * self.N_data)
 
     def fe_gaussian(self, XP):
@@ -324,7 +290,7 @@ class Annealer(object):
             if self.P.ndim == 1:
                 pn = (p, self.stim[:-1])
             else:
-                 pn = (p[:-1], self.stim[:-1])
+                pn = (p[:-1], self.stim[:-1])
 
         return self.f(self.t_model[:-1], x[:-1], pn)
 
@@ -332,7 +298,7 @@ class Annealer(object):
     # Annealing functions
     ############################################################################
     def anneal(self, X0, P0, alpha, beta_array, RM, RF0, Lidx, Pidx, dt_model=None,
-               init_to_data=True, action='A_gaussian', disc='trapezoid', 
+               init_to_data=True, action='A_gaussian', disc='trapezoid',
                method='L-BFGS-B', bounds=None, opt_args=None,
                track_paths=None, track_params=None, track_action_errors=None):
         """
@@ -401,7 +367,7 @@ class Annealer(object):
                 except:
                     fmt = "%.8e"
                 self.save_action_errors(track_action_errors['filename'], cmpt, dtype, fmt)
-            
+
 
     def anneal_init(self, X0, P0, alpha, beta_array, RM, RF0, Lidx, Pidx,
                     init_to_data=True, action='A_gaussian', disc='trapezoid',
@@ -531,12 +497,12 @@ class Annealer(object):
                 nmax_p = self.N_model - 1
             else:
                 nmax_p = self.N_model
-            self.minpaths = np.zeros((self.Nbeta, self.N_model*self.D + nmax_p*self.NP), 
-                                      dtype=np.float64)
+            self.minpaths = np.zeros((self.Nbeta, self.N_model*self.D + nmax_p*self.NP),
+                                     dtype=np.float64)
 
         # initialize observed state components to data if desired
         if init_to_data == True:
-            X0[::self.merr_nskip, self.Lidx] = self.Y[:]
+            X0[self.data_idxs, self.Lidx] = self.Y[:]
 
         # Flatten X0 and P0 into extended XP0 path vector
         #if self.NPest > 0:
@@ -595,7 +561,7 @@ class Annealer(object):
 
             if self.method == 'L-BFGS-B':
                 res = opt.minimize(self.A, XP0, method='L-BFGS-B', jac=self.gradient,
-                               options=self.opt_args, bounds=self.bounds)
+                                   options=self.opt_args, bounds=self.bounds)
             elif self.method == 'NCG':
                 res = opt.minimize(self.A, XP0, method='CG', jac=self.gradient,
                                    options=self.opt_args, bounds=self.bounds)
