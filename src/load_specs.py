@@ -6,9 +6,11 @@ Agastya Rana, 11/12/2021.
 
 import os
 from src.local_methods import def_data_dir
+from src.single_cell_FRET import NP_PARAMS
 import json
-
+import numpy as np
 data_dir = def_data_dir()
+NP_arrs = NP_PARAMS
 
 def read_specs_file(spec_name, data_dir=data_dir):
     """
@@ -44,4 +46,7 @@ def read_specs_file(spec_name, data_dir=data_dir):
     out_dict = dict()
     out_dict.update(data['data_vars'])
     out_dict.update(data['est_vars'])
+    for k in NP_arrs:
+        if k in out_dict.keys():
+            out_dict[k] = np.asarray(out_dict[k])
     return out_dict
