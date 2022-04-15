@@ -67,7 +67,7 @@ class Annealer(object):
         self.N_model = len(t_model)
         self.Y = data
         self.stim = stim
-        self.data_idxs = np.searchsorted(self.Tt, self.Tt_data)
+        self.data_idxs = np.searchsorted(self.t_model, self.t_data)
         assert len(stim) == self.N_model, "Stimulus needs to be supplied for each timepoint in Tt_model"
 
     ############################################################################
@@ -86,6 +86,8 @@ class Annealer(object):
                 Gaussian measurement error.-
         """
         x = np.reshape(X, (self.N_model, self.D))
+        #print(self.data_idxs.shape, self.Y.shape)
+        #print(self.data_idxs)
         diff = x[self.data_idxs, self.Lidx] - self.Y
         if type(self.RM) == np.ndarray:
             # Contract RM with error
@@ -99,7 +101,7 @@ class Annealer(object):
                 print("ERROR: RM is in an invalid shape.")
         else:
             merr = self.RM * np.sum(diff * diff)
-        return merr / (self.L * self.N_data)
+        return merr / (self.L * self.N_data) ## - removing bc we want total action, not averaged
 
     def fe_gaussian(self, XP):
         """
@@ -176,7 +178,7 @@ class Annealer(object):
             else:
                 ferr = self.RF * np.sum(diff * diff)
 
-        return ferr / (self.D * (self.N_model - 1))
+        return ferr  / (self.D * (self.N_model - 1)) ## - remove to find total action
 
     ############################################################################
     # Discretization routines
@@ -298,7 +300,7 @@ class Annealer(object):
     ############################################################################
     # Annealing functions
     ############################################################################
-    def anneal(self, X0, P0, alpha, beta_array, RM, RF0, Lidx, Pidx, dt_model=None,
+    def anneal(self, X0, P0, alpha, beta_array, RM, RF0, Lidx, Pidx,
                init_to_data=True, action='A_gaussian', disc='trapezoid',
                method='L-BFGS-B', bounds=None, opt_args=None,
                track_paths=None, track_params=None, track_action_errors=None):
@@ -308,7 +310,7 @@ class Annealer(object):
         """
         # Initialize the annealing procedure, if not already done.
         if self.annealing_initialized == False:
-            self.anneal_init(X0, P0, alpha, beta_array, RM, RF0, Lidx, Pidx, dt_model,
+            self.anneal_init(X0, P0, alpha, beta_array, RM, RF0, Lidx, Pidx,
                              init_to_data, action, disc, method, bounds,
                              opt_args)
 
@@ -502,8 +504,8 @@ class Annealer(object):
                                      dtype=np.float64)
 
         # initialize observed state components to data if desired
-        if init_to_data == True:
-            X0[self.data_idxs, self.Lidx] = self.Y[:]
+        if init_to_data:
+            X0[:, self.Lidx] = self.Y
 
         # Flatten X0 and P0 into extended XP0 path vector
         #if self.NPest > 0:

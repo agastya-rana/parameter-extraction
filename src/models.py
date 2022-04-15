@@ -1,6 +1,5 @@
 """
 Dynamical models and state bounds for FRET data assimilation.
-
 Created by Nirag Kadakia and Agastya Rana, 10-21-2021.
 """
 
@@ -18,7 +17,6 @@ class Model():
         self.params_set = [] ## True parameter dictionaries
         self.state_bounds = [[0.0, 4.0], [0, 1]] ## bounds of state components
         self.param_bounds = [[4, 8], [0.001, 0.1], [0.001, 0.1]] ## [lower, upper] only for P_idxs parameters
-
     def df(self, t, x, p, stim):
         """
         The dynamic model function that returns the derivative of the state, used to predict the state at the next timestep.
@@ -39,7 +37,6 @@ class Model():
         p1, p2, p3 = p
         df_vec = np.array([x1 * p1, x2]).T
         return df_vec
-
 
 class MWC_MM(Model):
     """

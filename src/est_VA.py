@@ -4,7 +4,6 @@ Variational annealing of single cell FRET data.
 Created by Nirag Kadakia and Agastya Rana, 11/18/21.
 """
 import time
-import scipy as sp
 import numpy as np
 import sys
 from src.load_data import load_est_data_VA, load_pred_data
@@ -38,7 +37,7 @@ def est_VA(spec_name, scF, init_seed=None, save_data=True, beta_inc=1, beta_mid=
                        scF.Tt[scF.est_wind_idxs], scF.stim[scF.est_wind_idxs])
 
     # Set Rm as inverse covariance; all parameters measured for now
-    Rm = 1.0/sp.asarray(scF.meas_noise)**2.0
+    Rm = np.reciprocal(np.square(scF.meas_noise))
     P_idxs = scF.model.P_idxs
     scF.beta_increment = beta_inc
     scF.beta_array = np.arange(beta_mid - beta_inc*beta_width, beta_mid + beta_inc*beta_width, beta_inc)
@@ -48,7 +47,7 @@ def est_VA(spec_name, scF, init_seed=None, save_data=True, beta_inc=1, beta_mid=
     tstart = time.time()
     annealer.anneal(scF.x_init[scF.est_wind_idxs], scF.p_init,
                     scF.alpha, scF.beta_array, Rm, scF.Rf0,
-                    scF.L_idxs, P_idxs, dt_model=None, init_to_data=True,
+                    scF.L_idxs, P_idxs, init_to_data=True,
                     bounds=scF.bounds, disc='trapezoid',
                     method='L-BFGS-B', opt_args=BFGS_options)
     print("\nVariational annealing completed in {} s.".format(time.time() - tstart))

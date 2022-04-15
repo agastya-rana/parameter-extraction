@@ -21,9 +21,10 @@ from src.save_data import save_stim, save_meas_data
 MODEL_DEP_PARAMS = ['nD', 'nP', 'L_idxs', 'P_idxs', 'state_bounds', 'param_bounds', 'x0', 'dt']
 INT_PARAMS = ['nT', 'est_beg_T', 'est_end_T', 'pred_end_T', 'data_skip']
 FLOAT_PARAMS = ['dt']
-LIST_PARAMS = ['x0', 'beta_array', 'meas_noise', 'params_set', 'state_bounds', 'param_bounds',
+LIST_PARAMS = ['x0', 'beta_array', 'params_set', 'state_bounds', 'param_bounds',
                'Tt_data', 'stim_protocol']
 STR_PARAMS = ['stim_file', 'meas_file']
+NP_PARAMS = ['meas_noise']
 
 
 class single_cell_FRET():
@@ -37,7 +38,7 @@ class single_cell_FRET():
         self.dt = 0.1  ## Model timestep
         self.nT = 0  ## Number of model timepoints
         self.Tt = np.arange(0, self.dt * self.nT, self.dt)  ## List of timepoints (timetrace)
-        self.Tt_data = self.Tt
+        self.Tt_data = None
         self.L_idxs = [1]  ## Indices of the observable (non-hidden) components of the state vector
 
         # Stimulus Variables
@@ -113,12 +114,13 @@ class single_cell_FRET():
                 exec('self.%s = float(val)' % key)
             elif key in LIST_PARAMS:
                 exec('self.%s = %s' % (key, val))
+            elif key in NP_PARAMS:
+                exec('self.%s = np.asarray(%s)' % (key, val))
             elif key == 'model':
                 pass
             else:
                 print("Parameter %s not recognized." % key)
                 sys.exit(1)
-
         self.set_stim()
         self.set_meas_data()
         self.set_est_pred_windows()
@@ -143,6 +145,8 @@ class single_cell_FRET():
         """
         Tt_stim = load_stim_file(self.stim_file)
         self.Tt = Tt_stim[:, 0]
+        if self.Tt_data is None:
+            self.Tt_data = self.Tt
         self.dt = self.Tt[1] - self.Tt[0]
         self.nT = len(self.Tt)
         self.stim = Tt_stim[:, 1]
@@ -240,6 +244,8 @@ class single_cell_FRET():
                                         np.ones(int(adapt_time / self.dt)) * (bg + l2[i])))
                 self.stim[i * len(block):(i + 1) * len(block)] = block
             print(len(self.Tt), len(self.stim))
+        if self.Tt_data is None:
+            self.Tt_data = self.Tt
 
     def eval_stim(self, t):
         """
@@ -269,7 +275,7 @@ class single_cell_FRET():
             np.random.seed(self.meas_data_seed)
             for iL_idx, iL in enumerate(self.L_idxs):
                 self.meas_data[:, iL_idx] = self.true_states[self.data_idxs, iL] + \
-                                            np.random.normal(0, self.meas_noise[:, iL_idx], len(self.Tt_data))
+                                            np.random.normal(0, self.meas_noise[iL_idx], len(self.Tt_data))
 
     def import_meas_data(self):
         """
