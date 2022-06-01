@@ -18,13 +18,11 @@ from src.save_data import save_stim, save_meas_data
 
 MODEL_DEP_PARAMS = ['nD', 'nP', 'L_idxs', 'P_idxs', 'state_bounds', 'param_bounds', 'params_set', 'x0', 'dt']
 INT_PARAMS = ['nT', 'est_beg_T', 'est_end_T', 'pred_end_T', 'data_skip']
-FLOAT_PARAMS = ['dt'] ## TODO: enforce an input with this to change the model parameter
+FLOAT_PARAMS = ['dt']
 LIST_PARAMS = ['x0', 'beta_array', 'params_set', 'state_bounds', 'param_bounds',
                'Tt_data', 'stim_protocol']
 STR_PARAMS = ['stim_file', 'meas_file']
 NP_PARAMS = ['meas_noise']
-MODEL_INFL_PARAMS = ['dt', 'x0', 'param_bounds']
-
 
 class single_cell_FRET():
     """
@@ -116,13 +114,14 @@ class single_cell_FRET():
                 exec('self.%s = float(val)' % key)
             elif key in LIST_PARAMS:
                 exec('self.%s = %s' % (key, val))
-            elif key in NP_PARAMS:
-                exec('self.%s = np.asarray(%s)' % (key, val))
+            elif key == "meas_noise":
+                self.meas_noise = np.asarray(val)
             elif key == 'model':
                 pass
             else:
                 print("Parameter %s not recognized." % key)
                 sys.exit(1)
+
         self.set_stim()
         self.set_meas_data()
         self.set_est_pred_windows()
@@ -381,15 +380,3 @@ class single_cell_FRET():
         est_params = [self.params_set[i] for i in self.P_idxs]
         self.true_states = odeint(self.df_data_generation, self.x0, self.Tt,
                                   args=(est_params,))
-
-
-def create_cell_from_mat(dir, mat_file, cell):
-    """Save stimulus and measurement files from FRET recording"""
-    data = load_FRET_recording(dir, mat_file, cell)
-    a = single_cell_FRET()
-    a.stim = data['stim']
-    a.Tt = data['Tt']
-    a.meas_data = data['FRET']
-    spec_name = '%s_cell_%s' % (dir.replace('/', '_'), cell)
-    save_stim(a, spec_name)
-    save_meas_data(a, spec_name)

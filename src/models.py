@@ -7,16 +7,19 @@ import autograd.numpy as np
 
 class Model():
     def __init__(self):
-        self.nD = 2
+        self.nD = 2 ## Dimensions, fixed
+        self.L_idxs = [1]  ## state component indices that are observable, fixed
+        self.state_names = ['methyl', 'FRET index']
         self.nP = 0
         self.x0 = [0, 0]  ## initial, equilibrium state of the system
-        self.state_names = ['methyl', 'FRET index']
-        self.param_names = [] ## names of parameters
+        self.constant_names = [] ## names of parameters
+        self.param_names = [] ## names of variable parameters
         self.P_idxs = [-1]  ## parameter indices that very
-        self.L_idxs = [1]  ## state component indices that are observable
-        self.params_set = [] ## True parameter dictionaries
+
+        self.params_set = [] ## True variable parameter values
         self.state_bounds = [[0.0, 4.0], [0, 1]] ## bounds of state components
         self.param_bounds = [[4, 8], [0.001, 0.1], [0.001, 0.1]] ## [lower, upper] only for P_idxs parameters
+
     def df(self, t, x, p, stim):
         """
         The dynamic model function that returns the derivative of the state, used to predict the state at the next timestep.
