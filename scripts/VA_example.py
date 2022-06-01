@@ -3,12 +3,11 @@ sys.path.append('..')
 sys.path.append('../src')
 
 import json
-from src.single_cell_FRET import create_cell_from_mat
 from src.local_methods import def_data_dir
 import numpy as np
-from src.plot_data import plot_raw_data
 from src.est_VA import var_anneal
 from src.utils import NumpyEncoder
+from src.save_data import save_cell_data
 data_dir = def_data_dir()
 
 # Since the MATLAB data file is stored in example_data_dir/recordings/trial_data/'
@@ -18,7 +17,7 @@ data_dir = def_data_dir()
 dirname = 'trial_data'
 fname = 'FRET_data'
 cellno = 18
-create_cell_from_mat(dirname, fname, cell=cellno)
+save_cell_data(dirname, fname, cell=cellno)
 
 # Then, we run the variational annealing algorithm by first generating a specs file, which contains
 # variables about the data (data_vars), variables about the estimation being done (est_vars).

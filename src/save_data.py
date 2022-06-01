@@ -14,48 +14,53 @@ import numpy as np
 import os
 import matplotlib
 matplotlib.use('agg')
-import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
+from src.load_data import load_FRET_recording
 import pickle
 import gzip
 from src.local_methods import def_data_dir
 
 DATA_DIR = def_data_dir()
 
+def save_cell_data(dir, mat_file, cell):
+    """Save stimulus and measurement files from FRET recording"""
+    data = load_FRET_recording(dir, mat_file, cell)
+    spec_name = '%s_cell_%s' % (dir.replace('/', '_'), cell)
+    out_dir = '%s/stim' % DATA_DIR
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
+    data_to_save = np.vstack((data['Tt'], data['stim'])).T
+    np.savetxt('%s/%s.stim' % (out_dir, spec_name), data_to_save, fmt='%.6f', delimiter='\t')
+
+    out_dir = '%s/meas_data' % DATA_DIR
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
+    data_to_save = np.vstack((data['Tt'], data['FRET'])).T
+    np.savetxt('%s/%s.meas' % (out_dir, spec_name), data_to_save, fmt='%.6f', delimiter='\t')
+
 
 def save_stim(obj, data_flag):
     out_dir = '%s/stim' % DATA_DIR
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
-
     data_to_save = np.vstack((obj.Tt, obj.stim)).T
     np.savetxt('%s/%s.stim' % (out_dir, data_flag), data_to_save,
                fmt='%.6f', delimiter='\t')
 
 
-def save_true_states(obj, data_flag):
+def save_true_states(obj, spec_name):
     out_dir = '%s/true_states' % DATA_DIR
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
-
     data_to_save = np.vstack((obj.Tt, obj.true_states.T)).T
-    np.savetxt('%s/%s.true' % (out_dir, data_flag), data_to_save,
+    np.savetxt('%s/%s.true' % (out_dir, spec_name), data_to_save,
                fmt='%.6f', delimiter='\t')
 
-
-def save_meas_data(obj, spec_name, simulated=False):
+def save_meas_data(obj, spec_name):
     out_dir = '%s/meas_data' % DATA_DIR
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
-
-    data_to_save = sp.vstack((obj.Tt, obj.meas_data.T)).T
-    if simulated:
-        filename = spec_name
-        #filename = spec_name+"_simulated"
-        pass
-    else:
-        filename = spec_name
-    sp.savetxt('%s/%s.meas' % (out_dir, filename), data_to_save,
+    data_to_save = np.vstack((obj.Tt, obj.meas_data.T)).T
+    np.savetxt('%s/%s.meas' % (out_dir, spec_name), data_to_save,
                fmt='%.6f', delimiter='\t')
 
 def save_pred_data(data_dict, data_flag):
