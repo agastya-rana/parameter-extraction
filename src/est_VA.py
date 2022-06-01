@@ -83,7 +83,7 @@ def var_anneal(spec_name, scF=None, seed_range=[0], plot=True, beta_precision=0.
 
     if plot:
         plot_trajectories(spec_name, scF, est_path, pred_path, plot_observed=True)
-        pnames = [scF.model.param_names[scF.model.P_idxs[i]] for i in range(len(params))]
+        pnames = scF.model.param_names
         plot_params(params, params_err, pnames, spec_name)
 
     out_dict = {'cell': scF, 'traj': trajectory_data, 'pred': pred_path, 'params': params, 'params_err': params_err}

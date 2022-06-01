@@ -51,8 +51,6 @@ class MWC_MM(CellModel):
 
     def __init__(self):
         super().__init__()
-        self.nP = 9
-        self.P_idxs = [-3, -2, -1]
         self.constant_names = ['K_I', 'K_A', 'm_0', 'alpha_m', 'K_R', 'K_B']
         self.param_names = ['Nn', 'V_R', 'V_B']
         self.constant_set = [20., 3225., 0.5, 2.0, 0.32, 0.30]
@@ -82,8 +80,6 @@ class MWC_linear(CellModel):
 
     def __init__(self):
         super().__init__()
-        self.nP = 7
-        self.P_idxs = [-3, -2, -1]
         self.constant_names = ['K_I', 'K_A', 'm_0', 'alpha_m']
         self.param_names = ['Nn', 'a_ss', 'slope']
         self.constant_set = [20., 3225., 0.5, 2.0]
@@ -103,6 +99,37 @@ class MWC_linear(CellModel):
         Aa = 1. / (1. + np.exp(Ee))
         dm = slope*(Aa-a_ss)
         df_vec = np.array([dm, (Aa - FR_idx) / self.dt]).T
+        return df_vec
+
+class MWC_MM_Swayam(CellModel):
+    """
+    MWC model for activity; Michaelis-Menten model for methylation/demethylation.
+    Assume K_I, m_0, alpha_m, K_R, K_B are fixed; narrowly constrain these bounds.
+    Parameters here taken from Shimizu (2010), except for K_I from Clausnitzer 2014.
+    """
+    def __init__(self, **kwargs):
+        super().__init__()
+        self.constant_names = ['K_I', 'K_A', 'm_0', 'alpha_m', 'K_R', 'K_B']
+        self.param_names = ['Nn', 'V_R', 'V_B']
+        self.constant_set = [20., 3225., 0.5, 2.0, 1.0, 0.30] ## why is this different?
+        self.params_set = [6.0, 0.010, 0.013]
+        self.x0 = [self.constant_set[2] + 0.83, 0.33]
+        self.param_bounds = [[1, 30], [0.001, 0.1], [0.001, 0.1]]  ## N, V_R, V_B
+
+    def df(self, t, x, inputs):
+        p, stim = inputs
+        Mm = x[..., 0]
+        FR_idx = x[..., 1]
+        K_I, K_A, m_0, alpha_m, K_R, K_B = self.constant_set
+        Nn, V_R, V_B = p
+        f_c = np.log((1. + stim / K_I) / (1. + stim / K_A))
+        f_m = alpha_m * (m_0 - Mm)
+        Ee = Nn * (f_m + f_c)
+        Aa = 1. / (1. + np.exp(Ee))
+
+        #df_vec = np.array([V_R * (1 - Aa) / (K_R + (1 - Aa)) - V_B * Aa / (K_B + Aa), (Aa - FR_idx) / self.dt]).T
+        df_vec = np.array([np.exp(np.log(V_R)) * ((1 - Aa) / (K_R)) - np.exp(np.log(V_B)) * Aa / (K_B + Aa),
+                           (Aa - FR_idx) / self.dt]).T ## this looks weird, missing 1-Aa
         return df_vec
 
 ## TODO: add model class using sdeint - check why diff from odeint without noise, this way using both process and measurement noise
