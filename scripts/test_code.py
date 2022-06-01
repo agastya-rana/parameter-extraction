@@ -9,7 +9,7 @@ from src.load_data import load_est_data_VA
 import numpy as np
 main_dir = def_data_dir()
 
-sp_name = 'sim_0.05_lin'
+sp_name = 'sim_0.05_lin_now'
 filename = '%s/specs/%s.txt' % (main_dir, sp_name)
 data_vars = {'stim_file': 'decent_stimulus', 'meas_noise': [0.05]}
 est_vars = {'model': 'MWC_linear',
