@@ -23,7 +23,7 @@ filename = '%s/specs/%s.txt' % (main_dir, sp_name)
 ## Uses the following stimulus file to simulate cell with model and params below
 data_vars = {'stim_file': 'simulation_example', 'meas_noise': meas_noise*np.ones((1,))} ## dimension of meas_noise is (len(L_idxs),)
 ## Set the model, parameters, and estimation, prediction windows
-est_vars = {'model': 'MWC_linear', 'params_set': [20., 3225., 0.5, 2.0, 6.0, 0.33, -0.05],
+est_vars = {'model': 'MWC_linear', 'params_set': [6.0, 0.33, -0.05],
             'est_beg_T': 20, 'est_end_T': 240, 'pred_end_T': 320}
 specifications = {'data_vars': data_vars, 'est_vars': est_vars}
 with open(filename, 'w') as outfile:
@@ -34,7 +34,7 @@ output = var_anneal(sp_name, plot=True)
 
 
 ## CASE 1: simulated cell; variable measurement noise; no sparsity
-meas_noise = np.linspace(0.04, 0.10, 767)
+meas_noise = np.linspace(0.04, 0.10, 767).reshape((767,1))
 ## any less and there is no slack in initial conditions (which are not exact), which prevents later estimation
 
 ## Define the spec name and file name
@@ -46,7 +46,7 @@ filename = '%s/specs/%s.txt' % (main_dir, sp_name)
 ## Uses the following stimulus file to simulate cell with model and params below
 data_vars = {'stim_file': 'simulation_example', 'meas_noise': meas_noise} ## dimension of meas_noise is (len(L_idxs),)
 ## Set the model, parameters, and estimation, prediction windows
-est_vars = {'model': 'MWC_linear', 'params_set': [20., 3225., 0.5, 2.0, 6.0, 0.33, -0.05],
+est_vars = {'model': 'MWC_linear', 'params_set': [6.0, 0.33, -0.05],
             'est_beg_T': 20, 'est_end_T': 240, 'pred_end_T': 320}
 specifications = {'data_vars': data_vars, 'est_vars': est_vars}
 with open(filename, 'w') as outfile:
