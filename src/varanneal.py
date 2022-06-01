@@ -157,6 +157,7 @@ class Annealer(object):
             x = np.reshape(XP[:self.N_model*self.D], (self.N_model, self.D))
             if self.P.ndim == 1:
                 p = XP[self.N_model*self.D:]
+                print("here")
             else:
                 if self.disc.__func__.__name__ in ["disc_euler", "disc_forwardmap"]:
                     p = np.reshape(XP[self.N_model*self.D:], (self.N_model - 1, self.NPest))
