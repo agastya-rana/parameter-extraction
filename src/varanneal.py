@@ -88,40 +88,15 @@ class Annealer(object):
         diff = x[self.data_idxs, self.Lidxs] - self.Y
         assert self.RM.shape == (self.N_data, self.L), "ERROR: RM is in an invalid shape."
         merr = np.sum(self.RM * np.square(diff))
-        return merr  ## / (self.L * self.N_data) ## - removing bc we want total action, not averaged
+        return merr  / (self.L * self.N_data) ## - removing bc we want total action, not averaged
 
     def fe_gaussian(self, XP):
         """
         Gaussian model error.
         """
         # Extract state and parameters from XP.
-        if self.NPest == 0:
-            x = np.reshape(XP, (self.N_model, self.D))
-            p = self.P
-        ## NOT OUR USECASE
-        elif self.NPest == self.NP:
-            x = np.reshape(XP[:self.N_model * self.D], (self.N_model, self.D))
-            if self.P.ndim == 1:
-                p = XP[self.N_model * self.D:]
-            ## NOT OUR USECASE
-            else:
-                if self.disc.__func__.__name__ in ["disc_euler", "disc_forwardmap"]:
-                    p = np.reshape(XP[self.N_model * self.D:], (self.N_model - 1, self.NPest))
-                else:
-                    p = np.reshape(XP[self.N_model * self.D:], (self.N_model, self.NPest))
-        else:
-            x = np.reshape(XP[:self.N_model * self.D], (self.N_model, self.D))
-            p = np.array(self.P, dtype=XP.dtype)
-            if self.P.ndim == 1:
-                p[self.Pidxs] = XP[self.N_model * self.D:] ## USECASE
-            ## NOT OUR USECASE
-            else:
-                if self.disc.__func__.__name__ in ["disc_euler", "disc_forwardmap"]:
-                    p[:, self.Pidxs] = np.reshape(XP[self.N_model * self.D:],
-                                                  (self.N_model - 1, self.NPest))
-                else:
-                    p[:, self.Pidxs] = np.reshape(XP[self.N_model * self.D:],
-                                                  (self.N_model, self.NPest))
+        x = np.reshape(XP[:self.N_model * self.D], (self.N_model, self.D))
+        p = XP[self.N_model * self.D:]
 
         # Start calculating the model error.
         # First compute time series of error terms.
@@ -143,7 +118,6 @@ class Annealer(object):
                     ferr = ferr1 + ferr2
                 else:
                     ferr = np.sum(self.RF * diff * diff)
-
             elif self.RF.shape == (self.N_model - 1, self.D, self.D):
                 if self.disc.__func__.__name__ == "disc_SimpsonHermite":
                     ferr1 = 0.0
@@ -156,18 +130,16 @@ class Annealer(object):
                     ferr = 0.0
                     for i in range(self.N_model - 1):
                         ferr = ferr + np.dot(diff[i], np.dot(self.RF[i], diff))
-
             else:
                 print("ERROR: RF is in an invalid shape. Exiting.")
                 sys.exit(1)
-
         else:
             if self.disc.__func__.__name__ == "disc_SimpsonHermite":
                 ferr = self.RF * np.sum(diff1 * diff1 + diff2 * diff2)
             else:
-                ferr = self.RF * np.sum(diff * diff)
+                ferr = self.RF * np.sum(diff * diff) ## USECASE
 
-        return ferr ## / (self.D * (self.N_model - 1))  ## - remove to find total action
+        return ferr / (self.D * (self.N_model - 1))  ## - remove to find total action
 
     ############################################################################
     # Discretization routines
@@ -289,7 +261,7 @@ class Annealer(object):
     ############################################################################
     # Annealing functions
     ############################################################################
-    def anneal(self, X0, P0, alpha, beta_array, RM, RF0, Lidx, Pidx,
+    def anneal(self, X0, P0, alpha, beta_array, RM, RF0, Lidx,
                init_to_data=True, action='A_gaussian', disc='trapezoid',
                method='L-BFGS-B', bounds=None, opt_args=None,
                track_paths=None, track_params=None, track_action_errors=None):
@@ -299,7 +271,7 @@ class Annealer(object):
         """
         # Initialize the annealing procedure, if not already done.
         if self.initialized == False:
-            self.anneal_init(X0, P0, alpha, beta_array, RM, RF0, Lidx, Pidx,
+            self.anneal_init(X0, P0, alpha, beta_array, RM, RF0, Lidx,
                              init_to_data, action, disc, method, bounds,
                              opt_args)
 
@@ -318,7 +290,6 @@ class Annealer(object):
                     sys.exit(1)
             else:
                 print('beta = %d, RF = %.8e' % (self.beta, self.RF))
-                print("Shouldn't be here though bc RF already made into ndarray")
             print('')
 
             self.anneal_step()
@@ -361,7 +332,7 @@ class Annealer(object):
                     fmt = "%.8e"
                 self.save_action_errors(track_action_errors['filename'], cmpt, dtype, fmt)
 
-    def anneal_init(self, X0, P0, alpha, beta_array, RM, RF0, Lidxs, Pidxs,
+    def anneal_init(self, X0, P0, alpha, beta_array, RM, RF0, Lidxs,
                     init_to_data=True, action='A_gaussian', disc='trapezoid',
                     method='L-BFGS-B', bounds=None, opt_args=None):
         """
@@ -378,17 +349,7 @@ class Annealer(object):
 
         # set up parameters and determine if static or time series
         self.P = P0
-        if P0.ndim == 1:
-            # Static parameters, so p is a single vector.
-            self.NP = len(P0)
-        else:
-            # Time-dependent parameters, so p is a time series of N values.
-            self.NP = P0.shape[1]
-
-        # get indices of parameters to be estimated by annealing
-        self.Pidxs = Pidxs
-        self.NPest = len(Pidxs)
-        self.freepars = np.array([self.N_model * self.D + i for i in range(len(self.Pidxs))])
+        self.NP = len(P0)
 
         # get indices of measured components of f
         self.Lidxs = Lidxs
@@ -405,19 +366,8 @@ class Annealer(object):
                 for i in range(self.D):
                     self.bounds.append(state_b[i])
             # set bounds on estimated parameters
-            if self.P.ndim == 1:
-                # parameters are static
-                for i in range(self.NPest):
-                    self.bounds.append(param_b[i])
-            else:
-                # parameters are time-dependent
-                if self.disc.__func__.__name__ in ["disc_euler", "disc_forwardmap"]:
-                    nmax = self.N_model - 1
-                else:
-                    nmax = self.N_model
-                for n in range(self.nmax):
-                    for i in range(self.NPest):
-                        self.bounds.append(param_b[i])
+            for i in range(self.NP):
+                self.bounds.append(param_b[i])
         else:
             self.bounds = None
 
@@ -487,24 +437,18 @@ class Annealer(object):
 
         # initialize observed state components to data if desired
         if init_to_data:
-            X0[self.data_idxs, self.Lidxs] = self.Y
+            for iL_idx, iL in enumerate(self.Lidxs):
+                X0[self.data_idxs, iL] = self.Y[:, iL_idx]
 
         # Flatten X0 and P0 into extended XP0 path vector
-        if self.NPest > 0:
-            if P0.ndim == 1:
-                XP0 = np.append(X0.flatten(), P0)
-            else:
-                XP0 = np.append(X0.flatten(), P0.flatten())
-        else:
-            XP0 = X0.flatten()
-
-        self.minpaths[0] = XP0  ## technically this includes fixed P that anneal is not concerned with but all ok
+        XP0 = np.append(X0.flatten(), P0)
+        self.minpaths[0] = XP0
 
         # array to store optimization results
         self.A_array = np.zeros(self.Nbeta, dtype=np.float64)
         self.me_array = np.zeros(self.Nbeta, dtype=np.float64)
         self.fe_array = np.zeros(self.Nbeta, dtype=np.float64)
-        self.params_cov = np.zeros((self.Nbeta, self.NPest, self.NPest), dtype=np.float64)
+        self.params_cov = np.zeros((self.Nbeta, self.NP, self.NP), dtype=np.float64)
         self.exitflags = np.empty(self.Nbeta, dtype=np.int8)
 
         # Initialization successful, we're at the beta = beta_0 step now.
@@ -520,23 +464,9 @@ class Annealer(object):
         ## Make XP0 vector only include variable parameters
         if self.method in ['L-BFGS-B', 'NCG', 'TNC', 'LM']:
             if self.betaidx == 0:
-                if self.NPest == 0:
-                    XP0 = np.copy(self.minpaths[0][:self.N_model * self.D])
-                elif self.NPest == self.NP:
-                    XP0 = np.copy(self.minpaths[0])
-                else:
-                    X0 = self.minpaths[0][:self.N_model * self.D]
-                    P0 = self.minpaths[0][self.N_model * self.D:][self.Pidxs]
-                    XP0 = np.append(X0, P0)
+                XP0 = np.copy(self.minpaths[0])
             else:
-                if self.NPest == 0:
-                    XP0 = np.copy(self.minpaths[self.betaidx - 1][:self.N_model * self.D])
-                elif self.NPest == self.NP:
-                    XP0 = np.copy(self.minpaths[self.betaidx - 1])
-                else:
-                    X0 = self.minpaths[self.betaidx - 1][:self.N_model * self.D]
-                    P0 = self.minpaths[self.betaidx - 1][self.N_model * self.D:][self.Pidxs]
-                    XP0 = np.append(X0, P0)
+                XP0 = np.copy(self.minpaths[self.betaidx - 1])
 
             print("Beginning optimization...")
             tstart = time.time()
@@ -550,14 +480,13 @@ class Annealer(object):
             elif self.method == 'TNC':
                 res = opt.minimize(self.A, XP0, method='TNC', jac=self.gradient,
                                    options=self.opt_args, bounds=self.bounds)
-            # elif self.method == 'LM':
-            #    XPmin, Amin, exitflag = self.min_lm_scipy(XP0)
             else:
                 print("You really shouldn't be here.  Exiting.")
                 sys.exit(1)
+
             XPmin, exitflag, Amin = res.x, res.status, res.fun  ## Res.fun is function value at xmin
             cov = np.linalg.inv(self.hes(XPmin))
-            covariance = cov[self.freepars, :][:, self.freepars]
+            covariance = cov[self.N_model * self.D:, self.N_model * self.D:]
             w, v = np.linalg.eig(covariance)
             err = np.array([np.sqrt(covariance[i, i]) for i in range(len(covariance))])
             print(w, err)
@@ -580,18 +509,7 @@ class Annealer(object):
             sys.exit(1)
 
         # update optimal parameter values
-        if self.NPest > 0:
-            if self.P.ndim == 1:
-                self.P[self.Pidxs] = np.copy(XPmin[-self.NPest:])
-            else:
-                if self.disc.__func__.__name__ in ["disc_euler", "disc_forwardmap"]:
-                    nmax = self.N_model - 1
-                else:
-                    nmax = self.N_model
-                for n in range(nmax):
-                    pi1 = nmax * self.D + n * self.NPest
-                    pi2 = nmax * self.D + (n + 1) * self.NPest
-                    self.P[n, self.Pidxs] = np.copy(XPmin[pi1:pi2])
+        self.P = np.copy(XPmin[self.N_model * self.D:])
 
         # store A_min and the minimizing path
         self.A_array[self.betaidx] = Amin
@@ -638,32 +556,8 @@ class Annealer(object):
         """
         Save minimum action parameter values.
         """
-        if self.NPest == 0:
-            print("WARNING: You did not estimate any parameters.  Writing fixed " \
-                  + "parameter values to file anyway.")
+        savearray = self.minpaths[:, self.N_model * self.D:]
 
-        # write fixed parameters to array
-        if self.P.ndim == 1:
-            savearray = np.resize(self.P, (self.Nbeta, self.NP))
-        else:
-            if self.disc.__func__.__name__ in ["disc_euler", "disc_forwardmap"]:
-                savearray = np.resize(self.P, (self.Nbeta, self.N_model - 1, self.NP))
-            else:
-                savearray = np.resize(self.P, (self.Nbeta, self.N_model, self.NP))
-        # write estimated parameters to array
-        if self.NPest > 0:
-            if self.P.ndim == 1:  ## use case
-                est_param_array = self.minpaths[:, self.N_model * self.D:]
-                savearray[:, self.Pidxs] = est_param_array
-            else:
-                if self.disc.__func__.__name__ in ["disc_euler", "disc_forwardmap"]:
-                    est_param_array = np.reshape(self.minpaths[:, self.N_model * self.D:],
-                                                 (self.Nbeta, self.N_model - 1, self.NPest))
-                    savearray[:, :, self.Pidxs] = est_param_array
-                else:
-                    est_param_array = np.reshape(self.minpaths[:, self.N_model * self.D:],
-                                                 (self.Nbeta, self.N_model, self.NPest))
-                    savearray[:, :, self.Pidxs] = est_param_array
         if filename.endswith('.npy'):
             np.save(filename, savearray.astype(dtype))
         else:
@@ -674,15 +568,7 @@ class Annealer(object):
         """
         Save minimum action parameter error values calculated from Hessian of action.
         """
-        if self.NPest == 0:
-            print("WARNING: You did not estimate any parameters.  Writing fixed " \
-                  + "parameter values to file anyway.")
-
-        # write fixed parameters to array
-        if self.P.ndim == 1 and self.NPest > 0:
-            savearray = self.params_cov
-        else:
-            print("Use case for parameter covariance not implemented yet.")
+        savearray = self.params_cov
 
         if filename.endswith('.npy'):
             np.save(filename, savearray.astype(dtype))
