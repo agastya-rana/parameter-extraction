@@ -274,7 +274,7 @@ class single_cell_FRET():
         if self.meas_file is not None:
             self.import_meas_data()
             if self.meas_noise.shape == (len(self.L_idxs),):
-                self.meas_noise = np.resize(self.meas_noise, (self.N_data, len(self.L_idxs)))
+                self.meas_noise = np.resize(self.meas_noise, (len(self.Tt_data), len(self.L_idxs)))
             print('Measured data imported from %s.meas.' % self.meas_file)
         else:
             assert self.stim is not None, "No stimulus file specified to forward integrate model with."
@@ -285,7 +285,7 @@ class single_cell_FRET():
             assert np.all(self.Tt[self.data_idxs] == self.Tt_data), "Tt_data not compatible with Tt"
             np.random.seed(self.meas_data_seed)
             if self.meas_noise.shape == (len(self.L_idxs),):
-                self.meas_noise = np.resize(self.meas_noise, (self.N_data, len(self.L_idxs)))
+                self.meas_noise = np.resize(self.meas_noise, (len(self.Tt_data), len(self.L_idxs)))
             for iL_idx, iL in enumerate(self.L_idxs):
                 self.meas_data[:, iL_idx] = self.true_states[self.data_idxs, iL] + \
                                             np.random.normal(0, self.meas_noise[:, iL_idx], len(self.Tt_data))
@@ -310,15 +310,14 @@ class single_cell_FRET():
         print('Initializing estimate with seed %s' % self.init_seed)
         self.bounds = np.vstack((self.state_bounds, self.param_bounds)) ## only for variable params
         self.x_init = np.zeros((self.nT, self.nD))
-        self.p_init = self.params_set
+        self.p_init = np.zeros(len(self.P_idxs))
 
         ## Generate random initial states within state bounds over timetrace
         np.random.seed(self.init_seed)
         for iD in range(self.nD):
             self.x_init[:, iD] = np.random.uniform(self.state_bounds[iD][0], self.state_bounds[iD][1], self.nT)
-        ## Generate random initial parameters in parameter bounds over all parameters (not just variable)
-        for iP_idx, iP in enumerate(self.P_idxs):
-            self.p_init[iP] = np.random.uniform(self.param_bounds[iP_idx][0], self.param_bounds[iP_idx][1])
+        for iP in range(len(self.P_idxs)):
+            self.p_init[iP] = np.random.uniform(self.param_bounds[iP][0], self.param_bounds[iP][1])
 
     def df_estimation(self, t, x, inputs):
         """
