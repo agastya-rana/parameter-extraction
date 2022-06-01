@@ -91,6 +91,7 @@ def var_anneal(spec_name, scF=None, seed_range=[0], plot=True, beta_precision=0.
         save_annealing(out_dict, spec_name)
     return out_dict
 
+
 def generate_predictions(spec_name):
     """
     Generate predictions for prediction time windows using estimated parameter sets from variational annealing estimations.
@@ -141,7 +142,8 @@ def minimize_pred_error(specs_name, seed_range=[0], store_data=False):
         scF.Tt = scF.Tt[scF.pred_wind_idxs]
         scF.stim = scF.stim[scF.pred_wind_idxs]
         scF.meas_data = scF.meas_data[scF.pred_data_wind_idxs]
-        pred_data_idxs = scF.data_idxs[scF.pred_data_wind_idxs]
+        data_times = scF.Tt_data[scF.pred_data_wind_idxs]
+        pred_data_idxs = np.searchsorted(scF.Tt, data_times)
         # Generate the forward prediction using estimated parameter dictionary
         # Choose optimal beta with minimal trajectory error over predictions
         opt_beta_idx = -1
@@ -150,7 +152,7 @@ def minimize_pred_error(specs_name, seed_range=[0], store_data=False):
             scF.x0 = data_dict['paths'][beta_idx, -1, 1:] ## -1 for last time point, 1 for removing time from path
             scF.params_set = data_dict['params'][beta_idx, :]
             scF.forward_integrate()
-            traj_err = np.sum((scF.true_states[pred_data_idxs, scF.L_idxs] - scF.meas_data) ** 2.0) / len(scF.Tt)
+            traj_err = np.sum((scF.true_states[pred_data_idxs][:, scF.L_idxs] - scF.meas_data) ** 2.0) / len(scF.Tt)
             traj_arr[beta_idx, seed_idx] = traj_err
             if min_err == None or traj_err < min_err:
                 min_err = traj_err

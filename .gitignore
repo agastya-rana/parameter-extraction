@@ -6,5 +6,6 @@
 # *~
 
 local_methods.py
+scripts/stim_selection_example.py
 *.pyc
 *.sh
