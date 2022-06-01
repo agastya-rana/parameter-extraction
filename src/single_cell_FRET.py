@@ -18,9 +18,9 @@ import collections
 from src.load_data import load_FRET_recording
 from src.save_data import save_stim, save_meas_data
 
-MODEL_DEP_PARAMS = ['nD', 'nP', 'L_idxs', 'P_idxs', 'state_bounds', 'param_bounds', 'x0', 'dt']
+MODEL_DEP_PARAMS = ['nD', 'nP', 'L_idxs', 'P_idxs', 'state_bounds', 'param_bounds', 'params_set', 'x0', 'dt']
 INT_PARAMS = ['nT', 'est_beg_T', 'est_end_T', 'pred_end_T', 'data_skip']
-FLOAT_PARAMS = ['dt']
+FLOAT_PARAMS = ['dt'] ## TODO: enforce an input with this to change the model parameter
 LIST_PARAMS = ['x0', 'beta_array', 'params_set', 'state_bounds', 'param_bounds',
                'Tt_data', 'stim_protocol']
 STR_PARAMS = ['stim_file', 'meas_file']
@@ -59,7 +59,7 @@ class single_cell_FRET():
         self.meas_file = None  ## measured data file; default: forward integrating the model with the stimulus file
         self.meas_data_seed = 0  ## seed for measurement noise generation
         self.meas_noise = 0.01 * np.ones(
-            (1, len(self.L_idxs)))  ## Measurement noise for each observable component of state
+            (len(self.L_idxs),))  ## Measurement noise for each observable component of state
 
         # Variables for integrating model
         self.model = models.MWC_MM()  ## Dynamical model proposed to explain data
@@ -91,7 +91,7 @@ class single_cell_FRET():
         self.alpha = 2.0  ## Multiplier by which Rf is increased in each annealing step
         self.beta_increment = 1  ## Rf increases by a factor of alpha to this value at each step
         self.beta_array = range(0, 61, self.beta_increment)  ## Exponents used to calculate Rf
-        self.Rf0 = 1e-6  ## Initial Rf
+        self.Rf0 = 1e-6  ## Initial Rf ## TODO: imagine array of Rf to differentiate between error in a and m
 
         # Overwrite variables with passed arguments
         if 'model' in kwargs:
@@ -103,6 +103,9 @@ class single_cell_FRET():
                     exec('self.model.%s = %s' % (param, kwargs[param]))
             for attr in MODEL_DEP_PARAMS:
                 exec('self.%s = self.model.%s' % (attr, attr))
+        else:
+            print("Need to include model used for integration.")
+            sys.exit(1)
 
         for key in kwargs:
             val = kwargs[key]
@@ -136,6 +139,11 @@ class single_cell_FRET():
             self.import_stim_data()
             print('Stimulus data imported from %s.stim.' % self.stim_file)
         else:
+            ## Need to ensure that self.dt and self.nT well defined
+            assert self.nT > 0, "Number of timepoints needs to be specified."
+            self.Tt = np.arange(0, self.dt * self.nT, self.dt)
+            if self.Tt_data is None:
+                self.Tt_data = self.Tt
             self.generate_stim()
             print('Stimulus data generated from inputs.')
 
@@ -262,8 +270,11 @@ class single_cell_FRET():
         """
         Set the meas data from file (if meas_file set) or generate from true parameters.
         """
+
         if self.meas_file is not None:
             self.import_meas_data()
+            if self.meas_noise.shape == (len(self.L_idxs),):
+                self.meas_noise = np.resize(self.meas_noise, (self.N_data, len(self.L_idxs)))
             print('Measured data imported from %s.meas.' % self.meas_file)
         else:
             assert self.stim is not None, "No stimulus file specified to forward integrate model with."
@@ -273,9 +284,11 @@ class single_cell_FRET():
             self.data_idxs = np.searchsorted(self.Tt, self.Tt_data)
             assert np.all(self.Tt[self.data_idxs] == self.Tt_data), "Tt_data not compatible with Tt"
             np.random.seed(self.meas_data_seed)
+            if self.meas_noise.shape == (len(self.L_idxs),):
+                self.meas_noise = np.resize(self.meas_noise, (self.N_data, len(self.L_idxs)))
             for iL_idx, iL in enumerate(self.L_idxs):
                 self.meas_data[:, iL_idx] = self.true_states[self.data_idxs, iL] + \
-                                            np.random.normal(0, self.meas_noise[iL_idx], len(self.Tt_data))
+                                            np.random.normal(0, self.meas_noise[:, iL_idx], len(self.Tt_data))
 
     def import_meas_data(self):
         """
@@ -285,7 +298,7 @@ class single_cell_FRET():
         self.Tt_data = Tt_meas_data[:, 0]
         self.data_idxs = np.searchsorted(self.Tt, self.Tt_data)
         self.meas_data = Tt_meas_data[:, 1:]  ## to remove time column
-        if not np.all(Tt_meas_data[:, 0] == self.Tt):
+        if not np.all(self.Tt_data == self.Tt):
             print("Usecase: sparse data")
         assert self.meas_data.shape[1] == len(self.L_idxs), "Measured data imported not of sufficient dimension."
 
@@ -295,19 +308,17 @@ class single_cell_FRET():
 
     def set_init_est(self):
         print('Initializing estimate with seed %s' % self.init_seed)
-        assert (self.nD == self.model.nD), 'self.nD != %s' % self.model.nD
-        assert (self.nP == self.model.nP), 'self.nP != %s' % self.model.nP
-        self.bounds = np.vstack((self.state_bounds, self.param_bounds))
+        self.bounds = np.vstack((self.state_bounds, self.param_bounds)) ## only for variable params
         self.x_init = np.zeros((self.nT, self.nD))
-        self.p_init = np.zeros(len(self.P_idxs))
+        self.p_init = self.params_set
 
         ## Generate random initial states within state bounds over timetrace
         np.random.seed(self.init_seed)
         for iD in range(self.nD):
             self.x_init[:, iD] = np.random.uniform(self.state_bounds[iD][0], self.state_bounds[iD][1], self.nT)
-        ## Generate random initial parameters in parameter bounds
-        for iP in range(len(self.P_idxs)):
-            self.p_init[iP] = np.random.uniform(self.param_bounds[iP][0], self.param_bounds[iP][1])
+        ## Generate random initial parameters in parameter bounds over all parameters (not just variable)
+        for iP_idx, iP in enumerate(self.P_idxs):
+            self.p_init[iP] = np.random.uniform(self.param_bounds[iP_idx][0], self.param_bounds[iP_idx][1])
 
     def df_estimation(self, t, x, inputs):
         """
@@ -329,19 +340,24 @@ class single_cell_FRET():
             print("Assuming prediction ends at last timepoint.")
             self.pred_end_T = (self.nT - 1) * self.dt
 
-        est_beg_idx = int(self.est_beg_T / self.dt)
-        est_end_idx = int(self.est_end_T / self.dt)
-        pred_beg_idx = int(self.pred_beg_T / self.dt)
-        pred_end_idx = int(self.pred_end_T / self.dt)
-        self.est_wind_idxs = np.arange(est_beg_idx, est_end_idx)
-        self.pred_wind_idxs = np.arange(pred_beg_idx, pred_end_idx)
+        assert self.est_beg_T in self.Tt_data, "Estimation must begin at data timepoint."
+        assert self.est_end_T in self.Tt_data, "Estimation must end at data timepoint."
+        assert self.pred_beg_T in self.Tt_data, "Prediction must begin at data timepoint."
+        assert self.pred_end_T in self.Tt_data, "Prediction must end at data timepoint."
 
-        est_data_beg_idx = np.where(self.Tt_data==self.est_beg_T)[0][0]
-        est_data_end_idx = np.where(self.Tt_data==self.est_end_T)[0][0]
-        pred_data_beg_idx = np.where(self.Tt_data==self.pred_beg_T)[0][0]
-        pred_data_end_idx = np.where(self.Tt_data==self.pred_end_T)[0][0]
-        self.est_data_wind_idxs = np.arange(est_data_beg_idx, est_data_end_idx)
-        self.pred_data_wind_idxs = np.arange(pred_data_beg_idx, pred_data_end_idx)
+        est_beg_idx = np.searchsorted(self.Tt, self.est_beg_T)
+        est_end_idx = np.searchsorted(self.Tt, self.est_end_T)
+        pred_beg_idx = np.searchsorted(self.Tt, self.pred_beg_T)
+        pred_end_idx = np.searchsorted(self.Tt, self.pred_end_T)
+        self.est_wind_idxs = np.arange(est_beg_idx, est_end_idx+1)
+        self.pred_wind_idxs = np.arange(pred_beg_idx, pred_end_idx+1)
+
+        est_data_beg_idx = np.searchsorted(self.Tt_data, self.est_beg_T)
+        est_data_end_idx = np.searchsorted(self.Tt_data, self.est_end_T)
+        pred_data_beg_idx = np.searchsorted(self.Tt_data, self.pred_beg_T)
+        pred_data_end_idx = np.searchsorted(self.Tt_data, self.pred_end_T)
+        self.est_data_wind_idxs = np.arange(est_data_beg_idx, est_data_end_idx+1)
+        self.pred_data_wind_idxs = np.arange(pred_data_beg_idx, pred_data_end_idx+1)
 
         if len(self.est_wind_idxs) == 0:
             print('WARNING: Estimation window has len 0; change est_beg_T and/or est_end_T')
