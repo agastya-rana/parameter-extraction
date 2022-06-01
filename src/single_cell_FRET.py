@@ -60,7 +60,6 @@ class single_cell_FRET():
 
         # Variables for integrating model
         self.model = models.MWC_MM()  ## Dynamical model proposed to explain data
-        self.nP = self.model.nP  ## Number of parameters (both fixed and fitted) that the model involves
         self.params_set = self.model.params_set  ## Parameter set used for forward integration of the model
         self.true_states = None  ## Stores state of integrated system over the complete timetrace
         self.x0 = self.model.x0  ## Initialized value of state for model to be integrated
