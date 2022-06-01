@@ -16,10 +16,10 @@ import collections
 from src.load_data import load_FRET_recording
 from src.save_data import save_stim, save_meas_data
 
-MODEL_DEP_PARAMS = ['nD', 'nP', 'L_idxs', 'P_idxs', 'state_bounds', 'param_bounds', 'params_set', 'x0', 'dt']
+MODEL_DEP_PARAMS = ['nD', 'nP', 'L_idxs', 'state_bounds', 'param_bounds', 'params_set', 'x0', 'dt', 'constant_set']
 INT_PARAMS = ['nT', 'est_beg_T', 'est_end_T', 'pred_end_T', 'data_skip']
 FLOAT_PARAMS = ['dt']
-LIST_PARAMS = ['x0', 'beta_array', 'params_set', 'state_bounds', 'param_bounds',
+LIST_PARAMS = ['x0', 'beta_array', 'params_set', 'state_bounds', 'param_bounds', 'constant_set'
                'Tt_data', 'stim_protocol']
 STR_PARAMS = ['stim_file', 'meas_file']
 NP_PARAMS = ['meas_noise']
@@ -61,7 +61,6 @@ class single_cell_FRET():
         # Variables for integrating model
         self.model = models.MWC_MM()  ## Dynamical model proposed to explain data
         self.nP = self.model.nP  ## Number of parameters (both fixed and fitted) that the model involves
-        self.P_idxs = self.model.P_idxs
         self.params_set = self.model.params_set  ## Parameter set used for forward integration of the model
         self.true_states = None  ## Stores state of integrated system over the complete timetrace
         self.x0 = self.model.x0  ## Initialized value of state for model to be integrated
@@ -308,13 +307,13 @@ class single_cell_FRET():
         print('Initializing estimate with seed %s' % self.init_seed)
         self.bounds = np.vstack((self.state_bounds, self.param_bounds)) ## only for variable params
         self.x_init = np.zeros((self.nT, self.nD))
-        self.p_init = np.zeros(len(self.P_idxs))
+        self.p_init = np.zeros(len(self.params_set))
 
         ## Generate random initial states within state bounds over timetrace
         np.random.seed(self.init_seed)
         for iD in range(self.nD):
             self.x_init[:, iD] = np.random.uniform(self.state_bounds[iD][0], self.state_bounds[iD][1], self.nT)
-        for iP in range(len(self.P_idxs)):
+        for iP in range(len(self.params_set)):
             self.p_init[iP] = np.random.uniform(self.param_bounds[iP][0], self.param_bounds[iP][1])
 
     def df_estimation(self, t, x, inputs):
@@ -377,6 +376,5 @@ class single_cell_FRET():
         """
         assert len(self.x0) == self.nD, "Initial state has dimension %s != " \
                                         "model dimension %s" % (len(self.x0), self.nD)
-        est_params = [self.params_set[i] for i in self.P_idxs]
         self.true_states = odeint(self.df_data_generation, self.x0, self.Tt,
-                                  args=(est_params,))
+                                  args=(self.params_set,))
