@@ -11,7 +11,7 @@ import numpy as np
 main_dir = def_data_dir()
 
 meas_noise = 0.05
-sp_name = 'sim_0.05_lin'
+sp_name = 'sim_0.05_lin_x'
 filename = '%s/specs/%s.txt' % (main_dir, sp_name)
 data_vars = {'stim_file': 'decent_stimulus', 'meas_noise': meas_noise*np.ones((1,))}
 est_vars = {'model': 'MWC_linear',
@@ -34,20 +34,19 @@ if not os.path.exists(out_dir):
 print(out_dir)
 
 ## Manually extract covariance file from storage, for each beta, calculate eigenvalues of matrix and plot
-est_dict = load_est_data_VA(sp_name)
+est_dict = load_est_data_VA(sp_name[:-2])
 cov = est_dict['params_err']
-eigenvalues = np.zeros((len(cell.beta_array), 3))
-for beta_idx in range(len(cell.beta_array)):
-    covariance = cov[beta_idx, :, :]
+eigenvalues = np.zeros((len(cell.beta_array[30:]), 3))
+for beta_idx in range(len(cell.beta_array[30:])):
+    covariance = cov[beta_idx+29, :, :]
     w, v = np.linalg.eig(covariance)
     eigenvalues[beta_idx] = w
     err = np.array([np.sqrt(covariance[i, i]) for i in range(len(covariance))])
     print(w, err)
 for i in range(3):
-    plt.scatter(cell.beta_array[20:], np.log(eigenvalues[:, i][20:]))
+    plt.scatter(cell.beta_array[30:], np.log(eigenvalues[:, i]))
 plt.savefig('%s/%s_eigenvalues.png' % (out_dir, sp_name))
 plt.close()
-
 
 traj_dict = minimize_pred_error(sp_name)
 t = traj_dict['errors']
@@ -56,6 +55,7 @@ plt.xlabel("Beta")
 plt.ylabel("Trajectory Errors")
 plt.savefig('%s/traj_err.png' % out_dir)
 plt.close()
+
 
 """
 Need to first:
