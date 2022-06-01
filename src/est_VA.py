@@ -14,7 +14,6 @@ from src.plot_data import plot_trajectories, plot_params
 def create_cell(spec_name, save_data=False):
     list_dict = read_specs_file(spec_name)
     scF = single_cell_FRET(**list_dict)
-    scF.set_meas_data()
     if save_data:
         save_stim(scF, spec_name)
         save_meas_data(scF, save_data)
@@ -35,8 +34,7 @@ def est_VA(spec_name, scF, init_seed=None, save_data=True, beta_inc=1, beta_mid=
                        scF.Tt[scF.est_wind_idxs], scF.stim[scF.est_wind_idxs])
 
     # Set Rm as inverse covariance; all parameters measured for now
-    Rm = np.reciprocal(np.square(scF.meas_noise))
-    P_idxs = scF.model.P_idxs
+    Rm = np.reciprocal(np.square(scF.meas_noise[scF.est_data_wind_idxs, :]))
     scF.beta_increment = beta_inc
     scF.beta_array = np.arange(beta_mid - beta_inc*beta_width, beta_mid + beta_inc*beta_width, beta_inc)
 
@@ -45,7 +43,7 @@ def est_VA(spec_name, scF, init_seed=None, save_data=True, beta_inc=1, beta_mid=
     tstart = time.time()
     annealer.anneal(scF.x_init[scF.est_wind_idxs], scF.p_init,
                     scF.alpha, scF.beta_array, Rm, scF.Rf0,
-                    scF.L_idxs, P_idxs, init_to_data=True,
+                    scF.L_idxs, init_to_data=True,
                     bounds=scF.bounds, method='L-BFGS-B', opt_args=BFGS_options)
     print("\nVariational annealing completed in {} s.".format(time.time() - tstart))
     save_estimates(scF, annealer, spec_name)
