@@ -3,9 +3,7 @@ Variational annealing of single cell FRET data.
 
 Created by Nirag Kadakia and Agastya Rana, 11/18/21.
 """
-import time
 import numpy as np
-import sys
 from src.load_data import load_est_data_VA, load_pred_data
 from src.varanneal import *
 from src.single_cell_FRET import single_cell_FRET
@@ -29,7 +27,7 @@ def est_VA(spec_name, scF, init_seed=None, save_data=True, beta_inc=1, beta_mid=
     if init_seed != None:
         scF.init_seed = init_seed ## influences x and p init
     # Initalize estimation
-    scF.set_init_est()
+    scF.set_init_est() ## to random set of x values across dt, and random p values across all parameters
     # Initalize annealer class
     annealer = Annealer()
     annealer.set_model(scF.df_estimation, scF.nD)
@@ -48,8 +46,7 @@ def est_VA(spec_name, scF, init_seed=None, save_data=True, beta_inc=1, beta_mid=
     annealer.anneal(scF.x_init[scF.est_wind_idxs], scF.p_init,
                     scF.alpha, scF.beta_array, Rm, scF.Rf0,
                     scF.L_idxs, P_idxs, init_to_data=True,
-                    bounds=scF.bounds, disc='trapezoid',
-                    method='L-BFGS-B', opt_args=BFGS_options)
+                    bounds=scF.bounds, method='L-BFGS-B', opt_args=BFGS_options)
     print("\nVariational annealing completed in {} s.".format(time.time() - tstart))
     save_estimates(scF, annealer, spec_name)
     return scF
