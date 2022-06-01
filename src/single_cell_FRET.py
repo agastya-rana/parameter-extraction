@@ -6,12 +6,10 @@ Created by Nirag Kadakia and Agastya Rana, 10-21-2021.
 Cleaned
 """
 
-import scipy as sp
 import numpy as np
 import sys
 from scipy.interpolate import interp1d
 from scipy.integrate import odeint
-import scipy.linalg as LA
 from src.load_data import load_stim_file, load_meas_file
 import src.models as models
 import collections
@@ -25,6 +23,7 @@ LIST_PARAMS = ['x0', 'beta_array', 'params_set', 'state_bounds', 'param_bounds',
                'Tt_data', 'stim_protocol']
 STR_PARAMS = ['stim_file', 'meas_file']
 NP_PARAMS = ['meas_noise']
+MODEL_INFL_PARAMS = ['dt', 'x0', 'param_bounds']
 
 
 class single_cell_FRET():

@@ -27,7 +27,6 @@ import time
 import sys
 import scipy.optimize as opt
 
-
 class Annealer(object):
 
     def __init__(self):
@@ -83,12 +82,10 @@ class Annealer(object):
         Gaussian measurement error.
         """
         x = np.reshape(X, (self.N_model, self.D))
-        # print(x[self.data_idxs, self.Lidxs], self.Y.shape)
-        # print(self.data_idxs)
-        diff = x[self.data_idxs, self.Lidxs] - self.Y
+        diff = x[self.data_idxs][:,self.Lidxs] - self.Y
         assert self.RM.shape == (self.N_data, self.L), "ERROR: RM is in an invalid shape."
         merr = np.sum(self.RM * np.square(diff))
-        return merr  / (self.L * self.N_data) ## - removing bc we want total action, not averaged
+        return merr
 
     def fe_gaussian(self, XP):
         """
@@ -139,7 +136,7 @@ class Annealer(object):
             else:
                 ferr = self.RF * np.sum(diff * diff) ## USECASE
 
-        return ferr / (self.D * (self.N_model - 1))  ## - remove to find total action
+        return ferr
 
     ############################################################################
     # Discretization routines
@@ -493,9 +490,7 @@ class Annealer(object):
             flag = True
             for e in w:
                 if e < 0:
-                    pass
                     flag = False
-            print(flag)
 
             print("Optimization complete!")
             print("Time = {0} s".format(time.time() - tstart))
