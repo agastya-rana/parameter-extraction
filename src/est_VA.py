@@ -166,7 +166,6 @@ def minimize_pred_error(specs_name, seed_range=[0], store_data=False):
     opt_beta = scF.beta_array[opt_beta_idx]
     if valid:
         traj_errors = np.amin(traj_arr, axis=1)
-        print(traj_errors)
         data_dict = load_est_data_VA(specs_name, best_seed)
         opt_traj = data_dict['paths'][opt_beta_idx, :, :]
         params = data_dict['params'][opt_beta_idx, :]
