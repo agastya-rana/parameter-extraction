@@ -23,6 +23,6 @@ def def_data_dir():
 	scripts in this project
 	"""
 	
-	data_dir = os.path.join(os.path.dirname(scripts_path),'example_data_dir')
+	data_dir = os.path.join(os.path.dirname(scripts_path), 'swayamshree_data')
 	
 	return data_dir
