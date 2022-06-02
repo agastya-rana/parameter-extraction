@@ -111,7 +111,7 @@ class MWC_MM_Swayam(CellModel):
         super().__init__()
         self.constant_names = ['K_I', 'K_A', 'm_0', 'alpha_m', 'K_R', 'K_B']
         self.param_names = ['Nn', 'V_R', 'V_B']
-        self.constant_set = [20., 3225., 0.5, 2.0, 1.0, 0.30] ## why is this different?
+        self.constant_set = [20., 3225., 0.5, 2.0, 1.0, 0.30]
         self.params_set = [6.0, 0.010, 0.013]
         self.x0 = [self.constant_set[2] + 0.83, 0.33]
         self.param_bounds = [[1, 30], [0.001, 0.1], [0.001, 0.1]]  ## N, V_R, V_B
@@ -129,7 +129,7 @@ class MWC_MM_Swayam(CellModel):
 
         #df_vec = np.array([V_R * (1 - Aa) / (K_R + (1 - Aa)) - V_B * Aa / (K_B + Aa), (Aa - FR_idx) / self.dt]).T
         df_vec = np.array([np.exp(np.log(V_R)) * ((1 - Aa) / (K_R)) - np.exp(np.log(V_B)) * Aa / (K_B + Aa),
-                           (Aa - FR_idx) / self.dt]).T ## this looks weird, missing 1-Aa
+                           (Aa - FR_idx) / self.dt]).T
         return df_vec
 
 ## TODO: add model class using sdeint - check why diff from odeint without noise, this way using both process and measurement noise

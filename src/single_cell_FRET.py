@@ -18,7 +18,7 @@ from src.save_data import save_stim, save_meas_data
 
 MODEL_DEP_PARAMS = ['nD', 'nP', 'L_idxs', 'state_bounds', 'param_bounds', 'params_set', 'x0', 'dt', 'constant_set']
 INT_PARAMS = ['nT', 'est_beg_T', 'est_end_T', 'pred_end_T', 'data_skip']
-FLOAT_PARAMS = ['dt']
+FLOAT_PARAMS = ['dt', 'Rf0']
 LIST_PARAMS = ['x0', 'beta_array', 'params_set', 'state_bounds', 'param_bounds', 'constant_set'
                'Tt_data', 'stim_protocol']
 STR_PARAMS = ['stim_file', 'meas_file']

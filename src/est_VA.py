@@ -62,7 +62,7 @@ def var_anneal(spec_name, scF=None, seed_range=[0], plot=True, beta_precision=0.
     if scF == None:
         scF = create_cell(spec_name)
 
-    while b_inc > beta_precision:
+    while b_inc >= beta_precision:
         if first:
             for seed in seed_range:
                 est_VA(spec_name, scF, init_seed=seed, beta_inc=b_inc, beta_mid=31, beta_width=30)

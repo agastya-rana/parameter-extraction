@@ -19,13 +19,13 @@ with open('%s/meas_noise/Meas_noise_%s_%s.txt' % (main_dir, batch_no, cell_no),'
 print('Cell No:', cell_no)
 print('Measurement Noise:', std)
 
-data_vars = {'stim_file': data_name , 'meas_file': data_name, 'meas_noise': std*np.ones((1,))}
-est_vars = {'model': 'MWC_MM_Swayam', 'est_beg_T': 0, 'est_end_T': 100, 'pred_end_T': 197}
+data_vars = {'stim_file': data_name, 'meas_file': data_name, 'meas_noise': std*np.ones((1,))} ## std*np.ones(nT,) not (nT, 1)
+est_vars = {'model': 'MWC_MM_Swayam', 'est_beg_T': 0, 'est_end_T': 160, 'pred_end_T': 197}
 specifications = {'data_vars': data_vars, 'est_vars': est_vars}
 with open(filename, 'w') as outfile:
     json.dump(specifications, outfile, indent=4, cls=NumpyEncoder)
 
-out_dict = var_anneal(sp_name, plot=True, beta_precision=1)
+out_dict = var_anneal(sp_name, plot=True, beta_precision=0.1)
 params = out_dict['params']
 print(params)
 N = params[0]
