@@ -113,6 +113,10 @@ def plot_exp(scF, spec_name, stim_change=False):
 
 
 def plot_params(params, params_err, pnames, spec_name):
+    if np.isnan(params_err).any():
+        print("Parameters for spec %s do not have valid error bounds." % spec_name)
+        return None
+
     fig, axs = plt.subplots(len(params), len(params), figsize=(15, 15))
     for i in range(len(params)):
         for j in range(len(params)):
