@@ -47,15 +47,18 @@ batch_no = 220517
 cell_no = 0
 cell_name = '%s_%s' % (batch_no, cell_no)
 model = MWC_MM_Swayam()
+
+## Conduct the inference for QS
 res = varanneal_pipeline("QS", cell_name, model, est_end=155, pred_end=197)
 
 N = res['par'][0]
 try:
-    Nerr = np.sqrt(res['par_err'][0, 0])
+    Nerr = np.sqrt(res['par_err'][0, 0]) ## this will fail if parameter bounds for QS not estimated
 except:
-    Nerr = 5
+    Nerr = 5 ## in which case we use this default value
 new_bounds = [[N-2*Nerr, N+2*Nerr]] + model.param_bounds[1:]
 
+## Use the new bounds for BS
 final_res = varanneal_pipeline("BS", cell_name, model, param_bounds=new_bounds, est_end=750, pred_end=900)
 print(final_res)
 
