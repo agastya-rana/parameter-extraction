@@ -491,11 +491,11 @@ class Annealer(object):
                 if e < 0:
                     flag = False
 
-            print("Time = {0} s".format(time.time() - tstart))
+            print("Time = %.1f s" % (time.time() - tstart))
             #print("Exit flag = {0}".format(exitflag))
             #print("Exit message: {0}".format(res.message))
             print("Iterations = {0}".format(res.nit))
-            print("Obj. function value = {0}\n".format(Amin))
+            print("Obj. function value = %.3f \n" % Amin)
             ## BIC is nP ln(nT) + 2 A_min
         else:
             print("ERROR: Optimization routine not implemented or recognized.")
