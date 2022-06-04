@@ -119,6 +119,9 @@ def minimize_pred_error(specs_name, seed_range=[0], store_data=False):
 
     Returns: the value of beta that minimizes the error in predicted trajectories
     """
+
+    ## TODO: ensure that beta selected has well-defined param bounds
+
     overall_min = None
     best_seed = seed_range[0]
     num_seeds = len(seed_range)
