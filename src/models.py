@@ -11,7 +11,6 @@ class CellModel():
     state_names = ['methyl', 'FRET index']
     dt = 0.5
     def __init__(self):
-        self.nP = 0
         self.x0 = [0, 0]  ## initial, equilibrium state of the system
         self.constant_names = [] ## names of fixed constants
         self.param_names = [] ## names of variable parameters
@@ -85,7 +84,7 @@ class MWC_linear(CellModel):
         self.constant_set = [20., 3225., 0.5, 2.0]
         self.params_set = [6.0, 0.33, -0.01]
         self.x0 = [self.constant_set[2]+0.83, self.params_set[1]] ## 0.83 correction needed for 100 uM bg
-        self.param_bounds = [[4, 15], [0., 1.], [-0.5, 0.5]] ## N, a_ss, slope
+        self.param_bounds = [[1, 30], [0., 1.], [-0.5, 0.5]] ## N, a_ss, slope
 
     def df(self, t, x, inputs):
         p, stim = inputs
