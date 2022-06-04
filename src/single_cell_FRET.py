@@ -16,7 +16,7 @@ import collections
 from src.load_data import load_FRET_recording
 from src.save_data import save_stim, save_meas_data
 
-MODEL_DEP_PARAMS = ['nD', 'nP', 'L_idxs', 'state_bounds', 'param_bounds', 'params_set', 'x0', 'dt', 'constant_set']
+MODEL_DEP_PARAMS = ['nD', 'L_idxs', 'state_bounds', 'param_bounds', 'params_set', 'x0', 'dt', 'constant_set']
 INT_PARAMS = ['nT', 'est_beg_T', 'est_end_T', 'pred_end_T', 'data_skip']
 FLOAT_PARAMS = ['dt', 'Rf0']
 LIST_PARAMS = ['x0', 'beta_array', 'params_set', 'state_bounds', 'param_bounds', 'constant_set'
@@ -271,6 +271,7 @@ class single_cell_FRET():
             self.import_meas_data()
             if self.meas_noise.shape == (len(self.L_idxs),):
                 self.meas_noise = np.resize(self.meas_noise, (len(self.Tt_data), len(self.L_idxs)))
+
             print('Measured data imported from %s.meas.' % self.meas_file)
         else:
             assert self.stim is not None, "No stimulus file specified to forward integrate model with."
