@@ -279,16 +279,14 @@ class Annealer(object):
             # Print RF
             if type(self.RF) == np.ndarray:
                 if self.RF.shape == (self.N_model - 1, self.D):
-                    print('beta = %d, RF[n=0, i=0] = %.8e' % (self.beta, self.RF[0, 0]))
+                    print('beta = %.1f, RF[n=0, i=0] = %.3e' % (self.beta, self.RF[0, 0]))
                 elif self.RF.shape == (self.N_model - 1, self.D, self.D):
-                    print('beta = %d, RF[n=0, i=0, j=0] = %.8e' % (self.beta, self.RF[0, 0, 0]))
+                    print('beta = %.1f, RF[n=0, i=0, j=0] = %.3e' % (self.beta, self.RF[0, 0, 0]))
                 else:
                     print("Error: RF has an invalid shape. You really shouldn't be here...")
                     sys.exit(1)
             else:
-                print('beta = %d, RF = %.8e' % (self.beta, self.RF))
-            print('')
-
+                print('beta = %.1f, RF = %.3e' % (self.beta, self.RF))
             self.anneal_step()
 
             # Track progress by saving to file after every step
@@ -465,7 +463,6 @@ class Annealer(object):
             else:
                 XP0 = np.copy(self.minpaths[self.betaidx - 1])
 
-            print("Beginning optimization...")
             tstart = time.time()
 
             if self.method == 'L-BFGS-B':
@@ -486,16 +483,17 @@ class Annealer(object):
             covariance = cov[self.N_model * self.D:, self.N_model * self.D:]
             w, v = np.linalg.eig(covariance)
             err = np.array([np.sqrt(covariance[i, i]) for i in range(len(covariance))])
-            print(w, err)
+            with np.printoptions(precision=5, suppress=True):
+                print("Params: ", XPmin[self.N_model * self.D:])
+                print("Param Error: ", err)
             flag = True
             for e in w:
                 if e < 0:
                     flag = False
 
-            print("Optimization complete!")
             print("Time = {0} s".format(time.time() - tstart))
-            print("Exit flag = {0}".format(exitflag))
-            print("Exit message: {0}".format(res.message))
+            #print("Exit flag = {0}".format(exitflag))
+            #print("Exit message: {0}".format(res.message))
             print("Iterations = {0}".format(res.nit))
             print("Obj. function value = {0}\n".format(Amin))
             ## BIC is nP ln(nT) + 2 A_min
