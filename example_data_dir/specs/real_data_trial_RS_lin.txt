@@ -1,0 +1,15 @@
+{
+    "data_vars": {
+        "stim_file": "real_data_trial_RS",
+        "meas_file": "real_data_trial_RS",
+        "meas_noise": [
+            0.05
+        ]
+    },
+    "est_vars": {
+        "model": "MWC_linear",
+        "est_beg_T": 0,
+        "est_end_T": 120,
+        "pred_end_T": 199
+    }
+}

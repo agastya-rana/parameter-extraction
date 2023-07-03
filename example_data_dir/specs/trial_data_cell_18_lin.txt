@@ -1,0 +1,15 @@
+{
+    "data_vars": {
+        "stim_file": "trial_data_cell_18",
+        "meas_file": "trial_data_cell_18",
+        "meas_noise": [
+            0.01
+        ]
+    },
+    "est_vars": {
+        "model": "MWC_linear",
+        "est_beg_T": 0,
+        "est_end_T": 200,
+        "pred_end_T": 320
+    }
+}

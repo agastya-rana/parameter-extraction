@@ -1,0 +1,26 @@
+# DATA VARIABLE NAME VALUE
+data_var nD 2
+data_var nT 767
+data_var dt 0.5
+data_var nP 7
+
+
+data_var stim_type block
+data_var stim_params [5.75,0.07500000000000001]
+data_var meas_noise [0.01]
+data_var L_idxs [1]
+
+
+# ESTIMATION VARS VARIABLE NAME VALUE
+est_var model MWC_linear
+est_var params_set [20.,3225.,0.5,2.0,9.457110723339534,0.3771362229609465,-0.010413262975147584]
+est_var bounds_set default
+est_var est_beg_T 0
+est_var est_end_T 380
+est_var pred_end_T 382
+	
+
+
+
+# ESTIMATION SPECS ESTIMATION SPECS VALUE
+est_spec est_type VA

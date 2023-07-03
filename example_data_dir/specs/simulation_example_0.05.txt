@@ -1,0 +1,19 @@
+{
+    "data_vars": {
+        "stim_file": "simulation_example",
+        "meas_noise": [
+            0.05
+        ]
+    },
+    "est_vars": {
+        "model": "MWC_linear",
+        "params_set": [
+            6.0,
+            0.33,
+            -0.05
+        ],
+        "est_beg_T": 20,
+        "est_end_T": 240,
+        "pred_end_T": 320
+    }
+}
